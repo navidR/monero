@@ -1360,6 +1360,23 @@ namespace cryptonote
       uint64_t* pmax_used_block_height = NULL) const;
 
     /**
+     * @brief run all input checks except the heavy ring signature verification
+     *
+     * Performs mixin, version, sorted-input, key-image, output-key, and min-age checks.
+     * Populates pubkeys_out with the dereferenced output keys for each input.
+     * Sets ring_verify_skipped_out to true if the verification ID matched and ring
+     * verification can be skipped entirely.
+     *
+     * @return false if any pre-ring-verify check fails
+     */
+    bool check_tx_inputs_prepare(transaction& tx,
+      tx_verification_context &tvc,
+      const crypto::hash &valid_input_verification_id_in,
+      std::vector<std::vector<rct::ctkey>> &pubkeys_out,
+      bool &ring_verify_skipped_out,
+      uint64_t* pmax_used_block_height = NULL) const;
+
+    /**
      * @brief performs a blockchain reorganization according to the longest chain rule
      *
      * This function aggregates all the actions necessary to switch to a

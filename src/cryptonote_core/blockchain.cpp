@@ -3310,13 +3310,16 @@ bool Blockchain::expand_transaction_2(transaction &tx, const crypto::hash &tx_pr
 //        check_tx_input() rather than here, and use this function simply
 //        to iterate the inputs as necessary (splitting the task
 //        using threads, etc.)
-bool Blockchain::check_tx_inputs(transaction& tx,
+bool Blockchain::check_tx_inputs_prepare(transaction& tx,
   tx_verification_context &tvc,
-  crypto::hash &valid_input_verification_id_inout,
+  const crypto::hash &valid_input_verification_id_in,
+  std::vector<std::vector<rct::ctkey>> &pubkeys_out,
+  bool &ring_verify_skipped_out,
   uint64_t* pmax_used_block_height) const
 {
-  PERF_TIMER(check_tx_inputs);
+  PERF_TIMER(check_tx_inputs_prepare);
   LOG_PRINT_L3("Blockchain::" << __func__);
+  ring_verify_skipped_out = false;
   size_t sig_index = 0;
   if(pmax_used_block_height)
     *pmax_used_block_height = 0;
@@ -3454,7 +3457,7 @@ bool Blockchain::check_tx_inputs(transaction& tx,
     }
   }
 
-  std::vector<std::vector<rct::ctkey>> pubkeys(tx.vin.size());
+  pubkeys_out.resize(tx.vin.size());
 
   uint64_t max_used_block_height = 0;
   if (!pmax_used_block_height)
@@ -3484,7 +3487,7 @@ bool Blockchain::check_tx_inputs(transaction& tx,
 
     // make sure that output being spent matches up correctly with the
     // signature spending it.
-    if (!check_tx_input(tx.version, in_to_key, tx_prefix_hash, tx.version == 1 ? tx.signatures[sig_index] : std::vector<crypto::signature>(), tx.rct_signatures, pubkeys[sig_index], pmax_used_block_height, hf_version))
+    if (!check_tx_input(tx.version, in_to_key, tx_prefix_hash, tx.version == 1 ? tx.signatures[sig_index] : std::vector<crypto::signature>(), tx.rct_signatures, pubkeys_out[sig_index], pmax_used_block_height, hf_version))
     {
       MERROR_VER("Failed to check ring signature for tx " << get_transaction_hash(tx) << "  vin key with k_image: " << in_to_key.k_image << "  sig_index: " << sig_index);
       if (pmax_used_block_height) // a default value of NULL is used when called from Blockchain::handle_block_to_main_chain()
@@ -3505,28 +3508,48 @@ bool Blockchain::check_tx_inputs(transaction& tx,
         false, "Transaction spends at least one output which is too young");
   }
 
-  const crypto::hash txid = get_transaction_hash(tx);
-
-  // Try skipping verification if input verification ID matches a previously valid ID
-  crypto::hash calculated_input_verification_id = crypto::null_hash;
-  if (valid_input_verification_id_inout != crypto::null_hash)
+  // Check if verification ID allows skipping ring verification
+  if (valid_input_verification_id_in != crypto::null_hash)
   {
-    calculated_input_verification_id = make_input_verification_id(get_transaction_hash(tx), pubkeys);
-    if (calculated_input_verification_id == valid_input_verification_id_inout)
+    const crypto::hash calculated = make_input_verification_id(get_transaction_hash(tx), pubkeys_out);
+    if (calculated == valid_input_verification_id_in)
     {
-      MDEBUG("Valid verID hit for tx " << txid << ", skipping input verification...");
+      MDEBUG("Valid verID hit for tx " << get_transaction_hash(tx) << ", skipping input verification...");
+      ring_verify_skipped_out = true;
       return true;
     }
     else
     {
-      MDEBUG("Previously valid verID for tx " << txid << " does not match current. Perhaps there was a reorg? "
+      MDEBUG("Previously valid verID for tx " << get_transaction_hash(tx) << " does not match current. Perhaps there was a reorg? "
         "Continuing to input verification even though this is not likely to succeed...");
     }
   }
   else
   {
-    MDEBUG("No previously valid verID provided for tx " << txid << ", continuing to input verification as normal...");
+    MDEBUG("No previously valid verID provided for tx " << get_transaction_hash(tx) << ", continuing to input verification as normal...");
   }
+
+  return true;
+}
+//------------------------------------------------------------------
+bool Blockchain::check_tx_inputs(transaction& tx,
+  tx_verification_context &tvc,
+  crypto::hash &valid_input_verification_id_inout,
+  uint64_t* pmax_used_block_height) const
+{
+  PERF_TIMER(check_tx_inputs);
+
+  std::vector<std::vector<rct::ctkey>> pubkeys;
+  bool ring_verify_skipped = false;
+
+  if (!check_tx_inputs_prepare(tx, tvc, valid_input_verification_id_inout,
+      pubkeys, ring_verify_skipped, pmax_used_block_height))
+    return false;
+
+  if (ring_verify_skipped)
+    return true;
+
+  const crypto::hash txid = get_transaction_hash(tx);
 
   // Verify ring signature input proofs
   valid_input_verification_id_inout = crypto::null_hash;
@@ -3536,10 +3559,7 @@ bool Blockchain::check_tx_inputs(transaction& tx,
     return false;
   }
 
-  // At this point, we've succeeded at input verification, so set `valid_input_verification_id_inout`
-  valid_input_verification_id_inout = (calculated_input_verification_id == crypto::null_hash)
-    ? make_input_verification_id(get_transaction_hash(tx), pubkeys)
-    : calculated_input_verification_id;
+  valid_input_verification_id_inout = make_input_verification_id(txid, pubkeys);
 
   MDEBUG("Input verification for tx " << txid << " succeeded. Setting verID to " << valid_input_verification_id_inout);
 
@@ -4108,12 +4128,23 @@ leave:
 
 // XXX old code adds miner tx here
 
-  // Iterate over the block's transaction hashes, grabbing each
-  // from the tx_pool (or from extra_block_txs) and validating them.  Each is then added
-  // to txs.  Keys spent in each are added to <keys> by the double spend check.
+  // Phase 1 (serial): Gather txs from pool/supplement, run fast checks and
+  // collect output keys.  DB reads must happen here on the main thread so the
+  // batch write transaction's uncommitted state is visible.
   txs.reserve(bl.tx_hashes.size());
   txs_meta.reserve(bl.tx_hashes.size());
   txpool_events.reserve(bl.tx_hashes.size());
+
+  // Per-tx intermediate state carried from Phase 1 into Phase 2
+  struct tx_verify_data {
+    std::vector<std::vector<rct::ctkey>> pubkeys;
+    bool ring_verify_skipped;
+  };
+  std::vector<tx_verify_data> vdata;
+  vdata.reserve(bl.tx_hashes.size());
+
+  bool need_ring_verify = false;
+
   for (const crypto::hash& tx_id : bl.tx_hashes)
   {
     TIME_MEASURE_START(aa);
@@ -4132,12 +4163,6 @@ leave:
     TIME_MEASURE_START(bb);
 
     // get transaction with hash <tx_id> from m_tx_pool or extra_block_txs
-    // tx info we want:
-    //   * tx as `cryptonote::transaction`
-    //   * blob
-    //   * weight
-    //   * fee
-    //   * is pruned?
     txs.emplace_back();
     transaction &tx = txs.back().first;
     blobdata &txblob = txs.back().second;
@@ -4146,12 +4171,6 @@ leave:
     crypto::hash valid_input_verification_id{};
     bool pruned{};
 
-    /* 
-     * Try pulling transaction data from the mempool proper first. If that fails, then try pulling
-     * from the block supplement. We add txs pulled from the block to the txpool events for future
-     * notifications, since if the tx skipped the mempool, then listeners have not yet received a
-     * notification for this tx.
-     */
     bool _unused1, _unused2, _unused3;
     const bool found_tx_in_pool{
         m_tx_pool.take_tx(tx_id, tx, txblob, tx_weight, fee, valid_input_verification_id,
@@ -4174,19 +4193,14 @@ leave:
       }
     }
 
-    // @TODO: We should move this section (checking if the daemon has all txs from the block) to
-    // right after the PoW check. Since it's now expected the node will sometimes not have all txs
-    // in its pool at this point nor the txs included as fluffy txs (and will need to re-request
-    // missing fluffy txs), then the node will sometimes waste cycles doing verification for some
-    // txs twice.
-    if (find_tx_failure) // did not find txid in mempool or provided extra block txs
+    if (find_tx_failure)
     {
       const bool fully_supplemented_block = extra_block_txs.txs_by_txid.size() >= bl.tx_hashes.size();
       if (fully_supplemented_block)
         MERROR_VER("Block with id: " << id  << " has at least one unknown transaction with id: " << tx_id);
       else
         LOG_PRINT_L2("Block with id: " << id  << " has at least one unknown transaction with id: " << tx_id);
-      txs.pop_back(); // We push to the back preemptively. On fail, we need txs & txs_meta to match size
+      txs.pop_back();
       bvc.m_verifivation_failed = true;
       bvc.m_missing_txs = true;
       return_txs_to_pool();
@@ -4197,25 +4211,8 @@ leave:
 
     TIME_MEASURE_FINISH(bb);
     t_pool += bb;
-    // add the transaction to the temp list of transactions, so we can either
-    // store the list of transactions all at once or return the ones we've
-    // taken from the tx_pool back to it if the block fails verification.
     txs_meta.emplace_back(tx_id, tx_weight, found_tx_in_pool, valid_input_verification_id);
     TIME_MEASURE_START(dd);
-
-    // FIXME: the storage should not be responsible for validation.
-    //        If it does any, it is merely a sanity check.
-    //        Validation is the purview of the Blockchain class
-    //        - TW
-    //
-    // ND: this is not needed, db->add_block() checks for duplicate k_images and fails accordingly.
-    // if (!check_for_double_spend(tx, keys))
-    // {
-    //     LOG_PRINT_L0("Double spend detected in transaction (id: " << tx_id);
-    //     bvc.m_verifivation_failed = true;
-    //     break;
-    // }
-
     TIME_MEASURE_FINISH(dd);
     t_dblspnd += dd;
     TIME_MEASURE_START(cc);
@@ -4224,25 +4221,102 @@ leave:
     if (!fast_check)
 #endif
     {
-      // validate that transaction inputs and the keys spending them are correct.
+      // Serial: run all input checks except the heavy ring signature crypto.
+      // This gathers output keys from DB/scan_table (requires main-thread DB visibility)
+      // and performs mixin, version, key-image, min-age checks.
       tx_verification_context tvc;
-      if(!check_tx_inputs(tx, tvc, valid_input_verification_id))
+      vdata.emplace_back();
+      tx_verify_data &vd = vdata.back();
+      if(!check_tx_inputs_prepare(tx, tvc, valid_input_verification_id,
+          vd.pubkeys, vd.ring_verify_skipped))
       {
         MERROR_VER("Block with id: " << id  << " has at least one transaction (id: " << tx_id << ") with wrong inputs.");
-
-        //TODO: why is this done?  make sure that keeping invalid blocks makes sense.
         add_block_as_invalid(bl, id);
         MERROR_VER("Block with id " << id << " added as invalid because of wrong inputs in transactions");
         bvc.m_verifivation_failed = true;
         return_txs_to_pool();
         return false;
       }
+      if (!vd.ring_verify_skipped)
+        need_ring_verify = true;
     }
 
     TIME_MEASURE_FINISH(cc);
     t_checktx += cc;
     fee_summary += fee;
     cumulative_block_weight += tx_weight;
+  }
+
+  // Phase 2 (parallel): Heavy ring signature verification across all txs in
+  // the block.  ver_input_proofs_rings is CPU-bound, reads no DB state, and
+  // mutates only its own transaction object, so it is safe to run concurrently.
+#if defined(PER_BLOCK_CHECKPOINT)
+  if (!fast_check)
+#endif
+  if (need_ring_verify && !vdata.empty())
+  {
+    TIME_MEASURE_START(ring_verify_time);
+
+    tools::threadpool& tpool = tools::threadpool::getInstanceForCompute();
+    const size_t n_txs = vdata.size();
+
+    if (n_txs == 1)
+    {
+      // Single tx: verify inline, no threadpool overhead
+      if (!vdata[0].ring_verify_skipped)
+      {
+        if (!ver_input_proofs_rings(txs[0].first, vdata[0].pubkeys))
+        {
+          const crypto::hash &tx_id = std::get<0>(txs_meta[0]);
+          MERROR_VER("Block with id: " << id << " has at least one transaction (id: " << tx_id << ") with wrong inputs.");
+          add_block_as_invalid(bl, id);
+          MERROR_VER("Block with id " << id << " added as invalid because of wrong inputs in transactions");
+          bvc.m_verifivation_failed = true;
+          return_txs_to_pool();
+          return false;
+        }
+      }
+    }
+    else
+    {
+      // Multiple txs: verify in parallel
+      std::deque<bool> results(n_txs, true);
+      {
+        tools::threadpool::waiter waiter(tpool);
+        for (size_t i = 0; i < n_txs; ++i)
+        {
+          if (vdata[i].ring_verify_skipped)
+            continue;
+          tpool.submit(&waiter, [&, i] {
+            if (!ver_input_proofs_rings(txs[i].first, vdata[i].pubkeys))
+              results[i] = false;
+          });
+        }
+        if (!waiter.wait())
+        {
+          bvc.m_verifivation_failed = true;
+          return_txs_to_pool();
+          return false;
+        }
+      }
+
+      for (size_t i = 0; i < n_txs; ++i)
+      {
+        if (!results[i])
+        {
+          const crypto::hash &tx_id = std::get<0>(txs_meta[i]);
+          MERROR_VER("Block with id: " << id << " has at least one transaction (id: " << tx_id << ") with wrong inputs.");
+          add_block_as_invalid(bl, id);
+          MERROR_VER("Block with id " << id << " added as invalid because of wrong inputs in transactions");
+          bvc.m_verifivation_failed = true;
+          return_txs_to_pool();
+          return false;
+        }
+      }
+    }
+
+    TIME_MEASURE_FINISH(ring_verify_time);
+    t_checktx += ring_verify_time;
   }
 
   // if we were syncing pruned blocks
