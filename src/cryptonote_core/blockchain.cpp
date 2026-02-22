@@ -3315,7 +3315,8 @@ bool Blockchain::check_tx_inputs_prepare(transaction& tx,
   const crypto::hash &valid_input_verification_id_in,
   std::vector<std::vector<rct::ctkey>> &pubkeys_out,
   bool &ring_verify_skipped_out,
-  uint64_t* pmax_used_block_height) const
+  uint64_t* pmax_used_block_height,
+  const uint64_t* pchain_height_for_min_age) const
 {
   PERF_TIMER(check_tx_inputs_prepare);
   LOG_PRINT_L3("Blockchain::" << __func__);
@@ -3504,7 +3505,8 @@ bool Blockchain::check_tx_inputs_prepare(transaction& tx,
   // enforce min output age
   if (hf_version >= HF_VERSION_ENFORCE_MIN_AGE)
   {
-    CHECK_AND_ASSERT_MES(*pmax_used_block_height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE <= m_db->height(),
+    const uint64_t chain_height_for_min_age = pchain_height_for_min_age ? *pchain_height_for_min_age : m_db->height();
+    CHECK_AND_ASSERT_MES(*pmax_used_block_height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE <= chain_height_for_min_age,
         false, "Transaction spends at least one output which is too young");
   }
 
@@ -3564,6 +3566,20 @@ bool Blockchain::check_tx_inputs(transaction& tx,
   MDEBUG("Input verification for tx " << txid << " succeeded. Setting verID to " << valid_input_verification_id_inout);
 
   return true;
+}
+
+//------------------------------------------------------------------
+bool Blockchain::prepare_tx_inputs_for_verification(transaction& tx,
+  tx_verification_context &tvc,
+  const crypto::hash &valid_input_verification_id_in,
+  std::vector<std::vector<rct::ctkey>> &pubkeys_out,
+  bool &ring_verify_skipped_out,
+  uint64_t* pmax_used_block_height,
+  const uint64_t* pchain_height_for_min_age) const
+{
+  CRITICAL_REGION_LOCAL(m_blockchain_lock);
+  return check_tx_inputs_prepare(tx, tvc, valid_input_verification_id_in,
+      pubkeys_out, ring_verify_skipped_out, pmax_used_block_height, pchain_height_for_min_age);
 }
 
 //------------------------------------------------------------------

@@ -29,6 +29,7 @@
 #include <atomic>
 #include <cstdio>
 #include <algorithm>
+#include <deque>
 #include <fstream>
 
 #include <boost/filesystem.hpp>
@@ -42,6 +43,8 @@
 #include "serialization/binary_utils.h" // dump_binary(), parse_binary()
 #include "include_base_utils.h"
 #include "cryptonote_core/cryptonote_core.h"
+#include "cryptonote_core/tx_verification_utils.h"
+#include "common/threadpool.h"
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "bcutil"
@@ -166,53 +169,179 @@ int check_flush(cryptonote::core &core, std::vector<block_complete_entry> &block
     return 1;
   }
 
+  // Topological batch verification:
+  // A tx can only spend outputs that are at least CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE
+  // blocks old. By verifying in windows no larger than this value, no tx in the
+  // window can depend on newly-created outputs from the same window.
+  const size_t verify_window_blocks = CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
+  const uint64_t batch_base_height = core.get_blockchain_storage().get_db().height();
   size_t blockidx = 0;
-  for(const block_complete_entry& block_entry: blocks)
+
+  struct tx_ring_verify_item
   {
-    // process transactions
-    for(auto& tx_blob: block_entry.txs)
+    cryptonote::transaction tx;
+    crypto::hash txid;
+    std::vector<std::vector<rct::ctkey>> pubkeys;
+    size_t local_block_index = 0;
+    size_t tx_index = 0;
+    bool ring_verify_skipped = false;
+  };
+
+  auto preverify_window_ring_signatures = [&](size_t begin, size_t end, std::vector<std::vector<crypto::hash>> &valid_ids_out) -> bool
+  {
+    valid_ids_out.clear();
+    valid_ids_out.resize(end - begin);
+
+    size_t total_txs = 0;
+    for (size_t bi = begin; bi < end; ++bi)
     {
-      tx_verification_context tvc = AUTO_VAL_INIT(tvc);
-      CHECK_AND_ASSERT_THROW_MES(tx_blob.prunable_hash == crypto::null_hash,
-        "block entry must not contain pruned txs");
-      core.handle_incoming_tx(tx_blob.blob, tvc, relay_method::block, true);
-      if(tvc.m_verifivation_failed)
+      valid_ids_out[bi - begin].resize(blocks[bi].txs.size(), crypto::null_hash);
+      total_txs += blocks[bi].txs.size();
+    }
+    if (total_txs == 0)
+      return true;
+
+    std::vector<tx_ring_verify_item> work;
+    work.reserve(total_txs);
+    size_t fallback_to_serial = 0;
+
+    for (size_t bi = begin; bi < end; ++bi)
+    {
+      const block_complete_entry &block_entry = blocks[bi];
+      for (size_t ti = 0; ti < block_entry.txs.size(); ++ti)
       {
-        cryptonote::transaction transaction;
-        if (cryptonote::parse_and_validate_tx_from_blob(tx_blob.blob, transaction))
-          MERROR("Transaction verification failed, tx_id = " << cryptonote::get_transaction_hash(transaction));
+        const auto &tx_blob = block_entry.txs[ti];
+        CHECK_AND_ASSERT_MES(tx_blob.prunable_hash == crypto::null_hash, false,
+          "block entry must not contain pruned txs");
+
+        tx_ring_verify_item item{};
+        if (!cryptonote::parse_and_validate_tx_from_blob(tx_blob.blob, item.tx, item.txid))
+        {
+          MERROR("Transaction parsing failed during window preverify");
+          return false;
+        }
+
+        tx_verification_context tvc = AUTO_VAL_INIT(tvc);
+        const uint64_t tx_chain_height_for_min_age = batch_base_height + bi;
+        if (!core.get_blockchain_storage().prepare_tx_inputs_for_verification(
+              item.tx, tvc, crypto::null_hash, item.pubkeys, item.ring_verify_skipped,
+              /*pmax_used_block_height=*/NULL, &tx_chain_height_for_min_age))
+        {
+          // Optimization fallback:
+          // Some ring members can point to outputs created in earlier blocks of the
+          // same flush batch; those may not be queryable from DB until serial commit
+          // progresses. Leave null verID so normal per-block verification handles it.
+          ++fallback_to_serial;
+          continue;
+        }
+
+        item.local_block_index = bi - begin;
+        item.tx_index = ti;
+        work.push_back(std::move(item));
+      }
+    }
+
+    std::deque<bool> results(work.size(), true);
+    if (work.size() == 1)
+    {
+      if (!work[0].ring_verify_skipped)
+        results[0] = ver_input_proofs_rings(work[0].tx, work[0].pubkeys);
+    }
+    else
+    {
+      tools::threadpool& tpool = tools::threadpool::getInstanceForCompute();
+      tools::threadpool::waiter waiter(tpool);
+      for (size_t i = 0; i < work.size(); ++i)
+      {
+        if (work[i].ring_verify_skipped)
+          continue;
+        tpool.submit(&waiter, [&, i] {
+          results[i] = ver_input_proofs_rings(work[i].tx, work[i].pubkeys);
+        });
+      }
+      if (!waiter.wait())
+        return false;
+    }
+
+    for (size_t i = 0; i < work.size(); ++i)
+    {
+      if (!work[i].ring_verify_skipped && !results[i])
+      {
+        MERROR("Ring signature verification failed during window preverify, tx_id = " << work[i].txid);
+        return false;
+      }
+
+      valid_ids_out[work[i].local_block_index][work[i].tx_index] =
+        make_input_verification_id(work[i].txid, work[i].pubkeys);
+    }
+
+    if (fallback_to_serial > 0)
+      MINFO("Window preverify fallback to serial verification for " << fallback_to_serial
+        << " tx(s) in batch block range [" << begin << ", " << end << ")");
+
+    return true;
+  };
+
+  for (size_t window_begin = 0; window_begin < blocks.size(); window_begin += verify_window_blocks)
+  {
+    const size_t window_end = std::min(window_begin + verify_window_blocks, blocks.size());
+    std::vector<std::vector<crypto::hash>> window_valid_ids;
+    if (!preverify_window_ring_signatures(window_begin, window_end, window_valid_ids))
+    {
+      core.cleanup_handle_incoming_blocks();
+      return 1;
+    }
+
+    for (size_t bi = window_begin; bi < window_end; ++bi)
+    {
+      const block_complete_entry& block_entry = blocks[bi];
+      const std::vector<crypto::hash> &block_valid_ids = window_valid_ids[bi - window_begin];
+
+      // process transactions
+      for (size_t ti = 0; ti < block_entry.txs.size(); ++ti)
+      {
+        const auto &tx_blob = block_entry.txs[ti];
+        tx_verification_context tvc = AUTO_VAL_INIT(tvc);
+        CHECK_AND_ASSERT_THROW_MES(tx_blob.prunable_hash == crypto::null_hash,
+          "block entry must not contain pruned txs");
+        core.handle_incoming_tx(tx_blob.blob, tvc, relay_method::block, true, block_valid_ids[ti]);
+        if(tvc.m_verifivation_failed)
+        {
+          cryptonote::transaction transaction;
+          if (cryptonote::parse_and_validate_tx_from_blob(tx_blob.blob, transaction))
+            MERROR("Transaction verification failed, tx_id = " << cryptonote::get_transaction_hash(transaction));
+          else
+            MERROR("Transaction verification failed, transaction is unparsable");
+          core.cleanup_handle_incoming_blocks();
+          return 1;
+        }
+      }
+
+      // process block
+      block_verification_context bvc = {};
+      pool_supplement ps{};
+
+      core.handle_incoming_block(block_entry.block, pblocks.empty() ? NULL : &pblocks[blockidx++], bvc, ps, false);
+
+      if(bvc.m_verifivation_failed)
+      {
+        cryptonote::block block;
+        if (cryptonote::parse_and_validate_block_from_blob(block_entry.block, block))
+          MERROR("Block verification failed, id = " << cryptonote::get_block_hash(block));
         else
-          MERROR("Transaction verification failed, transaction is unparsable");
+          MERROR("Block verification failed, block is unparsable");
+        core.cleanup_handle_incoming_blocks();
+        return 1;
+      }
+      if(bvc.m_marked_as_orphaned)
+      {
+        MERROR("Block received at sync phase was marked as orphaned");
         core.cleanup_handle_incoming_blocks();
         return 1;
       }
     }
+  }
 
-    // process block
-
-    block_verification_context bvc = {};
-    pool_supplement ps{};
-
-    core.handle_incoming_block(block_entry.block, pblocks.empty() ? NULL : &pblocks[blockidx++], bvc, ps, false); // <--- process block
-
-    if(bvc.m_verifivation_failed)
-    {
-      cryptonote::block block;
-      if (cryptonote::parse_and_validate_block_from_blob(block_entry.block, block))
-        MERROR("Block verification failed, id = " << cryptonote::get_block_hash(block));
-      else
-        MERROR("Block verification failed, block is unparsable");
-      core.cleanup_handle_incoming_blocks();
-      return 1;
-    }
-    if(bvc.m_marked_as_orphaned)
-    {
-      MERROR("Block received at sync phase was marked as orphaned");
-      core.cleanup_handle_incoming_blocks();
-      return 1;
-    }
-
-  } // each download block
   if (!core.cleanup_handle_incoming_blocks())
     return 1;
 

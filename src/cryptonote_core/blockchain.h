@@ -1374,7 +1374,8 @@ namespace cryptonote
       const crypto::hash &valid_input_verification_id_in,
       std::vector<std::vector<rct::ctkey>> &pubkeys_out,
       bool &ring_verify_skipped_out,
-      uint64_t* pmax_used_block_height = NULL) const;
+      uint64_t* pmax_used_block_height = NULL,
+      const uint64_t* pchain_height_for_min_age = NULL) const;
 
     /**
      * @brief performs a blockchain reorganization according to the longest chain rule
@@ -1523,6 +1524,21 @@ namespace cryptonote
      */
   public:
     void get_last_n_blocks_weights(std::vector<uint64_t>& weights, size_t count) const;
+
+    /**
+     * @brief prepare transaction input data without running ring signature crypto
+     *
+     * This is a public, lock-taking wrapper around the internal prepare step used
+     * by block processing. It runs all non-ring checks and gathers dereferenced
+     * ring members in pubkeys_out.
+     */
+    bool prepare_tx_inputs_for_verification(transaction& tx,
+      tx_verification_context &tvc,
+      const crypto::hash &valid_input_verification_id_in,
+      std::vector<std::vector<rct::ctkey>> &pubkeys_out,
+      bool &ring_verify_skipped_out,
+      uint64_t* pmax_used_block_height = NULL,
+      const uint64_t* pchain_height_for_min_age = NULL) const;
 #ifndef IN_UNIT_TESTS
   private:
 #endif

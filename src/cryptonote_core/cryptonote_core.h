@@ -126,7 +126,8 @@ namespace cryptonote
       *
       * @return true if the transaction was accepted, false otherwise
       */
-     bool handle_incoming_tx(const blobdata& tx_blob, tx_verification_context& tvc, relay_method tx_relay, bool relayed);
+     bool handle_incoming_tx(const blobdata& tx_blob, tx_verification_context& tvc, relay_method tx_relay, bool relayed,
+       const crypto::hash &valid_input_verification_id = crypto::null_hash);
 
     /**
       * @brief handles a single incoming block
@@ -965,7 +966,8 @@ namespace cryptonote
       * @param relayed whether or not the transaction was relayed to us
       *
       */
-     bool add_new_tx(transaction& tx, const crypto::hash& tx_hash, const cryptonote::blobdata &blob, size_t tx_weight, tx_verification_context& tvc, relay_method tx_relay, bool relayed);
+     bool add_new_tx(transaction& tx, const crypto::hash& tx_hash, const cryptonote::blobdata &blob, size_t tx_weight, tx_verification_context& tvc, relay_method tx_relay, bool relayed,
+       const crypto::hash &valid_input_verification_id = crypto::null_hash);
 
      /**
       * @brief add a new transaction to the transaction pool
@@ -981,7 +983,8 @@ namespace cryptonote
       * is already in a block on the Blockchain, or is successfully added
       * to the transaction pool
       */
-     bool add_new_tx(transaction& tx, tx_verification_context& tvc, relay_method tx_relay, bool relayed);
+     bool add_new_tx(transaction& tx, tx_verification_context& tvc, relay_method tx_relay, bool relayed,
+       const crypto::hash &valid_input_verification_id = crypto::null_hash);
 
      /**
       * @copydoc Blockchain::add_new_block
