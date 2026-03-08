@@ -87,9 +87,9 @@ namespace net_utils
     static std::map<std::string, unsigned int> hosts;
     unsigned int &val = hosts[m_host];
     if (delta > 0)
-      MTRACE("New connection from host " << m_host << ": " << val);
+      MTRACE("New connection from host {}: {}", m_host, val);
     else if (delta < 0)
-      MTRACE("Closed connection from host " << m_host << ": " << val);
+      MTRACE("Closed connection from host {}: {}", m_host, val);
     CHECK_AND_ASSERT_THROW_MES(delta >= 0 || val >= (unsigned)-delta, "Count would go negative");
     CHECK_AND_ASSERT_THROW_MES(delta <= 0 || val <= std::numeric_limits<unsigned int>::max() - (unsigned)delta, "Count would wrap");
     val += delta;
@@ -1096,13 +1096,7 @@ namespace net_utils
       address = endpoint.address().to_string();
       port = std::to_string(endpoint.port());
     }
-    MDEBUG(
-      " connection type " << std::to_string(m_connection_type) <<
-      " " << connection_basic::socket().local_endpoint().address().to_string() <<
-      ":" << connection_basic::socket().local_endpoint().port() <<
-      " <--> " << m_conn_context.m_remote_address.str() <<
-      " (via " << address << ":" << port << ")"
-    );
+    MDEBUG(" connection type {} {}:{} <--> {} (via {}:{})", std::to_string(m_connection_type), connection_basic::socket().local_endpoint().address().to_string(), connection_basic::socket().local_endpoint().port(), m_conn_context.m_remote_address.str(), address, port);
   }
 
   template<typename T>
@@ -1311,7 +1305,7 @@ namespace net_utils
 
     if (ipv4_failed != "")
     {
-      MERROR("Failed to bind IPv4: " << ipv4_failed);
+      MERROR("Failed to bind IPv4: {}", ipv4_failed);
       if (require_ipv4)
       {
         throw std::runtime_error("Failed to bind IPv4 (set to required)");
@@ -1351,7 +1345,7 @@ namespace net_utils
 
       if (use_ipv6 && ipv6_failed != "")
       {
-        MERROR("Failed to bind IPv6: " << ipv6_failed);
+        MERROR("Failed to bind IPv6: {}", ipv6_failed);
         if (ipv4_failed != "")
         {
           throw std::runtime_error("Failed to bind IPv4 and IPv6");
@@ -1362,7 +1356,7 @@ namespace net_utils
     }
     catch (const std::exception &e)
     {
-      MFATAL("Error starting server: " << e.what());
+      MFATAL("Error starting server: {}", e.what());
       return false;
     }
     catch (...)
@@ -1381,12 +1375,12 @@ namespace net_utils
     uint32_t p_ipv6 = 0;
 
     if (port.size() && !string_tools::get_xtype_from_string(p, port)) {
-      MERROR("Failed to convert port no = " << port);
+      MERROR("Failed to convert port no = {}", port);
       return false;
     }
 
     if (port_ipv6.size() && !string_tools::get_xtype_from_string(p_ipv6, port_ipv6)) {
-      MERROR("Failed to convert port no = " << port_ipv6);
+      MERROR("Failed to convert port no = {}", port_ipv6);
       return false;
     }
     return this->init_server(p, address, p_ipv6, address_ipv6, use_ipv6, require_ipv4, std::move(ssl_options));
@@ -1410,7 +1404,7 @@ namespace net_utils
       }
       catch(const std::exception& ex)
       {
-        _erro("Exception at server worker thread, what=" << ex.what());
+        _erro("Exception at server worker thread, what={}", ex.what());
       }
       catch(...)
       {
@@ -1429,7 +1423,7 @@ namespace net_utils
 		auto it = server_type_map.find(m_thread_name_prefix);
 		if (it==server_type_map.end()) throw std::runtime_error("Unknown prefix/server type:" + std::string(prefix_name));
     auto connection_type = it->second; // the value of type
-    MINFO("Set server type to: " << connection_type << " from name: " << m_thread_name_prefix << ", prefix_name = " << prefix_name);
+    MINFO("Set server type to: {} from name: {}, prefix_name = {}", connection_type, m_thread_name_prefix, prefix_name);
   }
   //---------------------------------------------------------------------------------
   template<class t_protocol_handler>
@@ -1469,7 +1463,7 @@ namespace net_utils
       {
         boost::shared_ptr<boost::thread> thread(new boost::thread(
           attrs, boost::bind(&boosted_tcp_server<t_protocol_handler>::worker_thread, this)));
-          _note("Run server thread name: " << m_thread_name_prefix);
+          _note("Run server thread name: {}", m_thread_name_prefix);
         m_threads.push_back(thread);
       }
       CRITICAL_REGION_END();
@@ -1599,7 +1593,7 @@ namespace net_utils
           case epee::net_utils::ssl_support_t::e_ssl_support_enabled: ssl_message = "enabled"; break;
           case epee::net_utils::ssl_support_t::e_ssl_support_autodetect: ssl_message = "autodetection"; break;
         }
-        MDEBUG("New server for RPC connections, SSL " << ssl_message);
+        MDEBUG("New server for RPC connections, SSL {}", ssl_message);
         (*current_new_connection)->setRpcStation(); // hopefully this is not needed actually
       }
       connection_ptr conn(std::move((*current_new_connection)));
@@ -1627,19 +1621,19 @@ namespace net_utils
     }
     else
     {
-      MERROR("Error in boosted_tcp_server<t_protocol_handler>::handle_accept: " << e);
+      MERROR("Error in boosted_tcp_server<t_protocol_handler>::handle_accept: {}", e);
     }
     }
     catch (const std::exception &e)
     {
-      MERROR("Exception in boosted_tcp_server<t_protocol_handler>::handle_accept: " << e.what());
+      MERROR("Exception in boosted_tcp_server<t_protocol_handler>::handle_accept: {}", e.what());
       if (accept_started)
         return;
     }
 
     // error path, if e or exception
     assert(m_state != nullptr); // always set in constructor
-    _erro("Some problems at accept: " << e.message() << ", connections_count = " << m_state->sock_count);
+    _erro("Some problems at accept: {}, connections_count = {}", e.message(), m_state->sock_count);
     misc_utils::sleep_no_w(100);
     (*current_new_connection).reset(new connection<t_protocol_handler>(io_context_, m_state, m_connection_type, (*current_new_connection)->get_ssl_support()));
     current_acceptor->async_accept((*current_new_connection)->socket(),
@@ -1662,7 +1656,7 @@ namespace net_utils
     }
     else
     {
-	MWARNING(out << " was not added, socket/io_context mismatch");
+	MWARNING("{} was not added, socket/io_context mismatch", out);
     }
     return false;
   }
@@ -1680,7 +1674,7 @@ namespace net_utils
       sock_.bind(local_endpoint, ec);
       if (ec)
       {
-        MERROR("Error binding to " << bind_ip << ": " << ec.message());
+        MERROR("Error binding to {}: {}", bind_ip, ec.message());
         if (sock_.is_open())
           sock_.close();
         return CONNECT_FAILURE;
@@ -1723,7 +1717,7 @@ namespace net_utils
       {
         //timeout
         sock_.close();
-        _dbg3("Failed to connect to " << adr << ":" << port << ", because of timeout (" << conn_timeout << ")");
+        _dbg3("Failed to connect to {}:{}, because of timeout ({})", adr, port, conn_timeout);
         return CONNECT_FAILURE;
       }
     }
@@ -1731,13 +1725,13 @@ namespace net_utils
 
     if (ec || !sock_.is_open())
     {
-      _dbg3("Some problems at connect, message: " << ec.message());
+      _dbg3("Some problems at connect, message: {}", ec.message());
       if (sock_.is_open())
         sock_.close();
       return CONNECT_FAILURE;
     }
 
-    _dbg3("Connected success to " << adr << ':' << port);
+    _dbg3("Connected success to {}:{}", adr, port);
 
     const ssl_support_t ssl_support = new_connection_l->get_ssl_support();
     if (ssl_support == epee::net_utils::ssl_support_t::e_ssl_support_enabled || ssl_support == epee::net_utils::ssl_support_t::e_ssl_support_autodetect)
@@ -1773,7 +1767,7 @@ namespace net_utils
     connection_ptr new_connection_l(new connection<t_protocol_handler>(io_context_, m_state, m_connection_type, ssl_support) );
     connections_mutex.lock();
     connections_.insert(new_connection_l);
-    MDEBUG("connections_ size now " << connections_.size());
+    MDEBUG("connections_ size now {}", connections_.size());
     connections_mutex.unlock();
     epee::misc_utils::auto_scope_leave_caller scope_exit_handler = epee::misc_utils::create_scope_leave_handler([&](){ CRITICAL_REGION_LOCAL(connections_mutex); connections_.erase(new_connection_l); });
     boost::asio::ip::tcp::socket&  sock_ = new_connection_l->socket();
@@ -1811,7 +1805,7 @@ namespace net_utils
     {
       if (!m_use_ipv6)
       {
-        _erro("Failed to resolve " << adr);
+        _erro("Failed to resolve {}", adr);
         return false;
       }
       else
@@ -1833,7 +1827,7 @@ namespace net_utils
 
       if(results.empty())
       {
-        _erro("Failed to resolve " << adr);
+        _erro("Failed to resolve {}", adr);
         return false;
       }
       else
@@ -1853,7 +1847,7 @@ namespace net_utils
 
     const auto iterator = results.begin();
 
-    MDEBUG("Trying to connect to " << adr << ":" << port << ", bind_ip = " << bind_ip_to_use);
+    MDEBUG("Trying to connect to {}:{}, bind_ip = {}", adr, port, bind_ip_to_use);
 
     //boost::asio::ip::tcp::endpoint remote_endpoint(boost::asio::ip::address::from_string(addr.c_str()), port);
     boost::asio::ip::tcp::endpoint remote_endpoint(*iterator);
@@ -1883,7 +1877,7 @@ namespace net_utils
     else
     {
       assert(m_state != nullptr); // always set in constructor
-      _erro("[sock " << new_connection_l->socket().native_handle() << "] Failed to start connection, connections_count = " << m_state->sock_count);
+      _erro("[sock {}] Failed to start connection, connections_count = {}", new_connection_l->socket().native_handle(), m_state->sock_count);
     }
     
 	new_connection_l->save_dbg_log();
@@ -1900,7 +1894,7 @@ namespace net_utils
     connection_ptr new_connection_l(new connection<t_protocol_handler>(io_context_, m_state, m_connection_type, ssl_support, std::move(initial)) );
     connections_mutex.lock();
     connections_.insert(new_connection_l);
-    MDEBUG("connections_ size now " << connections_.size());
+    MDEBUG("connections_ size now {}", connections_.size());
     connections_mutex.unlock();
     epee::misc_utils::auto_scope_leave_caller scope_exit_handler = epee::misc_utils::create_scope_leave_handler([&](){ CRITICAL_REGION_LOCAL(connections_mutex); connections_.erase(new_connection_l); });
     boost::asio::ip::tcp::socket&  sock_ = new_connection_l->socket();
@@ -1936,7 +1930,7 @@ namespace net_utils
     {
       if (!try_ipv6)
       {
-        _erro("Failed to resolve " << adr);
+        _erro("Failed to resolve {}", adr);
         return false;
       }
       else
@@ -1953,7 +1947,7 @@ namespace net_utils
 
       if(results.empty())
       {
-        _erro("Failed to resolve " << adr);
+        _erro("Failed to resolve {}", adr);
         return false;
       }
     }
@@ -1968,7 +1962,7 @@ namespace net_utils
       sock_.bind(local_endpoint, ec);
       if (ec)
       {
-        MERROR("Error binding to " << bind_ip << ": " << ec.message());
+        MERROR("Error binding to {}: {}", bind_ip, ec.message());
         if (sock_.is_open())
           sock_.close();
         return false;
@@ -1982,7 +1976,7 @@ namespace net_utils
       {
           if(error != boost::asio::error::operation_aborted) 
           {
-            _dbg3("Failed to connect to " << adr << ':' << port << ", because of timeout (" << conn_timeout.count() << ")");
+            _dbg3("Failed to connect to {}:{}, because of timeout ({})", adr, port, conn_timeout.count());
             new_connection_l->socket().close();
           }
       });
@@ -1999,8 +1993,7 @@ namespace net_utils
             cb(conn_context, boost::asio::error::operation_aborted);//this mean that deadline timer already queued callback with cancel operation, rare situation
           }else
           {
-            _dbg3("[sock " << new_connection_l->socket().native_handle() << "] Connected success to " << adr << ':' << port <<
-              " from " << lep.address().to_string() << ':' << lep.port());
+            _dbg3("[sock {}] Connected success to {}:{} from {}:{}", new_connection_l->socket().native_handle(), adr, port, lep.address().to_string(), lep.port());
 
             // start adds the connection to the config object's list, so we don't need to have it locally anymore
             connections_mutex.lock();
@@ -2014,14 +2007,13 @@ namespace net_utils
             }
             else
             {
-              _dbg3("[sock " << new_connection_l->socket().native_handle() << "] Failed to start connection to " << adr << ':' << port);
+              _dbg3("[sock {}] Failed to start connection to {}:{}", new_connection_l->socket().native_handle(), adr, port);
               cb(conn_context, boost::asio::error::fault);
             }
           }
         }else
         {
-          _dbg3("[sock " << new_connection_l->socket().native_handle() << "] Failed to connect to " << adr << ':' << port <<
-            " from " << lep.address().to_string() << ':' << lep.port() << ": " << ec_.message() << ':' << ec_.value());
+          _dbg3("[sock {}] Failed to connect to {}:{} from {}:{}: {}:{}", new_connection_l->socket().native_handle(), adr, port, lep.address().to_string(), lep.port(), ec_.message(), ec_.value());
           cb(conn_context, ec_);
         }
       });

@@ -42,7 +42,7 @@ namespace tools
     std::vector<std::string> records;
     bool found = false;
 
-    MDEBUG("Checking updates for " << buildtag << " " << software);
+    MDEBUG("Checking updates for {} {}", buildtag, software);
 
     // All four MoneroPulse domains have DNSSEC on and valid
     static const std::vector<std::string> dns_urls = {
@@ -64,7 +64,7 @@ namespace tools
       boost::split(fields, record, boost::is_any_of(":"));
       if (fields.size() != 4)
       {
-        MWARNING("Updates record does not have 4 fields: " << record);
+        MWARNING("Updates record does not have 4 fields: {}", record);
         continue;
       }
 
@@ -77,7 +77,7 @@ namespace tools
           alnum = false;
       if (fields[3].size() != 64 && !alnum)
       {
-        MWARNING("Invalid hash: " << fields[3]);
+        MWARNING("Invalid hash: {}", fields[3]);
         continue;
       }
 
@@ -88,13 +88,13 @@ namespace tools
         if (cmp > 0)
           continue;
         if (cmp == 0 && hash != fields[3])
-          MWARNING("Two matches found for " << software << " version " << version << " on " << buildtag);
+          MWARNING("Two matches found for {} version {} on {}", software, version, buildtag);
       }
 
       version = fields[2];
       hash = fields[3];
 
-      MINFO("Found new version " << version << " with hash " << hash);
+      MINFO("Found new version {} with hash {}", version, hash);
       found = true;
     }
     return found;

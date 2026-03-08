@@ -342,7 +342,7 @@ namespace net_utils
 					break;
 			}
 
-			MERROR("Unsupported network address type: " << (unsigned)type);
+			MERROR("Unsupported network address type: {}", (unsigned)type);
 			return false;
 		END_KV_SERIALIZE_MAP()
 	};
@@ -466,18 +466,24 @@ inline MAKE_LOGGABLE(connection_context_base, ct, os)
   return os;
 }
 
-#define LOG_ERROR_CC(ct, message) MERROR(ct << message)
-#define LOG_WARNING_CC(ct, message) MWARNING(ct << message)
-#define LOG_INFO_CC(ct, message) MINFO(ct << message)
-#define LOG_DEBUG_CC(ct, message) MDEBUG(ct << message)
-#define LOG_TRACE_CC(ct, message) MTRACE(ct << message)
-#define LOG_CC(level, ct, message) MLOG(level, ct << message)
+#define MCLOG_CONTEXT(level, cat, color, type, ct, fmt, ...) do { \
+  if (el::Loggers::allowed(level, cat)) { \
+    epee::logging::dispatch_prefixed(level, cat, color, __FILE__, __LINE__, ELPP_FUNC, type, ct, fmt, ##__VA_ARGS__); \
+  } \
+} while (0)
 
-#define LOG_PRINT_CC_L0(ct, message) LOG_PRINT_L0(ct << message)
-#define LOG_PRINT_CC_L1(ct, message) LOG_PRINT_L1(ct << message)
-#define LOG_PRINT_CC_L2(ct, message) LOG_PRINT_L2(ct << message)
-#define LOG_PRINT_CC_L3(ct, message) LOG_PRINT_L3(ct << message)
-#define LOG_PRINT_CC_L4(ct, message) LOG_PRINT_L4(ct << message)
+#define LOG_ERROR_CC(ct, ...) MCLOG_CONTEXT(el::Level::Error, MONERO_DEFAULT_LOG_CATEGORY, el::Color::Default, el::base::DispatchAction::NormalLog, ct, __VA_ARGS__)
+#define LOG_WARNING_CC(ct, ...) MCLOG_CONTEXT(el::Level::Warning, MONERO_DEFAULT_LOG_CATEGORY, el::Color::Default, el::base::DispatchAction::NormalLog, ct, __VA_ARGS__)
+#define LOG_INFO_CC(ct, ...) MCLOG_CONTEXT(el::Level::Info, MONERO_DEFAULT_LOG_CATEGORY, el::Color::Default, el::base::DispatchAction::NormalLog, ct, __VA_ARGS__)
+#define LOG_DEBUG_CC(ct, ...) MCLOG_CONTEXT(el::Level::Debug, MONERO_DEFAULT_LOG_CATEGORY, el::Color::Default, el::base::DispatchAction::NormalLog, ct, __VA_ARGS__)
+#define LOG_TRACE_CC(ct, ...) MCLOG_CONTEXT(el::Level::Trace, MONERO_DEFAULT_LOG_CATEGORY, el::Color::Default, el::base::DispatchAction::NormalLog, ct, __VA_ARGS__)
+#define LOG_CC(level, ct, ...) MCLOG_CONTEXT(level, MONERO_DEFAULT_LOG_CATEGORY, el::Color::Default, el::base::DispatchAction::NormalLog, ct, __VA_ARGS__)
+
+#define LOG_PRINT_CC_L0(ct, ...) LOG_WARNING_CC(ct, __VA_ARGS__)
+#define LOG_PRINT_CC_L1(ct, ...) LOG_INFO_CC(ct, __VA_ARGS__)
+#define LOG_PRINT_CC_L2(ct, ...) LOG_DEBUG_CC(ct, __VA_ARGS__)
+#define LOG_PRINT_CC_L3(ct, ...) LOG_TRACE_CC(ct, __VA_ARGS__)
+#define LOG_PRINT_CC_L4(ct, ...) LOG_TRACE_CC(ct, __VA_ARGS__)
 
 #define LOG_PRINT_CCONTEXT_L0(message) LOG_PRINT_CC_L0(context, message)
 #define LOG_PRINT_CCONTEXT_L1(message) LOG_PRINT_CC_L1(context, message)
@@ -485,7 +491,7 @@ inline MAKE_LOGGABLE(connection_context_base, ct, os)
 #define LOG_PRINT_CCONTEXT_L3(message) LOG_PRINT_CC_L3(context, message)
 #define LOG_ERROR_CCONTEXT(message)    LOG_ERROR_CC(context, message)
  
-#define CHECK_AND_ASSERT_MES_CC(condition, return_val, err_message) CHECK_AND_ASSERT_MES(condition, return_val, "[" << epee::net_utils::print_connection_context_short(context) << "]" << err_message)
+#define CHECK_AND_ASSERT_MES_CC(condition, return_val, fmt, ...) CHECK_AND_ASSERT_MES(condition, return_val, "[{}]" fmt, epee::net_utils::print_connection_context_short(context), ##__VA_ARGS__)
 
 }
 }

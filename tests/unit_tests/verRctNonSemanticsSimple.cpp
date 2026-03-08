@@ -99,12 +99,12 @@ static bool check_tx_is_expanded(const cryptonote::transaction& tx, const rct::c
         {
             if (pubkeys[n][m].dest != rct::rct2pk(rv.mixRing[n][m].dest))
             {
-                MERROR("Failed to check ringct signatures: mismatched pubkey at vin " << n << ", index " << m);
+                MERROR("Failed to check ringct signatures: mismatched pubkey at vin {}, index {}", n, m);
                 return false;
             }
             if (pubkeys[n][m].mask != rct::rct2pk(rv.mixRing[n][m].mask))
             {
-                MERROR("Failed to check ringct signatures: mismatched commitment at vin " << n << ", index " << m);
+                MERROR("Failed to check ringct signatures: mismatched commitment at vin {}, index {}", n, m);
                 return false;
             }
         }
@@ -207,7 +207,7 @@ static bool modification_changes_do_serialize
     {
         const std::string og_hex = epee::to_hex::string(epee::strspan<uint8_t>(og_blob));
         const std::string modded_hex = epee::to_hex::string(epee::strspan<uint8_t>(modded_blob));
-        MERROR("unexpected: modded_blob '" << modded_hex << "' vs og_blob ' << " << og_hex << "'");
+        MERROR("unexpected: modded_blob '{}' vs og_blob '{}'", modded_hex, og_hex);
     }
     return did_change;
 }

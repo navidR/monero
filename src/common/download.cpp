@@ -78,18 +78,18 @@ namespace tools
         existing_size = 0;
       if (existing_size > 0)
       {
-        MINFO("Resuming downloading " << control->uri << " to " << control->path << " from " << existing_size);
+        MINFO("Resuming downloading {} to {} from {}", control->uri, control->path, existing_size);
         mode |= std::ios_base::app;
       }
       else
       {
-        MINFO("Downloading " << control->uri << " to " << control->path);
+        MINFO("Downloading {} to {}", control->uri, control->path);
         mode |= std::ios_base::trunc;
       }
       std::ofstream f;
       f.open(control->path, mode);
       if (!f.good()) {
-        MERROR("Failed to open file " << control->path);
+        MERROR("Failed to open file {}", control->path);
         control->result_cb(control->path, control->uri, control->success);
         return;
       }
@@ -102,11 +102,11 @@ namespace tools
         virtual bool on_header(const epee::net_utils::http::http_response_info &headers)
         {
           for (const auto &kv: headers.m_header_info.m_etc_fields)
-            MDEBUG("Header: " << kv.first << ": " << kv.second);
+            MDEBUG("Header: {}: {}", kv.first, kv.second);
           ssize_t length;
           if (epee::string_tools::get_xtype_from_string(length, headers.m_header_info.m_content_length) && length >= 0)
           {
-            MINFO("Content-Length: " << length);
+            MINFO("Content-Length: {}", length);
             content_length = length;
             boost::filesystem::path path(control->path);
             try
@@ -115,11 +115,11 @@ namespace tools
               if (si.available < (size_t)content_length)
               {
                 const uint64_t avail = (si.available + 1023) / 1024, needed = (content_length + 1023) / 1024;
-                MERROR("Not enough space to download " << needed << " kB to " << path << " (" << avail << " kB available)");
+                MERROR("Not enough space to download {} kB to {} ({} kB available)", needed, path, avail);
                 return false;
               }
             }
-            catch (const std::exception &e) { MWARNING("Failed to check for free space: " << e.what()); }
+            catch (const std::exception &e) { MWARNING("Failed to check for free space: {}", e.what()); }
           }
           if (offset > 0)
           {
@@ -158,7 +158,7 @@ namespace tools
           }
           catch (const std::exception &e)
           {
-            MERROR("Error writing data: " << e.what());
+            MERROR("Error writing data: {}", e.what());
             return false;
           }
         }
@@ -172,13 +172,13 @@ namespace tools
       epee::net_utils::http::url_content u_c;
       if (!epee::net_utils::parse_url(control->uri, u_c))
       {
-        MERROR("Failed to parse URL " << control->uri);
+        MERROR("Failed to parse URL {}", control->uri);
         control->result_cb(control->path, control->uri, control->success);
         return;
       }
       if (u_c.host.empty())
       {
-        MERROR("Failed to determine address from URL " << control->uri);
+        MERROR("Failed to determine address from URL {}", control->uri);
         control->result_cb(control->path, control->uri, control->success);
         return;
       }
@@ -187,28 +187,28 @@ namespace tools
 
       epee::net_utils::ssl_support_t ssl = u_c.schema == "https" ? epee::net_utils::ssl_support_t::e_ssl_support_enabled : epee::net_utils::ssl_support_t::e_ssl_support_disabled;
       uint16_t port = u_c.port ? u_c.port : ssl == epee::net_utils::ssl_support_t::e_ssl_support_enabled ? 443 : 80;
-      MDEBUG("Connecting to " << u_c.host << ":" << port);
+      MDEBUG("Connecting to {}:{}", u_c.host, port);
       client.set_server(u_c.host, std::to_string(port), boost::none, ssl);
       if (!client.connect(std::chrono::seconds(30)))
       {
         boost::lock_guard<boost::mutex> lock(control->mutex);
-        MERROR("Failed to connect to " << control->uri);
+        MERROR("Failed to connect to {}", control->uri);
         control->result_cb(control->path, control->uri, control->success);
         return;
       }
-      MDEBUG("GETting " << u_c.uri);
+      MDEBUG("GETting {}", u_c.uri);
       const epee::net_utils::http::http_response_info *info = NULL;
       epee::net_utils::http::fields_list fields;
       if (existing_size > 0)
       {
         const std::string range = "bytes=" + std::to_string(existing_size) + "-";
-        MDEBUG("Asking for range: " << range);
+        MDEBUG("Asking for range: {}", range);
         fields.push_back(std::make_pair("Range", range));
       }
       if (!client.invoke_get(u_c.uri, std::chrono::seconds(30), "", &info, fields))
       {
         boost::lock_guard<boost::mutex> lock(control->mutex);
-        MERROR("Failed to connect to " << control->uri);
+        MERROR("Failed to connect to {}", control->uri);
         client.disconnect();
         control->result_cb(control->path, control->uri, control->success);
         return;
@@ -224,21 +224,21 @@ namespace tools
       if (!info)
       {
         boost::lock_guard<boost::mutex> lock(control->mutex);
-        MERROR("Failed invoking GET command to " << control->uri << ", no status info returned");
+        MERROR("Failed invoking GET command to {}, no status info returned", control->uri);
         client.disconnect();
         control->result_cb(control->path, control->uri, control->success);
         return;
       }
-      MDEBUG("response code: " << info->m_response_code);
-      MDEBUG("response length: " << info->m_header_info.m_content_length);
-      MDEBUG("response comment: " << info->m_response_comment);
-      MDEBUG("response body: " << info->m_body);
+      MDEBUG("response code: {}", info->m_response_code);
+      MDEBUG("response length: {}", info->m_header_info.m_content_length);
+      MDEBUG("response comment: {}", info->m_response_comment);
+      MDEBUG("response body: {}", info->m_body);
       for (const auto &f: info->m_additional_fields)
-        MDEBUG("additional field: " << f.first << ": " << f.second);
+        MDEBUG("additional field: {}: {}", f.first, f.second);
       if (info->m_response_code != 200 && info->m_response_code != 206)
       {
         boost::lock_guard<boost::mutex> lock(control->mutex);
-        MERROR("Status code " << info->m_response_code);
+        MERROR("Status code {}", info->m_response_code);
         client.disconnect();
         control->result_cb(control->path, control->uri, control->success);
         return;
@@ -253,7 +253,7 @@ namespace tools
     }
     catch (const std::exception &e)
     {
-      MERROR("Exception in download thread: " << e.what());
+      MERROR("Exception in download thread: {}", e.what());
       // fall through and call result_cb not from the catch block to avoid another exception
     }
     boost::lock_guard<boost::mutex> lock(control->mutex);

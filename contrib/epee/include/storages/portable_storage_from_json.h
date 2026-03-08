@@ -42,7 +42,7 @@ namespace epee
   {
     namespace json
     {
-#define CHECK_ISSPACE()  if(!epee::misc_utils::parse::isspace(*it)){ ASSERT_MES_AND_THROW("Wrong JSON character at: " << std::string(it, buf_end));}
+#define CHECK_ISSPACE()  if(!epee::misc_utils::parse::isspace(*it)){ ASSERT_MES_AND_THROW("Wrong JSON character at: {}", std::string(it, buf_end));}
 
       /*inline void parse_error()
       {
@@ -51,7 +51,7 @@ namespace epee
       template<class t_storage>
       inline void run_handler(typename t_storage::hsection current_section, std::string::const_iterator& sec_buf_begin, std::string::const_iterator buf_end, t_storage& stg, unsigned int recursion)
       {
-        CHECK_AND_ASSERT_THROW_MES(recursion < EPEE_JSON_RECURSION_LIMIT_INTERNAL, "Wrong JSON data: recursion limitation (" << EPEE_JSON_RECURSION_LIMIT_INTERNAL << ") exceeded");
+        CHECK_AND_ASSERT_THROW_MES(recursion < EPEE_JSON_RECURSION_LIMIT_INTERNAL, "Wrong JSON data: recursion limitation ({}) exceeded", EPEE_JSON_RECURSION_LIMIT_INTERNAL);
 
         std::string name;        
         typename t_storage::harray h_array = nullptr;
@@ -162,12 +162,12 @@ namespace epee
               {
                 stg.set_value(name, false, current_section);              
                 state = match_state_wonder_after_value;
-              }else ASSERT_MES_AND_THROW("Unknown value keyword " << word);
+              }else ASSERT_MES_AND_THROW("Unknown value keyword {}", word);
             }else if(*it == '{')
             {
               //sub section here
               typename t_storage::hsection new_sec = stg.open_section(name, current_section, true);
-              CHECK_AND_ASSERT_THROW_MES(new_sec, "Failed to insert new section in json: " << std::string(it, buf_end));
+              CHECK_AND_ASSERT_THROW_MES(new_sec, "Failed to insert new section in json: {}", std::string(it, buf_end));
               run_handler(new_sec, it, buf_end, stg, recursion + 1);
               state = match_state_wonder_after_value;
             }else if(*it == '[')
@@ -262,7 +262,7 @@ namespace epee
                 state = match_state_array_after_value;
                 array_md = array_mode_booleans;
 
-              }else ASSERT_MES_AND_THROW("Unknown value keyword " << word)
+              }else ASSERT_MES_AND_THROW("Unknown value keyword {}", word);
             }else CHECK_ISSPACE();
             break;
           case match_state_array_after_value:
@@ -348,7 +348,7 @@ namespace epee
                   CHECK_AND_ASSERT_THROW_MES(r, " failed to insert values section entry");
                   state = match_state_array_after_value;
                 }
-                else ASSERT_MES_AND_THROW("Unknown value keyword " << word);
+                else ASSERT_MES_AND_THROW("Unknown value keyword {}", word);
               }else CHECK_ISSPACE();
               break;
             case array_mode_undifined:
@@ -402,7 +402,7 @@ namespace epee
         }
         catch(const std::exception& ex)
         {
-          MERROR("Failed to parse json, what: " << ex.what());
+          MERROR("Failed to parse json, what: {}", ex.what());
           return false;
         }
         catch(...)

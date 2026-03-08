@@ -78,7 +78,7 @@ namespace
   try {                                                                                                         \
     setup_chain(core, trezor_base, chain_path, fix_chain, vm_core);                                             \
   } catch (const std::exception& ex) {                                                                          \
-    MERROR("Chain setup failed for " << NAME);                                                                  \
+    MERROR("Chain setup failed for {}", NAME);                                                                  \
     throw;                                                                                                      \
   }                                                                                                             \
 } while(0)
@@ -158,8 +158,8 @@ int main(int argc, char* argv[])
     const long mining_timeout = get_env_long("TEST_MINING_TIMEOUT", TREZOR_TEST_MINING_TIMEOUT_DEFAULT);
     const auto sync_test = get_env_long("TEST_KI_SYNC", TREZOR_TEST_KI_SYNC_DEFAULT);
     const bool env_gen_heavy = get_env_long("TEST_GEN_HEAVY", 0) > 0 || heavy_tests;
-    MINFO("Test versions " << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")");
-    MINFO("Testing hardforks [" << (int)initial_hf << ", " << (int)max_hf << "], sync-test: " << sync_test);
+    MINFO("Test versions {}' (v{})", MONERO_RELEASE_NAME, MONERO_VERSION_FULL);
+    MINFO("Testing hardforks [{}, {}], sync-test: {}", (int)initial_hf, (int)max_hf, sync_test);
 
     cryptonote::core core_obj(nullptr);
     cryptonote::core * const core = &core_obj;
@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
         }
       }
 
-      MDEBUG("Transaction tests for HF " << (int)hf);
+      MDEBUG("Transaction tests for HF {}", (int)hf);
       trezor_base.set_hard_fork(hf);
       TREZOR_SETUP_CHAIN(std::string("HF") + std::to_string((int)hf));
 
@@ -266,7 +266,7 @@ static void rollback_chain(cryptonote::core * core, const cryptonote::block & he
 
   crypto::hash head_hash = get_block_hash(head), cur_hash{};
   uint64_t height = get_block_height(head), cur_height=0;
-  MDEBUG("Rolling back to " << height << " to hash " << head_hash);
+  MDEBUG("Rolling back to {} to hash {}", height, head_hash);
 
   do {
     core->get_blockchain_top(cur_height, cur_hash);
@@ -392,16 +392,16 @@ static void setup_chain(cryptonote::core * core, gen_trezor_base & trezor_base, 
     bool deserialize_ok = deserialize_chain_from_file(events, trezor_base, chain_version, chain_path, loaded_opts);
     if (!deserialize_ok)
     {
-      MERROR("Failed to deserialize data from file: " << chain_path << ". " << fix_suggestion);
+      MERROR("Failed to deserialize data from file: {}. {}", chain_path, fix_suggestion);
       CHECK_AND_ASSERT_THROW_MES(fix_chain, "Chain load error. " << fix_suggestion);
     }
     else if (chain_version != CUR_CHAIN_VERSION) {
-      MERROR("Loaded chain version " << chain_version << " differs from current target" << CUR_CHAIN_VERSION << " in the chain file: " << chain_path << ". " << fix_suggestion);
+      MERROR("Loaded chain version {} differs from current target{} in the chain file: {}. {}", chain_version, CUR_CHAIN_VERSION, chain_path, fix_suggestion);
       CHECK_AND_ASSERT_THROW_MES(fix_chain, "Chain load error - versions differ. " << fix_suggestion);
       deserialize_ok = false;
     }
     else if (opts.heavy_tests && !loaded_opts.heavy_tests) {
-      MERROR("Loaded chain does not include transactions for heavy test, the chain file: " << chain_path << ". " << fix_suggestion);
+      MERROR("Loaded chain does not include transactions for heavy test, the chain file: {}. {}", chain_path, fix_suggestion);
       CHECK_AND_ASSERT_THROW_MES(fix_chain, "Chain does not heavy tx set - versions differ. " << fix_suggestion);
       deserialize_ok = false;
     }
@@ -430,7 +430,7 @@ static void setup_chain(cryptonote::core * core, gen_trezor_base & trezor_base, 
         trezor_base.update_trackers(events);
         if (!serialize_chain_to_file(events, trezor_base, chain_path, opts))
         {
-          MERROR("Failed to serialize data to file: " << chain_path);
+          MERROR("Failed to serialize data to file: {}", chain_path);
         }
       }
     }
@@ -592,7 +592,7 @@ static tools::wallet2::tx_construction_data get_construction_data_with_decrypted
     set_encrypted_payment_id_to_tx_extra_nonce(extra_nonce, payment_id);
     THROW_WALLET_EXCEPTION_IF(!add_extra_nonce_to_tx_extra(construction_data.extra, extra_nonce),
                               tools::error::wallet_internal_error, "Failed to add decrypted payment id to tx extra");
-    MDEBUG("Decrypted payment ID: " << payment_id);
+    MDEBUG("Decrypted payment ID: {}", payment_id);
   }
   return construction_data;
 }
@@ -910,10 +910,10 @@ void gen_trezor_base::init_wallets()
 
 void gen_trezor_base::log_wallets_desc()
 {
-  MDEBUG("Wallet for Alice:  " << wallet_desc_str(m_wl_alice.get()));
-  MDEBUG("Wallet for Alice2: " << wallet_desc_str(m_wl_alice2.get()));
-  MDEBUG("Wallet for Bob:    " << wallet_desc_str(m_wl_bob.get()));
-  MDEBUG("Wallet for Eve:    " << wallet_desc_str(m_wl_eve.get()));
+  MDEBUG("Wallet for Alice:  {}", wallet_desc_str(m_wl_alice.get()));
+  MDEBUG("Wallet for Alice2: {}", wallet_desc_str(m_wl_alice2.get()));
+  MDEBUG("Wallet for Bob:    {}", wallet_desc_str(m_wl_bob.get()));
+  MDEBUG("Wallet for Eve:    {}", wallet_desc_str(m_wl_eve.get()));
 }
 
 void gen_trezor_base::update_client_settings()
@@ -962,7 +962,7 @@ bool gen_trezor_base::generate(std::vector<test_event_entry>& events)
   }
 
   events.push_back(last_block);
-  MDEBUG("Gen+1 block has time: " << last_block.timestamp << " blid: " << get_block_hash(last_block));
+  MDEBUG("Gen+1 block has time: {} blid: {}", last_block.timestamp, get_block_hash(last_block));
 
   // Generate some spendable funds on the Miner account
   REWIND_BLOCKS_N(events, blk_3, last_block, m_miner_account, 20);
@@ -973,7 +973,7 @@ bool gen_trezor_base::generate(std::vector<test_event_entry>& events)
   last_block = blk_3r1;
   last_block = rewind_blocks_with_decoys(events, last_block, 10, 1, TEST_DECOY_MINING_COUNTS);
 
-  MDEBUG("Mining chain generated, height: " << get_block_height(last_block) << ", #events: " << events.size() << ", last block: " << get_block_hash(last_block));
+  MDEBUG("Mining chain generated, height: {}, #events: {}, last block: {}", get_block_height(last_block), events.size(), get_block_hash(last_block));
 
   // Non-rct transactions Miner -> Alice
   // Note that change transaction is spendable after CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE so we batch it to a tx
@@ -981,14 +981,14 @@ bool gen_trezor_base::generate(std::vector<test_event_entry>& events)
   generate_tx_block(events, txs_blk_4, last_block, m_miner_account, m_alice_account, MK_TCOINS(0.1), 20, 1);
   MAKE_NEXT_BLOCK_TX_LIST(events, blk_4, last_block, m_miner_account, txs_blk_4);
   last_block = blk_4;
-  MDEBUG("Non-rct transactions generated, height: " << get_block_height(last_block) << ", #events: " << events.size() << ", last block: " << get_block_hash(last_block));
+  MDEBUG("Non-rct transactions generated, height: {}, #events: {}, last block: {}", get_block_height(last_block), events.size(), get_block_hash(last_block));
 
   // Hard fork to bulletproofs version, v9.
   const uint8_t CUR_HF = 9;
   auto hardfork_height = num_blocks(events);  // next block is v9
   ADD_HARDFORK(m_hard_forks, CUR_HF, hardfork_height);
   add_hforks(events, m_hard_forks);
-  MDEBUG("Hardfork " << (int)CUR_HF << " height: " << hardfork_height << ", #events: " << events.size() << " at block: " << get_block_hash(last_block));
+  MDEBUG("Hardfork {} height: {}, #events: {} at block: {}", (int)CUR_HF, hardfork_height, events.size(), get_block_hash(last_block));
 
   // RCT transactions, wallets have to be used, wallet init
   init_wallets();
@@ -1079,7 +1079,7 @@ bool gen_trezor_base::generate(std::vector<test_event_entry>& events)
   MAKE_NEXT_BLOCK_TX_LIST_HF(events, blk_6, last_block, m_miner_account, txs_blk_6, CUR_HF);
 
   last_block = blk_6;
-  MDEBUG("Post 1st tsx: " << (num_blocks(events) - 1) << " at block: " << get_block_hash(last_block) << ", event: " << events.size());
+  MDEBUG("Post 1st tsx: {} at block: {}, event: {}", (num_blocks(events) - 1), get_block_hash(last_block), events.size());
 
   // Simple transaction check
   resx = rct::verRctSemanticsSimple(tx_1.rct_signatures);
@@ -1088,7 +1088,7 @@ bool gen_trezor_base::generate(std::vector<test_event_entry>& events)
   CHECK_AND_ASSERT_THROW_MES(resy, "tx_1 non-semantics failed");
 
   last_block = rewind_blocks_with_decoys(events, last_block, CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE, CUR_HF, TEST_DECOY_MINING_COUNTS);
-  MDEBUG("Blockchain generation up to " << (int)CUR_HF << " finished at height " << num_blocks(events) << ", #events: " << events.size());
+  MDEBUG("Blockchain generation up to {} finished at height {}, #events: {}", (int)CUR_HF, num_blocks(events), events.size());
 
   wallet_tools::process_transactions(TREZOR_ALL_WALLET_VCT, events, last_block, m_bt);
   log_wallets_desc();
@@ -1158,7 +1158,7 @@ cryptonote::block gen_trezor_base::rewind_blocks_with_decoys(std::vector<test_ev
     blk_last = blk;
   }
 
-  MDEBUG("Blocks rewound: " << rewind_n << ", #blocks: " << num_blocks(events) << ", #events: " << events.size());
+  MDEBUG("Blocks rewound: {}, #blocks: {}, #events: {}", rewind_n, num_blocks(events), events.size());
   return blk_last;
 }
 
@@ -1176,13 +1176,13 @@ void gen_trezor_base::fix_hf(std::vector<test_event_entry>& events)
 
     ADD_HARDFORK(m_hard_forks, hf_to_add, hardfork_height);
     add_top_hfork(events, m_hard_forks);
-    MDEBUG("Hardfork added at height: " << hardfork_height << ", from " << (int)current_hf << " to " << (int)hf_to_add);
+    MDEBUG("Hardfork added at height: {}, from {} to {}", hardfork_height, (int)current_hf, (int)hf_to_add);
 
     // Wallet2 requires 10 blocks extra to activate HF
     rewind_blocks(events, hf_to_add == m_top_hard_fork ? 10 : 1, hf_to_add);
 
     if (hf_to_add == m_top_hard_fork) {
-      MDEBUG("Blockchain generation up to " << (int)hf_to_add << " finished at height " << num_blocks(events) << ", #events: " << events.size());
+      MDEBUG("Blockchain generation up to {} finished at height {}, #events: {}", (int)hf_to_add, num_blocks(events), events.size());
     }
   }
   wallet_tools::process_transactions(TREZOR_ALL_WALLET_VCT, events, m_head, m_bt);
@@ -1233,7 +1233,7 @@ void gen_trezor_base::add_transactions_to_events(
   }
 
   MAKE_NEXT_BLOCK_TX_LIST_HF(events, blk_new, m_head, m_miner_account, tx_list, tx_hf);
-  MDEBUG("New tsx: " << (num_blocks(events) - 1) << " at block: " << get_block_hash(blk_new));
+  MDEBUG("New tsx: {} at block: {}", (num_blocks(events) - 1), get_block_hash(blk_new));
 
   m_head = blk_new;
 }
@@ -1268,7 +1268,7 @@ void gen_trezor_base::test_trezor_tx(std::vector<test_event_entry>& events, std:
   aux_data.hard_fork = m_top_hard_fork;
   dev_cold->tx_sign(&wallet_shim, txs, exported_txs, aux_data);
 
-  MDEBUG("Signed tx data from hw: " << exported_txs.ptx.size() << " transactions, hf: " << (int)m_top_hard_fork << ", bpv: " << m_rct_config.bp_version);
+  MDEBUG("Signed tx data from hw: {} transactions, hf: {}, bpv: {}", exported_txs.ptx.size(), (int)m_top_hard_fork, m_rct_config.bp_version);
   CHECK_AND_ASSERT_THROW_MES(exported_txs.ptx.size() == ptxs.size(), "Invalid transaction sizes");
 
   for (size_t i = 0; i < exported_txs.ptx.size(); ++i){
@@ -1285,9 +1285,9 @@ void gen_trezor_base::test_trezor_tx(std::vector<test_event_entry>& events, std:
 
     tx_list.push_back(c_ptx.tx);
     const crypto::hash txhash = cryptonote::get_transaction_hash(c_ptx.tx);
-    MDEBUG("Transaction: " << dump_data(c_ptx.tx));
-    MDEBUG("Transaction hash: " << epee::string_tools::pod_to_hex(txhash));
-    MDEBUG("Serialized transaction: " << epee::string_tools::buff_to_hex_nodelimer(tx_to_blob(c_ptx.tx)));
+    MDEBUG("Transaction: {}", dump_data(c_ptx.tx));
+    MDEBUG("Transaction hash: {}", epee::string_tools::pod_to_hex(txhash));
+    MDEBUG("Serialized transaction: {}", epee::string_tools::buff_to_hex_nodelimer(tx_to_blob(c_ptx.tx)));
   }
 
   add_transactions_to_events(events, generator, tx_list);
@@ -1573,11 +1573,7 @@ tsx_builder * tsx_builder::compute_sources(boost::optional<size_t> num_utxo, uin
 
   const uint64_t needed_amount = m_fee + std::accumulate(m_destinations_orig.begin(), m_destinations_orig.end(), 0, [](int a, const cryptonote::tx_destination_entry& b){return a + b.amount;});
   const uint64_t real_amount = needed_amount + extra_amount;
-  MDEBUG("Computing sources for tx, |utxos| = " << (num_utxo ? std::to_string(num_utxo.get()) : "*")
-    << ", sum: " << std::setfill(' ') << std::setw(12) << ((double)real_amount / COIN)
-    << ", need: " << std::setfill(' ') << std::setw(12) << ((double)needed_amount / COIN)
-    << ", extra: " << std::setfill(' ') << std::setw(12) << ((double)extra_amount / COIN)
-    << ", fee: " << std::setfill(' ') << std::setw(12) << ((double)m_fee / COIN));
+  MDEBUG("Computing sources for tx, |utxos| = {}, sum: {}{}{}, need: {}{}{}, extra: {}{}{}, fee: {}{}{}", (num_utxo ? std::to_string(num_utxo.get()) : "*"), std::setfill(' '), std::setw(12), ((double)real_amount / COIN), std::setfill(' '), std::setw(12), ((double)needed_amount / COIN), std::setfill(' '), std::setw(12), ((double)extra_amount / COIN), std::setfill(' '), std::setw(12), ((double)m_fee / COIN));
 
   bool res = wallet_tools::fill_tx_sources(m_from, m_sources, m_mixin, num_utxo, real_amount, m_tester->m_bt, m_selected_transfers, m_cur_height, offset, step, fnc_acc, fnc_trezor_default_acceptor_tx_in);
   CHECK_AND_ASSERT_THROW_MES(!num_utxo || num_utxo == m_sources.size(), "!!Test error, Number of computed inputs " << m_sources.size() << " does not match desired number " << num_utxo.get());
@@ -2332,7 +2328,7 @@ bool wallet_api_tests::generate(std::vector<test_event_entry>& events)
   CHECK_AND_ASSERT_THROW_MES(walletImpl->rescanSpent(), "Rescan spent fail");
 
   uint64_t balance = w->balance(0);
-  MDEBUG("Balance: " << balance);
+  MDEBUG("Balance: {}", balance);
   CHECK_AND_ASSERT_THROW_MES(w->status() == Monero::PendingTransaction::Status_Ok, "Status nok, " << w->errorString());
 
   const uint64_t tx_amount = MK_TCOINS(0.5);

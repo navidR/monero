@@ -99,11 +99,11 @@ namespace cryptonote
   {
     if (!m_http_client.set_server(address, credentials))
     {
-      MERROR("Failed to set bootstrap daemon address " << address);
+      MERROR("Failed to set bootstrap daemon address {}", address);
       return false;
     }
 
-    MINFO("Changed bootstrap daemon address to " << address);
+    MINFO("Changed bootstrap daemon address to {}", address);
     return true;
   }
 

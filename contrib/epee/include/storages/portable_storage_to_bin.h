@@ -65,7 +65,7 @@ namespace epee
       }else
       {
         // Same as checking val <= 4611686018427387903 except that it's portable for 32-bit size_t
-        CHECK_AND_ASSERT_THROW_MES(!(val >> 31 >> 31), "failed to pack varint - too big amount = " << val);
+        CHECK_AND_ASSERT_THROW_MES(!(val >> 31 >> 31), "failed to pack varint - too big amount = {}", val);
         return pack_varint_t<uint64_t>(strm, PORTABLE_RAW_SIZE_MARK_INT64, val);
       }
     }
@@ -205,7 +205,7 @@ namespace epee
       pack_varint(strm, sec.m_entries.size());
       for(const section_pair& se: sec.m_entries)
       {
-        CHECK_AND_ASSERT_THROW_MES(se.first.size() < std::numeric_limits<uint8_t>::max(), "storage_entry_name is too long: " << se.first.size() << ", val: " << se.first);
+        CHECK_AND_ASSERT_THROW_MES(se.first.size() < std::numeric_limits<uint8_t>::max(), "storage_entry_name is too long: {}, val: {}", se.first.size(), se.first);
         CHECK_AND_ASSERT_THROW_MES(!se.first.empty(), "storage_entry_name is empty");
         uint8_t len = static_cast<uint8_t>(se.first.size());
         strm.write((const char*)&len, sizeof(len));

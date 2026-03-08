@@ -101,7 +101,7 @@ namespace cryptonote
     else
       credits += delta;
     if (delta)
-      MINFO("Client " << client << ": balance change from " << info.credits << " to " << credits);
+      MINFO("Client {}: balance change from {} to {}", client, info.credits, credits);
     return info.credits = credits;
   }
 
@@ -111,20 +111,20 @@ namespace cryptonote
     client_info &info = m_client_info[client]; // creates if not found
     if (ts < info.last_request_timestamp || (ts == info.last_request_timestamp && !same_ts))
     {
-      MDEBUG("Invalid ts: " << ts << " <= " << info.last_request_timestamp);
+      MDEBUG("Invalid ts: {} <= {}", ts, info.last_request_timestamp);
       return false;
     }
     info.last_request_timestamp = ts;
     if (info.credits < payment)
     {
-      MDEBUG("Not enough credits: " << info.credits << " < " << payment);
+      MDEBUG("Not enough credits: {} < {}", info.credits, payment);
       credits = info.credits;
       return false;
     }
     info.credits -= payment;
     add64clamp(&info.credits_used, payment);
     add64clamp(&m_credits_used, payment);
-    MDEBUG("client " << client << " paying " << payment << " for " << rpc << ", " << info.credits << " left");
+    MDEBUG("client {} paying {} for {}, {} left", client, payment, rpc, info.credits);
     credits = info.credits;
     return true;
   }
@@ -195,11 +195,11 @@ namespace cryptonote
       return false;
     }
     const bool is_current = cookie == info.cookie;
-    MINFO("client " << client << " sends nonce: " << nonce << ", " << (is_current ? "current" : "stale"));
+    MINFO("client {} sends nonce: {}, {}", client, nonce, (is_current ? "current" : "stale"));
     std::unordered_set<uint64_t> &payments = is_current ? info.payments : info.previous_payments;
     if (!payments.insert(nonce).second)
     {
-      MWARNING("Duplicate nonce " << nonce << " from " << (is_current ? "current" : "previous"));
+      MWARNING("Duplicate nonce {} from {}", nonce, (is_current ? "current" : "previous"));
       ++m_nonces_dupe;
       ++info.nonces_dupe;
       sub64clamp(&info.credits, PENALTY_FOR_DUPLICATE * m_credits_per_hash_found);
@@ -213,7 +213,7 @@ namespace cryptonote
     {
       if (now > info.update_time + STALE_THRESHOLD)
       {
-        MWARNING("Nonce is stale (top " << top << ", should be " << info.top << " or within " << STALE_THRESHOLD << " seconds");
+        MWARNING("Nonce is stale (top {}, should be {} or within {} seconds", top, info.top, STALE_THRESHOLD);
         ++m_nonces_stale;
         ++info.nonces_stale;
         sub64clamp(&info.credits, PENALTY_FOR_STALE * m_credits_per_hash_found);
@@ -256,7 +256,7 @@ namespace cryptonote
     }
 
     add64clamp(&info.credits, m_credits_per_hash_found);
-    MINFO("client " << client << " credited for " << m_credits_per_hash_found << ", now " << info.credits << (is_current ? "" : " (close)"));
+    MINFO("client {} credited for {}, now {}{}", client, m_credits_per_hash_found, info.credits, (is_current ? "" : " (close)"));
 
     m_hashrate[now] += m_diff;
     add64clamp(&m_credits_total, m_credits_per_hash_found);
@@ -288,7 +288,7 @@ namespace cryptonote
     boost::lock_guard<boost::mutex> lock(mutex);
     m_directory = std::move(directory);
     std::string state_file_path = m_directory + "/" + RPC_PAYMENTS_DATA_FILENAME;
-    MINFO("loading rpc payments data from " << state_file_path);
+    MINFO("loading rpc payments data from {}", state_file_path);
     std::ifstream data;
     data.open(state_file_path, std::ios_base::binary | std::ios_base::in);
     std::string bytes(std::istream_iterator<char>{data}, std::istream_iterator<char>{});
@@ -335,10 +335,10 @@ namespace cryptonote
     TRY_ENTRY();
     boost::lock_guard<boost::mutex> lock(mutex);
     const std::string &directory = directory_.empty() ? m_directory : directory_;
-    MDEBUG("storing rpc payments data to " << directory);
+    MDEBUG("storing rpc payments data to {}", directory);
     if (!tools::create_directories_if_necessary(directory))
     {
-      MWARNING("Failed to create data directory: " << directory);
+      MWARNING("Failed to create data directory: {}", directory);
       return false;
     }
     const boost::filesystem::path state_file_path = (boost::filesystem::path(directory) / RPC_PAYMENTS_DATA_FILENAME);
@@ -349,13 +349,13 @@ namespace cryptonote
       boost::filesystem::remove(state_file_path_old, ec);
       std::error_code e = tools::replace_file(state_file_path.string(), state_file_path_old);
       if (e)
-        MWARNING("Failed to rename " << state_file_path << " to " << state_file_path_old << ": " << e);
+        MWARNING("Failed to rename {} to {}: {}", state_file_path, state_file_path_old, e);
     }
     std::ofstream data;
     data.open(state_file_path.string(), std::ios_base::binary | std::ios_base::out | std::ios::trunc);
     if (data.fail())
     {
-      MWARNING("Failed to save RPC payments to file " << state_file_path);
+      MWARNING("Failed to save RPC payments to file {}", state_file_path);
       return false;
     };
     binary_archive<true> ar(data);
@@ -385,7 +385,7 @@ namespace cryptonote
       const bool erase = t < ((j->second.credits == 0) ? threshold0 : threshold);
       if (erase)
       {
-        MINFO("Erasing " << j->first << " with " << j->second.credits << " credits, inactive for " << (now-t)/86400 << " days");
+        MINFO("Erasing {} with {} credits, inactive for {} days", j->first, j->second.credits, (now-t)/86400);
         m_client_info.erase(j);
         ++count;
       }

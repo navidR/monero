@@ -318,7 +318,7 @@ namespace
       {
         const expect<void> sent = net::zmq::send(std::move(message), socket, ZMQ_DONTWAIT);
         if (!sent)
-          MERROR("Failed to send ZMQ/Pub message: " << sent.error().message());
+          MERROR("Failed to send ZMQ/Pub message: {}", sent.error().message());
         else
           ++count;
       }
@@ -394,8 +394,7 @@ bool zmq_pub::sub_request(boost::string_ref message)
 
     if (!chain_range.empty() || !miner_range.empty() || !txpool_range.empty())
     {
-      MDEBUG("Client " << (tag ? "subscribed" : "unsubscribed") << " to " <<
-             chain_range.size() << " chain topic(s), " << miner_range.size() << " miner topic(s) and " << txpool_range.size() << " txpool topic(s)");
+      MDEBUG("Client {} to {} chain topic(s), {} miner topic(s) and {} txpool topic(s)", (tag ? "subscribed" : "unsubscribed"), chain_range.size(), miner_range.size(), txpool_range.size());
 
       const boost::lock_guard<boost::mutex> lock{sync_};
       switch (tag)
@@ -424,7 +423,7 @@ bool zmq_pub::relay_to_pub(void* const relay, void* const pub)
   const expect<bool> relayed = relay_block_pub(relay, pub);
   if (!relayed)
   {
-    MERROR("Error relaying ZMQ/Pub: " << relayed.error().message());
+    MERROR("Error relaying ZMQ/Pub: {}", relayed.error().message());
     return false;
   }
 
@@ -513,7 +512,7 @@ std::size_t zmq_pub::send_txpool_add(std::vector<txpool_event> txes)
       if (sent)
         txes_.emplace_back(std::move(txes));
       else
-        MERROR("ZMQ/Pub failure, relay queue error: " << sent.error().message());
+        MERROR("ZMQ/Pub failure, relay queue error: {}", sent.error().message());
       return bool(sent);
     }
   }

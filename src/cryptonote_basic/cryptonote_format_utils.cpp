@@ -127,7 +127,7 @@ namespace cryptonote
         return true;
       if (rv.outPk.size() != tx.vout.size())
       {
-        LOG_PRINT_L1("Failed to parse transaction from blob, bad outPk size in tx " << get_transaction_hash(tx));
+        LOG_PRINT_L1("Failed to parse transaction from blob, bad outPk size in tx {}", get_transaction_hash(tx));
         return false;
       }
       for (size_t n = 0; n < tx.rct_signatures.outPk.size(); ++n)
@@ -135,7 +135,7 @@ namespace cryptonote
         crypto::public_key output_public_key;
         if (!get_output_public_key(tx.vout[n], output_public_key))
         {
-          LOG_PRINT_L1("Failed to get output public key for output " << n << " in tx " << get_transaction_hash(tx));
+          LOG_PRINT_L1("Failed to get output public key for output {} in tx {}", n, get_transaction_hash(tx));
           return false;
         }
         rv.outPk[n].dest = rct::pk2rct(output_public_key);
@@ -149,18 +149,18 @@ namespace cryptonote
         {
           if (rv.p.bulletproofs_plus.size() != 1)
           {
-            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs_plus size in tx " << get_transaction_hash(tx));
+            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs_plus size in tx {}", get_transaction_hash(tx));
             return false;
           }
           if (rv.p.bulletproofs_plus[0].L.size() < 6)
           {
-            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs_plus L size in tx " << get_transaction_hash(tx));
+            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs_plus L size in tx {}", get_transaction_hash(tx));
             return false;
           }
           const size_t max_outputs = rct::n_bulletproof_plus_max_amounts(rv.p.bulletproofs_plus[0]);
           if (max_outputs < tx.vout.size())
           {
-            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs_plus max outputs in tx " << get_transaction_hash(tx));
+            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs_plus max outputs in tx {}", get_transaction_hash(tx));
             return false;
           }
           const size_t n_amounts = tx.vout.size();
@@ -173,18 +173,18 @@ namespace cryptonote
         {
           if (rv.p.bulletproofs.size() != 1)
           {
-            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs size in tx " << get_transaction_hash(tx));
+            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs size in tx {}", get_transaction_hash(tx));
             return false;
           }
           if (rv.p.bulletproofs[0].L.size() < 6)
           {
-            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs L size in tx " << get_transaction_hash(tx));
+            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs L size in tx {}", get_transaction_hash(tx));
             return false;
           }
           const size_t max_outputs = 1 << (rv.p.bulletproofs[0].L.size() - 6);
           if (max_outputs < tx.vout.size())
           {
-            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs max outputs in tx " << get_transaction_hash(tx));
+            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs max outputs in tx {}", get_transaction_hash(tx));
             return false;
           }
           const size_t n_amounts = tx.vout.size();
@@ -270,7 +270,7 @@ namespace cryptonote
     bool r = hwdev.generate_key_derivation(tx_public_key, ack.m_view_secret_key, recv_derivation);
     if (!r)
     {
-      MWARNING("key image helper: failed to generate_key_derivation(" << tx_public_key << ", <viewkey>)");
+      MWARNING("key image helper: failed to generate_key_derivation({}, <viewkey>)", tx_public_key);
       memcpy(&recv_derivation, rct::identity().bytes, sizeof(recv_derivation));
     }
 
@@ -281,7 +281,7 @@ namespace cryptonote
       r = hwdev.generate_key_derivation(additional_tx_public_keys[i], ack.m_view_secret_key, additional_recv_derivation);
       if (!r)
       {
-        MWARNING("key image helper: failed to generate_key_derivation(" << additional_tx_public_keys[i] << ", <viewkey>)");
+        MWARNING("key image helper: failed to generate_key_derivation({}, <viewkey>)", additional_tx_public_keys[i]);
       }
       else
       {
@@ -528,7 +528,7 @@ namespace cryptonote
     for(auto& o: tx.vout)
       amount_out += o.amount;
 
-    CHECK_AND_ASSERT_MES(amount_in >= amount_out, false, "transaction spend (" <<amount_in << ") more than it has (" << amount_out << ")");
+    CHECK_AND_ASSERT_MES(amount_in >= amount_out, false, "transaction spend ({}) more than it has ({})", amount_in, amount_out);
     fee = amount_in - amount_out;
     return true;
   }
@@ -554,10 +554,10 @@ namespace cryptonote
     {
       tx_extra_field field;
       bool r = ::do_serialize(ar, field);
-      CHECK_AND_NO_ASSERT_MES_L1(r, false, "failed to deserialize extra field. extra = " << string_tools::buff_to_hex_nodelimer(std::string(reinterpret_cast<const char*>(tx_extra.data()), tx_extra.size())));
+      CHECK_AND_NO_ASSERT_MES_L1(r, false, "failed to deserialize extra field. extra = {}", string_tools::buff_to_hex_nodelimer(std::string(reinterpret_cast<const char*>(tx_extra.data()), tx_extra.size())));
       tx_extra_fields.push_back(field);
     } while (!ar.eof());
-    CHECK_AND_NO_ASSERT_MES_L1(::serialization::check_stream_state(ar), false, "failed to deserialize extra field. extra = " << string_tools::buff_to_hex_nodelimer(std::string(reinterpret_cast<const char*>(tx_extra.data()), tx_extra.size())));
+    CHECK_AND_NO_ASSERT_MES_L1(::serialization::check_stream_state(ar), false, "failed to deserialize extra field. extra = {}", string_tools::buff_to_hex_nodelimer(std::string(reinterpret_cast<const char*>(tx_extra.data()), tx_extra.size())));
 
     return true;
   }
@@ -596,7 +596,7 @@ namespace cryptonote
       bool r = ::do_serialize(ar, field);
       if (!r)
       {
-        MWARNING("failed to deserialize extra field. extra = " << string_tools::buff_to_hex_nodelimer(std::string(reinterpret_cast<const char*>(tx_extra.data()), tx_extra.size())));
+        MWARNING("failed to deserialize extra field. extra = {}", string_tools::buff_to_hex_nodelimer(std::string(reinterpret_cast<const char*>(tx_extra.data()), tx_extra.size())));
         if (!allow_partial)
           return false;
         break;
@@ -606,11 +606,11 @@ namespace cryptonote
     } while (!ar.eof());
     if (!::serialization::check_stream_state(ar))
     {
-      MWARNING("failed to deserialize extra field. extra = " << string_tools::buff_to_hex_nodelimer(std::string(reinterpret_cast<const char*>(tx_extra.data()), tx_extra.size())));
+      MWARNING("failed to deserialize extra field. extra = {}", string_tools::buff_to_hex_nodelimer(std::string(reinterpret_cast<const char*>(tx_extra.data()), tx_extra.size())));
       if (!allow_partial)
         return false;
     }
-    MTRACE("Sorted " << processed << "/" << tx_extra.size());
+    MTRACE("Sorted {}/{}", processed, tx_extra.size());
 
     std::ostringstream oss;
     binary_archive<true> nar(oss);
@@ -772,11 +772,11 @@ namespace cryptonote
     {
       tx_extra_field field;
       bool r = ::do_serialize(ar, field);
-      CHECK_AND_NO_ASSERT_MES_L1(r, false, "failed to deserialize extra field. extra = " << string_tools::buff_to_hex_nodelimer(std::string(reinterpret_cast<const char*>(tx_extra.data()), tx_extra.size())));
+      CHECK_AND_NO_ASSERT_MES_L1(r, false, "failed to deserialize extra field. extra = {}", string_tools::buff_to_hex_nodelimer(std::string(reinterpret_cast<const char*>(tx_extra.data()), tx_extra.size())));
       if (field.type() != type)
         ::do_serialize(newar, field);
     } while (!ar.eof());
-    CHECK_AND_NO_ASSERT_MES_L1(::serialization::check_stream_state(ar), false, "failed to deserialize extra field. extra = " << string_tools::buff_to_hex_nodelimer(std::string(reinterpret_cast<const char*>(tx_extra.data()), tx_extra.size())));
+    CHECK_AND_NO_ASSERT_MES_L1(::serialization::check_stream_state(ar), false, "failed to deserialize extra field. extra = {}", string_tools::buff_to_hex_nodelimer(std::string(reinterpret_cast<const char*>(tx_extra.data()), tx_extra.size())));
     tx_extra.clear();
     std::string s = oss.str();
     tx_extra.reserve(s.size());
@@ -833,7 +833,7 @@ namespace cryptonote
   //---------------------------------------------------------------
   uint64_t get_block_height(const block& b)
   {
-    CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == 1, 0, "wrong miner tx in block: " << get_block_hash(b) << ", b.miner_tx.vin.size() != 1");
+    CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == 1, 0, "wrong miner tx in block: {}, b.miner_tx.vin.size() != 1", get_block_hash(b));
     CHECKED_GET_SPECIFIC_VARIANT(b.miner_tx.vin[0], const txin_gen, coinbase_in, 0);
     return coinbase_in.height;
   }
@@ -842,9 +842,8 @@ namespace cryptonote
   {
     for(const auto& in: tx.vin)
     {
-      CHECK_AND_ASSERT_MES(in.type() == typeid(txin_to_key), false, "wrong variant type: "
-        << in.type().name() << ", expected " << typeid(txin_to_key).name()
-        << ", in transaction id=" << get_transaction_hash(tx));
+      CHECK_AND_ASSERT_MES(in.type() == typeid(txin_to_key), false, "wrong variant type: {}, expected {}, in transaction id={}",
+        in.type().name(), typeid(txin_to_key).name(), get_transaction_hash(tx));
 
     }
     return true;
@@ -855,12 +854,12 @@ namespace cryptonote
     for(const tx_out& out: tx.vout)
     {
       crypto::public_key output_public_key;
-      CHECK_AND_ASSERT_MES(get_output_public_key(out, output_public_key), false, "Failed to get output public key (output type: "
-        << out.target.type().name() << "), in transaction id=" << get_transaction_hash(tx));
+      CHECK_AND_ASSERT_MES(get_output_public_key(out, output_public_key), false, "Failed to get output public key (output type: {}), in transaction id={}",
+        out.target.type().name(), get_transaction_hash(tx));
 
       if (tx.version == 1)
       {
-        CHECK_AND_NO_ASSERT_MES(0 < out.amount, false, "zero amount output in transaction id=" << get_transaction_hash(tx));
+      CHECK_AND_NO_ASSERT_MES(0 < out.amount, false, "zero amount output in transaction id={}", get_transaction_hash(tx));
       }
 
       if(!check_key(output_public_key))
@@ -917,7 +916,7 @@ namespace cryptonote
       output_public_key = boost::get< txout_to_tagged_key >(out.target).key;
     else
     {
-      LOG_ERROR("Unexpected output target type found: " << out.target.type().name());
+      LOG_ERROR("Unexpected output target type found: {}", out.target.type().name());
       return false;
     }
 
@@ -965,26 +964,25 @@ namespace cryptonote
       if (hf_version > HF_VERSION_VIEW_TAGS)
       {
         // from v15, require outputs have view tags
-        CHECK_AND_ASSERT_MES(o.target.type() == typeid(txout_to_tagged_key), false, "wrong variant type: "
-          << o.target.type().name() << ", expected txout_to_tagged_key in transaction id=" << get_transaction_hash(tx));
+        CHECK_AND_ASSERT_MES(o.target.type() == typeid(txout_to_tagged_key), false, "wrong variant type: {}, expected txout_to_tagged_key in transaction id={}",
+          o.target.type().name(), get_transaction_hash(tx));
       }
       else if (hf_version < HF_VERSION_VIEW_TAGS)
       {
         // require outputs to be of type txout_to_key
-        CHECK_AND_ASSERT_MES(o.target.type() == typeid(txout_to_key), false, "wrong variant type: "
-          << o.target.type().name() << ", expected txout_to_key in transaction id=" << get_transaction_hash(tx));
+        CHECK_AND_ASSERT_MES(o.target.type() == typeid(txout_to_key), false, "wrong variant type: {}, expected txout_to_key in transaction id={}",
+          o.target.type().name(), get_transaction_hash(tx));
       }
       else  //(hf_version == HF_VERSION_VIEW_TAGS)
       {
         // require outputs be of type txout_to_key OR txout_to_tagged_key
         // to allow grace period before requiring all to be txout_to_tagged_key
-        CHECK_AND_ASSERT_MES(o.target.type() == typeid(txout_to_key) || o.target.type() == typeid(txout_to_tagged_key), false, "wrong variant type: "
-          << o.target.type().name() << ", expected txout_to_key or txout_to_tagged_key in transaction id=" << get_transaction_hash(tx));
+        CHECK_AND_ASSERT_MES(o.target.type() == typeid(txout_to_key) || o.target.type() == typeid(txout_to_tagged_key), false, "wrong variant type: {}, expected txout_to_key or txout_to_tagged_key in transaction id={}",
+          o.target.type().name(), get_transaction_hash(tx));
 
         // require all outputs in a tx be of the same type
-        CHECK_AND_ASSERT_MES(o.target.type() == tx.vout[0].target.type(), false, "non-matching variant types: "
-          << o.target.type().name() << " and " << tx.vout[0].target.type().name() << ", "
-          << "expected matching variant types in transaction id=" << get_transaction_hash(tx));
+        CHECK_AND_ASSERT_MES(o.target.type() == tx.vout[0].target.type(), false, "non-matching variant types: {} and {}, expected matching variant types in transaction id={}",
+          o.target.type().name(), tx.vout[0].target.type().name(), get_transaction_hash(tx));
       }
     }
     return true;
@@ -1122,7 +1120,7 @@ namespace cryptonote
         default_decimal_point = decimal_point;
         break;
       default:
-        ASSERT_MES_AND_THROW("Invalid decimal point specification: " << decimal_point);
+        ASSERT_MES_AND_THROW("Invalid decimal point specification: {}", decimal_point);
     }
   }
   //---------------------------------------------------------------
@@ -1148,7 +1146,7 @@ namespace cryptonote
       case 0:
         return "piconero";
       default:
-        ASSERT_MES_AND_THROW("Invalid decimal point specification: " << decimal_point);
+        ASSERT_MES_AND_THROW("Invalid decimal point specification: {}", decimal_point);
     }
   }
   //---------------------------------------------------------------
@@ -1230,7 +1228,7 @@ namespace cryptonote
     char *end = NULL;
     errno = 0;
     const unsigned long long ull = strtoull(buf, &end, 10);
-    CHECK_AND_ASSERT_THROW_MES(ull != ULLONG_MAX || errno == 0, "Failed to parse rounded amount: " << buf);
+    CHECK_AND_ASSERT_THROW_MES(ull != ULLONG_MAX || errno == 0, "Failed to parse rounded amount: {}", buf);
     CHECK_AND_ASSERT_THROW_MES(ull != 0 || amount == 0, "Overflow in rounding");
     return ull;
   }
@@ -1238,7 +1236,7 @@ namespace cryptonote
   std::string round_money_up(const std::string &s, unsigned significant_digits)
   {
     uint64_t amount;
-    CHECK_AND_ASSERT_THROW_MES(parse_amount(amount, s), "Failed to parse amount: " << s);
+    CHECK_AND_ASSERT_THROW_MES(parse_amount(amount, s), "Failed to parse amount: {}", s);
     amount = round_money_up(amount, significant_digits);
     return print_money(amount);
   }

@@ -134,7 +134,7 @@ bool transactions_flow_test(std::string& working_folder,
   }
   catch (const std::exception& e)
   {
-    LOG_ERROR("failed to generate wallet: " << e.what());
+    LOG_ERROR("failed to generate wallet: {}", e.what());
     return false;
   }
 
@@ -145,7 +145,7 @@ bool transactions_flow_test(std::string& working_folder,
   bool ok;
   if(!w1.refresh(true, blocks_fetched, received_money, ok))
   {
-    LOG_ERROR( "failed to refresh source wallet from " << daemon_addr_a );
+    LOG_ERROR("failed to refresh source wallet from {}", daemon_addr_a);
     return false;
   }
 
@@ -238,11 +238,11 @@ bool transactions_flow_test(std::string& working_folder,
 
     if(!do_send_money(w1, w2, mix_in_factor, amount_to_tx, tx))
     {
-      LOG_PRINT_L0("failed to transfer money, tx: " << get_transaction_hash(tx) << ", refresh and try again" );
+      LOG_PRINT_L0("failed to transfer money, tx: {}, refresh and try again", get_transaction_hash(tx));
       w1.refresh(true, blocks_fetched, received_money, ok);
       if(!do_send_money(w1, w2, mix_in_factor, amount_to_tx, tx))
       {
-        LOG_PRINT_L0( "failed to transfer money, second chance. tx: " << get_transaction_hash(tx) << ", exit" );
+        LOG_PRINT_L0("failed to transfer money, second chance. tx: {}, exit", get_transaction_hash(tx));
         LOCAL_ASSERT(false);
         return false;
       }
@@ -251,7 +251,7 @@ bool transactions_flow_test(std::string& working_folder,
 
     transfered_money += amount_to_tx;
 
-    LOG_PRINT_L0("transferred " << amount_to_tx << ", i=" << i );
+    LOG_PRINT_L0("transferred {}, i={}", amount_to_tx, i);
     tx_test_entry& ent = txs[get_transaction_hash(tx)] = tx_test_entry{};
     ent.amount_transfered = amount_to_tx;
     ent.tx = tx;
@@ -290,13 +290,13 @@ bool transactions_flow_test(std::string& working_folder,
     {
       if(tx_pair.second.m_received_count != 1)
       {
-        MERROR("Transaction lost: " << get_transaction_hash(tx_pair.second.tx));
+        MERROR("Transaction lost: {}", get_transaction_hash(tx_pair.second.tx));
       }
 
     }
 
     MERROR("-----------------------FINISHING TRANSACTIONS FLOW TEST FAILED-----------------------" );
-    MERROR("income " << print_money(money_2) << " via " << i << " transactions, expected money = " << print_money(transfered_money) );
+    MERROR("income {} via {} transactions, expected money = {}", print_money(money_2), i, print_money(transfered_money));
     LOCAL_ASSERT(false);
     return false;
   }

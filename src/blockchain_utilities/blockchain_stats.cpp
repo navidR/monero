@@ -211,7 +211,7 @@ int main(int argc, char* argv[])
   }
 
   const std::string filename = (boost::filesystem::path(opt_data_dir) / db->get_db_name()).string();
-  LOG_PRINT_L0("Loading blockchain from folder " << filename << " ...");
+  LOG_PRINT_L0("Loading blockchain from folder {} ...", filename);
 
   try
   {
@@ -219,7 +219,7 @@ int main(int argc, char* argv[])
   }
   catch (const std::exception& e)
   {
-    LOG_PRINT_L0("Error opening database: " << e.what());
+    LOG_PRINT_L0("Error opening database: {}", e.what());
     return 1;
   }
   r = core_storage->blockchain.init(db, net_type);
@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
   const uint64_t db_height = db->height();
   if (!block_stop)
       block_stop = db_height;
-  MINFO("Starting from height " << block_start << ", stopping at height " << block_stop);
+  MINFO("Starting from height {}, stopping at height {}", block_start, block_stop);
 
 /*
  * The default output can be plotted with GnuPlot using these commands:

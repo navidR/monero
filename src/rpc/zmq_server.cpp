@@ -89,7 +89,7 @@ namespace
         MONERO_LOG_ZMQ_ERROR("ZMQ bind failed");
         return nullptr;
       }
-      MINFO("ZMQ now listening at " << address);
+      MINFO("ZMQ now listening at {}", address);
     }
 
     return out;
@@ -174,11 +174,11 @@ void ZmqServer::serve()
         }
         else // no errors
         {
-          MDEBUG("Received RPC request: \"" << *message << "\"");
+          MDEBUG("Received RPC request: \"{}\"", *message);
           epee::byte_slice response = handler.handle(std::move(*message));
 
           const boost::string_ref response_view{reinterpret_cast<const char*>(response.data()), response.size()};
-          MDEBUG("Sending RPC reply: \"" << response_view << "\"");
+          MDEBUG("Sending RPC reply: \"{}\"", response_view);
           MONERO_UNWRAP(net::zmq::send(std::move(response), rep.get()));
         }
       }
@@ -187,11 +187,11 @@ void ZmqServer::serve()
   catch (const std::system_error& e)
   {
     if (e.code() != net::zmq::make_error_code(ETERM))
-      MERROR("ZMQ RPC Server Error: " << e.what());
+      MERROR("ZMQ RPC Server Error: {}", e.what());
   }
   catch (const std::exception& e)
   {
-    MERROR("ZMQ RPC Server Error: " << e.what());
+    MERROR("ZMQ RPC Server Error: {}", e.what());
   }
   catch (...)
   {
@@ -240,7 +240,7 @@ std::shared_ptr<listener::zmq_pub> ZmqServer::init_pub(epee::span<const std::str
     shared_state = nullptr;
     pub_socket = nullptr;
     relay_socket = nullptr;
-    MERROR("Failed to create ZMQ/Pub listener: " << e.what());
+    MERROR("Failed to create ZMQ/Pub listener: {}", e.what());
     return nullptr;
   }
 

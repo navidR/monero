@@ -351,7 +351,7 @@ namespace rpc
     std::string tx_blob;
     if(!epee::string_tools::parse_hexstr_to_binbuff(req.tx_as_hex, tx_blob))
     {
-      MERROR("[SendRawTxHex]: Failed to parse tx from hexbuff: " << req.tx_as_hex);
+      MERROR("[SendRawTxHex]: Failed to parse tx from hexbuff: {}", req.tx_as_hex);
       res.status = Message::STATUS_FAILED;
       res.error_details = "Invalid hex";
       return;
@@ -921,7 +921,7 @@ namespace rpc
 
   epee::byte_slice DaemonHandler::handle(std::string&& request)
   {
-    MDEBUG("Handling RPC request: " << request);
+    MDEBUG("Handling RPC request: {}", request);
 
     try
     {
@@ -935,7 +935,7 @@ namespace rpc
       epee::byte_slice response = matched_handler->call(*this, req_full.getID(), req_full.getMessage());
 
       const boost::string_ref response_view{reinterpret_cast<const char*>(response.data()), response.size()};
-      MDEBUG("Returning RPC response: " << response_view);
+      MDEBUG("Returning RPC response: {}", response_view);
 
       return response;
     }

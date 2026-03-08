@@ -284,7 +284,7 @@ TEST(logging, deadlock)
       std::lock_guard<std::mutex> guard(inner_mutex);
       return "world!";
     };
-    MGINFO("Hello, " << thread1_inner_func() << " - Sincerely, thread 1");
+    MGINFO("Hello, {} - Sincerely, thread 1", thread1_inner_func());
   };
 
   const auto thread2_func = [&]

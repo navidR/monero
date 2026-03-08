@@ -83,7 +83,7 @@ static bool parse_db_sync_mode(std::string db_sync_mode)
   boost::split(options, db_sync_mode, boost::is_any_of(" :"));
 
   for(const auto &option : options)
-    MDEBUG("option: " << option);
+    MDEBUG("option: {}", option);
 
   // default to fast:async:1
   uint64_t DEFAULT_FLAGS = DBF_FAST;
@@ -200,7 +200,7 @@ static int resize_env(const char *db_path)
       boost::filesystem::space_info si = boost::filesystem::space(path);
       if(si.available < needed)
       {
-        MERROR("!! WARNING: Insufficient free space to extend database !!: " << (si.available >> 20L) << " MB available");
+        MERROR("!! WARNING: Insufficient free space to extend database !!: {} MB available", (si.available >> 20L));
         return ENOSPC;
       }
     }
@@ -221,7 +221,7 @@ static void init(std::string cache_filename)
   bool tx_active = false;
   int dbr;
 
-  MINFO("Creating spent output cache in " << cache_filename);
+  MINFO("Creating spent output cache in {}", cache_filename);
 
   tools::create_directories_if_necessary(cache_filename);
 
@@ -600,8 +600,7 @@ static std::vector<uint64_t> canonicalize(const std::vector<uint64_t> &v)
   }
   if (c.size() < v.size())
   {
-    MINFO("Ring has duplicate member(s): " <<
-        boost::join(v | boost::adaptors::transformed([](uint64_t out){return std::to_string(out);}), " "));
+    MINFO("Ring has duplicate member(s): {}", boost::join(v | boost::adaptors::transformed([](uint64_t out){return std::to_string(out);}), " "));
   }
   return c;
 }
@@ -958,7 +957,7 @@ static void open_db(const std::string &filename, MDB_env **env, MDB_txn **txn, M
   dbr = mdb_env_set_maxdbs(*env, 1);
   CHECK_AND_ASSERT_THROW_MES(!dbr, "Failed to set max env dbs: " + std::string(mdb_strerror(dbr)));
   const std::string actual_filename = filename;
-  MINFO("Opening monero blockchain at " << actual_filename);
+  MINFO("Opening monero blockchain at {}", actual_filename);
   dbr = mdb_env_open(*env, actual_filename.c_str(), flags, 0664);
   CHECK_AND_ASSERT_THROW_MES(!dbr, "Failed to open rings database file '"
       + actual_filename + "': " + std::string(mdb_strerror(dbr)));
@@ -1052,7 +1051,7 @@ static std::vector<std::pair<uint64_t, uint64_t>> load_outputs(const std::string
   f = fopen(filename.c_str(), "r");
   if (!f)
   {
-    MERROR("Failed to load outputs from " << filename << ": " << strerror(errno));
+    MERROR("Failed to load outputs from {}: {}", filename, strerror(errno));
     return {};
   }
   while (1)
@@ -1060,7 +1059,7 @@ static std::vector<std::pair<uint64_t, uint64_t>> load_outputs(const std::string
     char s[256];
     if (!fgets(s, sizeof(s), f))
     {
-      MERROR("Error reading from " << filename << ": " << strerror(errno));
+      MERROR("Error reading from {}: {}", filename, strerror(errno));
       break;
     }
     if (feof(f))
@@ -1077,7 +1076,7 @@ static std::vector<std::pair<uint64_t, uint64_t>> load_outputs(const std::string
     }
     if (amount == std::numeric_limits<uint64_t>::max())
     {
-      MERROR("Bad format in " << filename);
+      MERROR("Bad format in {}", filename);
       continue;
     }
     if (sscanf(s, "%" PRIu64 "*%" PRIu64, &offset, &num_offsets) == 2 && num_offsets < std::numeric_limits<uint64_t>::max() - offset)
@@ -1091,7 +1090,7 @@ static std::vector<std::pair<uint64_t, uint64_t>> load_outputs(const std::string
     }
     else
     {
-      MERROR("Bad format in " << filename);
+      MERROR("Bad format in {}", filename);
       continue;
     }
   }
@@ -1104,7 +1103,7 @@ static bool export_spent_outputs(MDB_cursor *cur, const std::string &filename)
   FILE *f = fopen(filename.c_str(), "w");
   if (!f)
   {
-    MERROR("Failed to open " << filename << ": " << strerror(errno));
+    MERROR("Failed to open {}: {}", filename, strerror(errno));
     return false;
   }
 
@@ -1121,7 +1120,7 @@ static bool export_spent_outputs(MDB_cursor *cur, const std::string &filename)
     if (dbr)
     {
       fclose(f);
-      MERROR("Failed to enumerate spent outputs: " << mdb_strerror(dbr));
+      MERROR("Failed to enumerate spent outputs: {}", mdb_strerror(dbr));
       return false;
     }
     const uint64_t amount = *(const uint64_t*)k.mv_data;
@@ -1245,7 +1244,7 @@ int main(int argc, char* argv[])
   std::string db_sync_mode = command_line::get_arg(vm, arg_db_sync_mode);
   if (!parse_db_sync_mode(db_sync_mode))
   {
-    MERROR("Invalid db sync mode: " << db_sync_mode);
+    MERROR("Invalid db sync mode: {}", db_sync_mode);
     return 1;
   }
 
@@ -1311,7 +1310,7 @@ int main(int argc, char* argv[])
         {
           uint64_t window_front = (height / STAT_WINDOW - 1) * STAT_WINDOW;
           uint64_t window_back = window_front + STAT_WINDOW - 1;
-          LOG_PRINT_L0(window_front << "-" << window_back << ": " << (100.0f * outs_spent / outs_total) << "% ( " << outs_spent << " / " << outs_total << " )");
+          LOG_PRINT_L0("{}-{}: {}% ( {} / {} )", window_front, window_back, (100.0f * outs_spent / outs_total), outs_spent, outs_total);
           outs_total = outs_spent = 0;
         }
       }
@@ -1328,7 +1327,7 @@ int main(int argc, char* argv[])
       {
         uint64_t window_front = (height / STAT_WINDOW) * STAT_WINDOW;
         uint64_t window_back = height;
-        LOG_PRINT_L0(window_front << "-" << window_back << ": " << (100.0f * outs_spent / outs_total) << "% ( " << outs_spent << " / " << outs_total << " )");
+        LOG_PRINT_L0("{}-{}: {}% ( {} / {} )", window_front, window_back, (100.0f * outs_spent / outs_total), outs_spent, outs_total);
       }
       if (stop_requested)
       {
@@ -1345,7 +1344,7 @@ int main(int argc, char* argv[])
 
   if (!extra_spent_outputs.empty())
   {
-    MINFO("Adding " << extra_spent_outputs.size() << " extra spent outputs");
+    MINFO("Adding {} extra spent outputs", extra_spent_outputs.size());
     MDB_txn *txn;
     int dbr = mdb_txn_begin(env, NULL, 0, &txn);
     CHECK_AND_ASSERT_THROW_MES(!dbr, "Failed to create LMDB transaction: " + std::string(mdb_strerror(dbr)));
@@ -1380,9 +1379,9 @@ int main(int argc, char* argv[])
     if (n > 0 && start_idx == 0)
     {
       start_idx = find_first_diverging_transaction(inputs[0], inputs[n]);
-      LOG_PRINT_L0("First diverging transaction at " << start_idx);
+      LOG_PRINT_L0("First diverging transaction at {}", start_idx);
     }
-    LOG_PRINT_L0("Reading blockchain from " << inputs[n] << " from " << start_idx);
+    LOG_PRINT_L0("Reading blockchain from {} from {}", inputs[n], start_idx);
     MDB_txn *txn;
     int dbr = mdb_txn_begin(env, NULL, 0, &txn);
     CHECK_AND_ASSERT_THROW_MES(!dbr, "Failed to create LMDB transaction: " + std::string(mdb_strerror(dbr)));
@@ -1422,7 +1421,7 @@ int main(int argc, char* argv[])
           const std::pair<uint64_t, uint64_t> output = std::make_pair(txin.amount, absolute[0]);
           if (opt_verbose)
           {
-            MINFO("Marking output " << output.first << "/" << output.second << " as spent, due to being used in a 1-ring");
+            MINFO("Marking output {}/{} as spent, due to being used in a 1-ring", output.first, output.second);
             std::cout << "\r" << start_idx << "/" << n_txes << "         \r" << std::flush;
           }
           blackballs.push_back(output);
@@ -1436,7 +1435,7 @@ int main(int argc, char* argv[])
             const std::pair<uint64_t, uint64_t> output = std::make_pair(txin.amount, absolute[o]);
             if (opt_verbose)
             {
-              MINFO("Marking output " << output.first << "/" << output.second << " as spent, due to being used in " << new_ring.size() << " identical " << new_ring.size() << "-rings");
+              MINFO("Marking output {}/{} as spent, due to being used in {} identical {}-rings", output.first, output.second, new_ring.size(), new_ring.size());
               std::cout << "\r" << start_idx << "/" << n_txes << "         \r" << std::flush;
             }
             blackballs.push_back(output);
@@ -1451,7 +1450,7 @@ int main(int argc, char* argv[])
             const std::pair<uint64_t, uint64_t> output = std::make_pair(txin.amount, o);
             if (opt_verbose)
             {
-              MINFO("Marking output " << output.first << "/" << output.second << " as spent, due to as many outputs of that amount being spent as exist so far");
+              MINFO("Marking output {}/{} as spent, due to as many outputs of that amount being spent as exist so far", output.first, output.second);
               std::cout << "\r" << start_idx << "/" << n_txes << "         \r" << std::flush;
             }
             blackballs.push_back(output);
@@ -1466,7 +1465,7 @@ int main(int argc, char* argv[])
             const std::pair<uint64_t, uint64_t> output = std::make_pair(txin.amount, absolute[o]);
             if (opt_verbose)
             {
-              MINFO("Marking output " << output.first << "/" << output.second << " as spent, due to being used in " << new_ring.size() << " subsets of " << new_ring.size() << "-rings");
+              MINFO("Marking output {}/{} as spent, due to being used in {} subsets of {}-rings", output.first, output.second, new_ring.size(), new_ring.size());
               std::cout << "\r" << start_idx << "/" << n_txes << "         \r" << std::flush;
             }
             blackballs.push_back(output);
@@ -1476,9 +1475,7 @@ int main(int argc, char* argv[])
         }
         else if (n > 0 && get_relative_ring(txn, txin.k_image, relative_ring))
         {
-          MDEBUG("Key image " << txin.k_image << " already seen: rings " <<
-              boost::join(relative_ring | boost::adaptors::transformed([](uint64_t out){return std::to_string(out);}), " ") <<
-              ", " << boost::join(txin.key_offsets | boost::adaptors::transformed([](uint64_t out){return std::to_string(out);}), " "));
+          MDEBUG("Key image {} already seen: rings {}, {}", txin.k_image, boost::join(relative_ring | boost::adaptors::transformed([](uint64_t out){return std::to_string(out);}), " "), boost::join(txin.key_offsets | boost::adaptors::transformed([](uint64_t out){return std::to_string(out);}), " "));
           std::cout << "\r" << start_idx << "/" << n_txes << "         \r" << std::flush;
           if (relative_ring != txin.key_offsets)
           {
@@ -1502,7 +1499,7 @@ int main(int argc, char* argv[])
               const std::pair<uint64_t, uint64_t> output = std::make_pair(txin.amount, common[0]);
               if (opt_verbose)
               {
-                MINFO("Marking output " << output.first << "/" << output.second << " as spent, due to being used in rings with a single common element");
+                MINFO("Marking output {}/{} as spent, due to being used in rings with a single common element", output.first, output.second);
                 std::cout << "\r" << start_idx << "/" << n_txes << "         \r" << std::flush;
               }
               blackballs.push_back(output);
@@ -1574,7 +1571,7 @@ int main(int argc, char* argv[])
     mdb_cursor_close(cur);
     dbr = mdb_txn_commit(txn);
     CHECK_AND_ASSERT_THROW_MES(!dbr, "Failed to commit txn creating/opening database: " + std::string(mdb_strerror(dbr)));
-    LOG_PRINT_L0("blockchain from " << inputs[n] << " processed till tx idx " << start_idx);
+    LOG_PRINT_L0("blockchain from {} processed till tx idx {}", inputs[n], start_idx);
     if (stop_requested)
       break;
   }
@@ -1593,7 +1590,7 @@ int main(int argc, char* argv[])
 
   while (!work_spent.empty())
   {
-    LOG_PRINT_L0("Secondary pass on " << work_spent.size() << " spent outputs");
+    LOG_PRINT_L0("Secondary pass on {} spent outputs", work_spent.size());
 
     int dbr = resize_env(cache_dir.c_str());
     CHECK_AND_ASSERT_THROW_MES(!dbr, "Failed to resize LMDB database: " + std::string(mdb_strerror(dbr)));
@@ -1631,8 +1628,7 @@ int main(int argc, char* argv[])
           const std::pair<uint64_t, uint64_t> output = std::make_pair(od.amount, last_unknown);
           if (opt_verbose)
           {
-            MINFO("Marking output " << output.first << "/" << output.second << " as spent, due to being used in a " <<
-                absolute.size() << "-ring where all other outputs are known to be spent");
+            MINFO("Marking output {}/{} as spent, due to being used in a {}-ring where all other outputs are known to be spent", output.first, output.second, absolute.size());
           }
           blackballs.push_back(output);
           if (add_spent_output(cur, output_data(od.amount, last_unknown)))
@@ -1659,15 +1655,15 @@ int main(int argc, char* argv[])
 
 skip_secondary_passes:
   uint64_t diff = get_num_spent_outputs() - start_blackballed_outputs;
-  LOG_PRINT_L0(std::to_string(diff) << " new outputs marked as spent, " << get_num_spent_outputs() << " total outputs marked as spent");
+  LOG_PRINT_L0("{} new outputs marked as spent, {} total outputs marked as spent", std::to_string(diff), get_num_spent_outputs());
 
   MDB_txn *txn;
   dbr = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
   CHECK_AND_ASSERT_THROW_MES(!dbr, "Failed to create LMDB transaction: " + std::string(mdb_strerror(dbr)));
   uint64_t pre_rct = 0, rct = 0;
   get_num_outputs(txn0, cur0, dbi0, pre_rct, rct);
-  MINFO("Total pre-rct outputs: " << pre_rct);
-  MINFO("Total rct outputs: " << rct);
+  MINFO("Total pre-rct outputs: {}", pre_rct);
+  MINFO("Total rct outputs: {}", rct);
   static const struct { const char *key; uint64_t base; } stat_keys[] = {
     { "pre-rct-ring-size-1", pre_rct }, { "rct-ring-size-1", rct },
     { "pre-rct-duplicate-rings", pre_rct }, { "rct-duplicate-rings", rct },
@@ -1683,7 +1679,7 @@ skip_secondary_passes:
     if (!get_stat(txn, key.key, data))
       data = 0;
     float percent = key.base ? 100.0f * data / key.base : 0.0f;
-    MINFO(key.key << ": " << data << " (" << percent << "%)");
+    MINFO("{}: {} ({}%)", key.key, data, percent);
   }
   mdb_txn_abort(txn);
 

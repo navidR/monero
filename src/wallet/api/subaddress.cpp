@@ -56,7 +56,7 @@ void SubaddressImpl::setLabel(uint32_t accountIndex, uint32_t addressIndex, cons
   }
   catch (const std::exception& e)
   {
-    LOG_ERROR("setLabel: " << e.what());
+    LOG_ERROR("setLabel: {}", e.what());
   }
 }
 

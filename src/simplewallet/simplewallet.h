@@ -390,7 +390,7 @@ namespace cryptonote
         }
         else
         {
-          LOG_ERROR("Failed to get current blockchain height: " << err);
+          LOG_ERROR("Failed to get current blockchain height: {}", err);
         }
       }
 

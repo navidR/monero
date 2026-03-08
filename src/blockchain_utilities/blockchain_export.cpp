@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
     output_file_path = boost::filesystem::path(command_line::get_arg(vm, arg_output_file));
   else
     output_file_path = boost::filesystem::path(m_config_folder) / "export" / BLOCKCHAIN_RAW;
-  LOG_PRINT_L0("Export output file: " << output_file_path.string());
+  LOG_PRINT_L0("Export output file: {}", output_file_path.string());
 
   // If we wanted to use the memory pool, we would set up a fake_core.
 
@@ -144,14 +144,14 @@ int main(int argc, char* argv[])
   folder /= db->get_db_name();
   const std::string filename = folder.string();
 
-  LOG_PRINT_L0("Loading blockchain from folder " << filename << " ...");
+  LOG_PRINT_L0("Loading blockchain from folder {} ...", filename);
   try
   {
     db->open(filename, DBF_RDONLY);
   }
   catch (const std::exception& e)
   {
-    LOG_PRINT_L0("Error opening database: " << e.what());
+    LOG_PRINT_L0("Error opening database: {}", e.what());
     return 1;
   }
   r = core_storage->blockchain.init(db, opt_testnet ? cryptonote::TESTNET : opt_stagenet ? cryptonote::STAGENET : cryptonote::MAINNET);

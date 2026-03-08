@@ -69,8 +69,8 @@ public:
 #endif
 
     if (command_line::is_arg_defaulted(vm, daemon_args::arg_proxy) && command_line::get_arg(vm, daemon_args::arg_proxy_allow_dns_leaks)) {
-      MLOG_RED(el::Level::Warning, "--" << daemon_args::arg_proxy_allow_dns_leaks.name << " is enabled, but --"
-        << daemon_args::arg_proxy.name << " is not specified.");
+      MLOG_RED(el::Level::Warning, "--{} is enabled, but --{} is not specified.",
+        daemon_args::arg_proxy_allow_dns_leaks.name, daemon_args::arg_proxy.name);
     }
 
     const bool allow_dns = command_line::is_arg_defaulted(vm, daemon_args::arg_proxy) || command_line::get_arg(vm, daemon_args::arg_proxy_allow_dns_leaks);

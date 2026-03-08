@@ -234,7 +234,7 @@ namespace tools
       }
       catch (const std::exception& ex)
       {
-        LOG_ERROR("Exception at while refreshing, what=" << ex.what());
+        LOG_ERROR("Exception at while refreshing, what={}", ex.what());
       }
 
       const auto end = std::chrono::steady_clock::now();
@@ -308,7 +308,7 @@ namespace tools
     {
       if (!command_line::is_arg_defaulted(*m_vm, wallet_args::arg_wallet_file()))
       {
-        MERROR(arg_wallet_dir.name << " and " << wallet_args::arg_wallet_file().name << " are incompatible, use only one of them");
+        MERROR("{} and {} are incompatible, use only one of them", arg_wallet_dir.name, wallet_args::arg_wallet_file().name);
         return false;
       }
       m_wallet_dir = command_line::get_arg(*m_vm, arg_wallet_dir);
@@ -333,7 +333,7 @@ namespace tools
       if (rpc_config->login)
       {
         const cryptonote::rpc_args::descriptors arg{};
-        LOG_ERROR(tr("Cannot specify --") << arg_disable_rpc_login.name << tr(" and --") << arg.rpc_login.name);
+        LOG_ERROR("{}{}{}{}", tr("Cannot specify --"), arg_disable_rpc_login.name, tr(" and --"), arg.rpc_login.name);
         return false;
       }
     }
@@ -352,7 +352,7 @@ namespace tools
         rpc_login_file = tools::private_file::drop_and_recreate(temp);
         if (!rpc_login_file.handle())
         {
-          LOG_ERROR(tr("Failed to create file ") << temp << tr(". Check permissions or remove file"));
+          LOG_ERROR("{}{}{}", tr("Failed to create file "), temp, tr(". Check permissions or remove file"));
           return false;
         }
         std::fputs(http_login->username.c_str(), rpc_login_file.handle());
@@ -362,10 +362,10 @@ namespace tools
         std::fflush(rpc_login_file.handle());
         if (std::ferror(rpc_login_file.handle()))
         {
-          LOG_ERROR(tr("Error writing to file ") << temp);
+          LOG_ERROR("{}{}", tr("Error writing to file "), temp);
           return false;
         }
-        LOG_PRINT_L0(tr("RPC username/password is stored in file ") << temp);
+        LOG_PRINT_L0("{}{}", tr("RPC username/password is stored in file "), temp);
       }
       else // chosen user/pass
       {
@@ -388,12 +388,12 @@ namespace tools
 
     if (max_connections < max_connections_public)
     {
-      MFATAL(arg_rpc_max_connections_per_public_ip.name << " is bigger than " << arg_rpc_max_connections.name);
+      MFATAL("{} is bigger than {}", arg_rpc_max_connections_per_public_ip.name, arg_rpc_max_connections.name);
       return false;
     }
     if (max_connections < max_connections_private)
     {
-      MFATAL(arg_rpc_max_connections_per_private_ip.name << " is bigger than " << arg_rpc_max_connections.name);
+      MFATAL("{} is bigger than {}", arg_rpc_max_connections_per_private_ip.name, arg_rpc_max_connections.name);
       return false;
     }
 
@@ -436,7 +436,7 @@ namespace tools
     bool r = m_wallet->invoke_http_json("/mining_status", req, res);
     if (!r || res.status != CORE_RPC_STATUS_OK)
     {
-      MERROR("Failed to query mining status: " << (r ? res.status : "No connection to daemon"));
+      MERROR("Failed to query mining status: {}", (r ? res.status : "No connection to daemon"));
       return;
     }
     if (res.active || res.is_background_mining_enabled)
@@ -460,7 +460,7 @@ namespace tools
     r = m_wallet->invoke_http_json("/start_mining", req2, res);
     if (!r || res2.status != CORE_RPC_STATUS_OK)
     {
-      MERROR("Failed to setup background mining: " << (r ? res.status : "No connection to daemon"));
+      MERROR("Failed to setup background mining: {}", (r ? res.status : "No connection to daemon"));
       return;
     }
 
@@ -3458,7 +3458,7 @@ namespace tools
     {
       const auto new_period = req.enable ? req.period ? req.period : DEFAULT_AUTO_REFRESH_PERIOD : 0;
       m_auto_refresh_period.store(new_period, std::memory_order_relaxed);
-      MINFO("Auto refresh now " << (new_period ? std::to_string(new_period) + " seconds" : std::string("disabled")));
+      MINFO("Auto refresh now {}", (new_period ? std::to_string(new_period) + " seconds" : std::string("disabled")));
       return true;
     }
     catch (const std::exception& e)
@@ -5002,7 +5002,7 @@ public:
         }
         catch (const std::exception &e)
         {
-          MERROR("Error creating wallet: " << e.what());
+          MERROR("Error creating wallet: {}", e.what());
           return false;
         }
       }
@@ -5025,7 +5025,7 @@ public:
       }
       catch (const std::exception& e)
       {
-        LOG_ERROR(tools::wallet_rpc_server::tr("Initial refresh failed: ") << e.what());
+        LOG_ERROR("{}{}", tools::wallet_rpc_server::tr("Initial refresh failed: "), e.what());
       }
       // if we ^C during potentially length load/refresh, there's no server loop yet
       if (quit)
@@ -5039,7 +5039,7 @@ public:
     }
     catch (const std::exception& e)
     {
-      LOG_ERROR(tools::wallet_rpc_server::tr("Wallet initialization failed: ") << e.what());
+      LOG_ERROR("{}{}", tools::wallet_rpc_server::tr("Wallet initialization failed: "), e.what());
       return false;
     }
   just_dir:
@@ -5056,7 +5056,7 @@ public:
     }
     catch (const std::exception &e)
     {
-      LOG_ERROR(tools::wallet_rpc_server::tr("Failed to run wallet: ") << e.what());
+      LOG_ERROR("{}{}", tools::wallet_rpc_server::tr("Failed to run wallet: "), e.what());
       return false;
     }
     LOG_PRINT_L0(tools::wallet_rpc_server::tr("Stopped wallet RPC server"));
@@ -5068,7 +5068,7 @@ public:
     }
     catch (const std::exception& e)
     {
-      LOG_ERROR(tools::wallet_rpc_server::tr("Failed to save wallet: ") << e.what());
+      LOG_ERROR("{}{}", tools::wallet_rpc_server::tr("Failed to save wallet: "), e.what());
       return false;
     }
     return true;

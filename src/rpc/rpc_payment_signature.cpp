@@ -63,7 +63,7 @@ namespace cryptonote
   {
     if (message.size() != 2 * sizeof(crypto::public_key) + 16 + 2 * sizeof(crypto::signature))
     {
-      MDEBUG("Bad message size: " << message.size());
+      MDEBUG("Bad message size: {}", message.size());
       return false;
     }
     const std::string pkey_string = message.substr(0, 2 * sizeof(crypto::public_key));

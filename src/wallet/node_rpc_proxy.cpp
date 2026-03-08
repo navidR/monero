@@ -313,7 +313,7 @@ boost::optional<std::string> NodeRPCProxy::get_transactions(const std::vector<cr
     const size_t n_txids = std::min<size_t>(SLICE_SIZE, txids.size() - offset);
     for (size_t n = offset; n < (offset + n_txids); ++n)
       req_t.txs_hashes.push_back(epee::string_tools::pod_to_hex(txids[n]));
-    MDEBUG("asking for " << req_t.txs_hashes.size() << " transactions");
+    MDEBUG("asking for {} transactions", req_t.txs_hashes.size());
     req_t.decode_as_json = false;
     req_t.prune = true;
 

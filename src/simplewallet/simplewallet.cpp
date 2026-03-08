@@ -635,7 +635,7 @@ void simple_wallet::handle_transfer_exception(const std::exception_ptr &e, bool 
     }
     catch (const tools::error::wallet_rpc_error& e)
     {
-      LOG_ERROR("RPC error: " << e.to_string());
+      LOG_ERROR("RPC error: {}", e.to_string());
       fail_msg_writer() << sw::tr("RPC error: ") << e.what();
     }
     catch (const tools::error::get_outs_error &e)
@@ -712,23 +712,23 @@ void simple_wallet::handle_transfer_exception(const std::exception_ptr &e, bool 
     }
     catch (const tools::error::transfer_error& e)
     {
-      LOG_ERROR("unknown transfer error: " << e.to_string());
+      LOG_ERROR("unknown transfer error: {}", e.to_string());
       fail_msg_writer() << sw::tr("unknown transfer error: ") << e.what();
     }
     catch (const tools::error::multisig_export_needed& e)
     {
-      LOG_ERROR("Multisig error: " << e.to_string());
+      LOG_ERROR("Multisig error: {}", e.to_string());
       fail_msg_writer() << sw::tr("Multisig error: ") << e.what();
       warn_of_possible_attack = false;
     }
     catch (const tools::error::wallet_internal_error& e)
     {
-      LOG_ERROR("internal error: " << e.to_string());
+      LOG_ERROR("internal error: {}", e.to_string());
       fail_msg_writer() << sw::tr("internal error: ") << e.what();
     }
     catch (const std::exception& e)
     {
-      LOG_ERROR("unexpected error: " << e.what());
+      LOG_ERROR("unexpected error: {}", e.what());
       fail_msg_writer() << sw::tr("unexpected error: ") << e.what();
     }
 
@@ -1350,7 +1350,7 @@ bool simple_wallet::export_multisig_main(const std::vector<std::string> &args, b
   }
   catch (const std::exception &e)
   {
-    LOG_ERROR("Error exporting multisig info: " << e.what());
+    LOG_ERROR("Error exporting multisig info: {}", e.what());
     fail_msg_writer() << tr("Error exporting multisig info: ") << e.what();
     return false;
   }
@@ -1723,7 +1723,7 @@ bool simple_wallet::export_raw_multisig(const std::vector<std::string> &args)
   }
   catch (const std::exception& e)
   {
-    LOG_ERROR("unexpected error: " << e.what());
+    LOG_ERROR("unexpected error: {}", e.what());
     fail_msg_writer() << tr("unexpected error: ") << e.what();
   }
   catch (...)
@@ -2976,7 +2976,7 @@ bool simple_wallet::set_device_name(const std::vector<std::string> &args/* = std
       }
 
     } catch(const std::exception & e){
-      MWARNING("Device reconnect failed: " << e.what());
+      MWARNING("Device reconnect failed: {}", e.what());
       fail_msg_writer() << tr("Device reconnect failed: ") << e.what();
     }
 
@@ -3889,9 +3889,8 @@ bool simple_wallet::ask_wallet_create_if_needed()
       else
       {
         tools::wallet2::wallet_exists(wallet_path, keys_file_exists, wallet_file_exists);
-        LOG_PRINT_L3("wallet_path: " << wallet_path << "");
-        LOG_PRINT_L3("keys_file_exists: " << std::boolalpha << keys_file_exists << std::noboolalpha
-        << "  wallet_file_exists: " << std::boolalpha << wallet_file_exists << std::noboolalpha);
+        LOG_PRINT_L3("wallet_path: {}", wallet_path);
+        LOG_PRINT_L3("keys_file_exists: {}{}{}  wallet_file_exists: {}{}{}", std::boolalpha, keys_file_exists, std::noboolalpha, std::boolalpha, wallet_file_exists, std::noboolalpha);
 
         if((keys_file_exists || wallet_file_exists) && (!m_generate_new.empty() || m_restoring))
         {
@@ -5781,22 +5780,22 @@ bool simple_wallet::refresh_main(uint64_t start_height, enum ResetType reset, bo
   }
   catch (const tools::error::wallet_rpc_error& e)
   {
-    LOG_ERROR("RPC error: " << e.to_string());
+    LOG_ERROR("RPC error: {}", e.to_string());
     ss << tr("RPC error: ") << e.what();
   }
   catch (const tools::error::refresh_error& e)
   {
-    LOG_ERROR("refresh error: " << e.to_string());
+    LOG_ERROR("refresh error: {}", e.to_string());
     ss << tr("refresh error: ") << e.what();
   }
   catch (const tools::error::wallet_internal_error& e)
   {
-    LOG_ERROR("internal error: " << e.to_string());
+    LOG_ERROR("internal error: {}", e.to_string());
     ss << tr("internal error: ") << e.what();
   }
   catch (const std::exception& e)
   {
-    LOG_ERROR("unexpected error: " << e.what());
+    LOG_ERROR("unexpected error: {}", e.what());
     ss << tr("unexpected error: ") << e.what();
   }
   catch (...)
@@ -6124,12 +6123,12 @@ bool simple_wallet::rescan_spent(const std::vector<std::string> &args)
   }
   catch (const tools::error::wallet_rpc_error& e)
   {
-    LOG_ERROR("RPC error: " << e.to_string());
+    LOG_ERROR("RPC error: {}", e.to_string());
     fail_msg_writer() << tr("RPC error: ") << e.what();
   }
   catch (const std::exception& e)
   {
-    LOG_ERROR("unexpected error: " << e.what());
+    LOG_ERROR("unexpected error: {}", e.what());
     fail_msg_writer() << tr("unexpected error: ") << e.what();
   }
   catch (...)
@@ -10000,7 +9999,7 @@ bool simple_wallet::export_key_images(const std::vector<std::string> &args_)
   }
   catch (const std::exception &e)
   {
-    LOG_ERROR("Error exporting key images: " << e.what());
+    LOG_ERROR("Error exporting key images: {}", e.what());
     fail_msg_writer() << "Error exporting key images: " << e.what();
     return true;
   }
@@ -10159,7 +10158,7 @@ bool simple_wallet::export_outputs(const std::vector<std::string> &args_)
   }
   catch (const std::exception &e)
   {
-    LOG_ERROR("Error exporting outputs: " << e.what());
+    LOG_ERROR("Error exporting outputs: {}", e.what());
     fail_msg_writer() << "Error exporting outputs: " << e.what();
     return true;
   }

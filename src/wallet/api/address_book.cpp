@@ -113,7 +113,7 @@ void AddressBookImpl::refresh()
 
 bool AddressBookImpl::deleteRow(std::size_t rowId)
 {
-  LOG_PRINT_L2("Deleting address book row " << rowId);
+  LOG_PRINT_L2("Deleting address book row {}", rowId);
   bool r = m_wallet->m_wallet->delete_address_book_row(rowId);
   if (r)
     refresh();

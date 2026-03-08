@@ -48,19 +48,19 @@ namespace epee
       const http::http_response_info* pri = NULL;
       if(!transport.invoke(uri, method, req_param, timeout, std::addressof(pri), std::move(additional_params)))
       {
-        LOG_PRINT_L1("Failed to invoke http request to  " << uri);
+        LOG_PRINT_L1("Failed to invoke http request to  {}", uri);
         return false;
       }
 
       if(!pri)
       {
-        LOG_PRINT_L1("Failed to invoke http request to  " << uri << ", internal error (null response ptr)");
+        LOG_PRINT_L1("Failed to invoke http request to  {}, internal error (null response ptr)", uri);
         return false;
       }
 
       if(pri->m_response_code != 200)
       {
-        LOG_PRINT_L1("Failed to invoke http request to  " << uri << ", wrong response code: " << pri->m_response_code);
+        LOG_PRINT_L1("Failed to invoke http request to  {}, wrong response code: {}", uri, pri->m_response_code);
         return false;
       }
 
@@ -79,19 +79,19 @@ namespace epee
       const http::http_response_info* pri = NULL;
       if(!transport.invoke(uri, method, boost::string_ref{reinterpret_cast<const char*>(req_param.data()), req_param.size()}, timeout, std::addressof(pri)))
       {
-        LOG_PRINT_L1("Failed to invoke http request to  " << uri);
+        LOG_PRINT_L1("Failed to invoke http request to  {}", uri);
         return false;
       }
 
       if(!pri)
       {
-        LOG_PRINT_L1("Failed to invoke http request to  " << uri << ", internal error (null response ptr)");
+        LOG_PRINT_L1("Failed to invoke http request to  {}, internal error (null response ptr)", uri);
         return false;
       }
 
       if(pri->m_response_code != 200)
       {
-        LOG_PRINT_L1("Failed to invoke http request to  " << uri << ", wrong response code: " << pri->m_response_code);
+        LOG_PRINT_L1("Failed to invoke http request to  {}, wrong response code: {}", uri, pri->m_response_code);
         return false;
       }
 
@@ -120,7 +120,7 @@ namespace epee
       if(resp_t.error.code || resp_t.error.message.size())
       {
         error_struct = resp_t.error;
-        LOG_ERROR("RPC call of \"" << req_t.method << "\" returned error: " << resp_t.error.code << ", message: " << resp_t.error.message);
+        LOG_ERROR("RPC call of \"{}\" returned error: {}, message: {}", req_t.method, resp_t.error.code, resp_t.error.message);
         return false;
       }
       result_struct = resp_t.result;

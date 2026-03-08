@@ -50,7 +50,7 @@ PUSH_WARNINGS
 DISABLE_GCC_WARNING(maybe-uninitialized)
   if ((intptr_t)quux == foop)
   {
-    MDEBUG(std::hex << std::setw(8) << std::setfill('0') << *(uint32_t*)quux);
+    MDEBUG("{}{}{}{}", std::hex, std::setw(8), std::setfill('0'), *(uint32_t*)quux);
     if (wipe) { ASSERT_TRUE(memcmp(quux, "bar", 3)); }
   }
   else MWARNING("We did not get the same location, cannot check");

@@ -207,14 +207,14 @@ std::vector<std::string> WalletManagerImpl::findWallets(const std::string &path)
         boost::smatch what;
         std::string filename = itr->path().filename().string();
 
-        LOG_PRINT_L3("Checking filename: " << filename);
+        LOG_PRINT_L3("Checking filename: {}", filename);
 
         bool matched = boost::regex_match(filename, what, wallet_rx);
         if (matched) {
             // if keys file found, checking if there's wallet file itself
             std::string wallet_file = (itr->path().parent_path() /= what[1].str()).string();
             if (boost::filesystem::exists(wallet_file)) {
-                LOG_PRINT_L3("Found wallet: " << wallet_file);
+                LOG_PRINT_L3("Found wallet: {}", wallet_file);
                 result.push_back(wallet_file);
             }
         }
@@ -362,7 +362,7 @@ std::tuple<bool, std::string, std::string, std::string, std::string> WalletManag
     }
 
     std::string version, hash;
-    MDEBUG("Checking for a new " << software << " version for " << buildtag);
+    MDEBUG("Checking for a new {} version for {}", software, buildtag);
     if (!tools::check_updates(software, buildtag, version, hash))
       return std::make_tuple(false, "", "", "", "");
 
@@ -370,7 +370,7 @@ std::tuple<bool, std::string, std::string, std::string, std::string> WalletManag
     {
       std::string user_url = tools::get_update_url(software, subdir, buildtag, version, true);
       std::string auto_url = tools::get_update_url(software, subdir, buildtag, version, false);
-      MGINFO("Version " << version << " of " << software << " for " << buildtag << " is available: " << user_url << ", SHA256 hash " << hash);
+      MGINFO("Version {} of {} for {} is available: {}, SHA256 hash {}", version, software, buildtag, user_url, hash);
       return std::make_tuple(true, version, hash, user_url, auto_url);
     }
     return std::make_tuple(false, "", "", "", "");

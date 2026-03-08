@@ -399,7 +399,7 @@ eof:
 
           string_tools::trim(command);
 
-          LOG_PRINT_L2("Read command: " << command);
+          LOG_PRINT_L2("Read command: {}", command);
           if(cmd_handler(command))
           {
             continue;
@@ -419,7 +419,7 @@ eof:
         }
         catch (const std::exception &ex)
         {
-          LOG_ERROR("Exception at [console_handler], what=" << ex.what());
+          LOG_ERROR("Exception at [console_handler], what={}", ex.what());
         }
       }
       if (exit_handler)

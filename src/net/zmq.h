@@ -48,7 +48,7 @@
 #define MONERO_LOG_ZMQ_ERROR(...)                                                   \
     do                                                                          \
     {                                                                           \
-        MERROR( __VA_ARGS__ << ": " << ::net::zmq::get_error_code().message()); \
+        MERROR("{}: {}", __VA_ARGS__, ::net::zmq::get_error_code().message()); \
     } while (0)
 
 //! Throw an exception with a custom `msg`, current ZMQ error code, filename, and line number.

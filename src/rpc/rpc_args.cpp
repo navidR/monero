@@ -76,7 +76,7 @@ namespace cryptonote
       // user specified CA file or fingeprints implies enabled SSL by default
       if (!ssl_required && !epee::net_utils::ssl_support_from_string(ssl_options.support, command_line::get_arg(vm, arg.rpc_ssl)))
       {
-        MERROR("Invalid argument for " << std::string(arg.rpc_ssl.name));
+        MERROR("Invalid argument for {}", std::string(arg.rpc_ssl.name));
         return boost::none;
       }
 
@@ -152,17 +152,13 @@ namespace cryptonote
       const auto parsed_ip = boost::asio::ip::make_address(config.bind_ip, ec);
       if (ec)
       {
-        LOG_ERROR(tr("Invalid IP address given for --") << arg.rpc_bind_ip.name);
+        LOG_ERROR("{}{}", tr("Invalid IP address given for --"), arg.rpc_bind_ip.name);
         return boost::none;
       }
 
       if (!parsed_ip.is_loopback() && !command_line::get_arg(vm, arg.confirm_external_bind))
       {
-        LOG_ERROR(
-          "--" << arg.rpc_bind_ip.name <<
-          tr(" permits inbound unencrypted external connections. Consider SSH tunnel or SSL proxy instead. Override with --") <<
-          arg.confirm_external_bind.name
-        );
+        LOG_ERROR("--{}{}{}", arg.rpc_bind_ip.name, tr(" permits inbound unencrypted external connections. Consider SSH tunnel or SSL proxy instead. Override with --"), arg.confirm_external_bind.name);
         return boost::none;
       }
     }
@@ -180,17 +176,13 @@ namespace cryptonote
       const auto parsed_ip = boost::asio::ip::make_address(config.bind_ipv6_address, ec);
       if (ec)
       {
-        LOG_ERROR(tr("Invalid IP address given for --") << arg.rpc_bind_ipv6_address.name);
+        LOG_ERROR("{}{}", tr("Invalid IP address given for --"), arg.rpc_bind_ipv6_address.name);
         return boost::none;
       }
 
       if (!parsed_ip.is_loopback() && !command_line::get_arg(vm, arg.confirm_external_bind))
       {
-        LOG_ERROR(
-          "--" << arg.rpc_bind_ipv6_address.name <<
-          tr(" permits inbound unencrypted external connections. Consider SSH tunnel or SSL proxy instead. Override with --") <<
-          arg.confirm_external_bind.name
-        );
+        LOG_ERROR("--{}{}{}", arg.rpc_bind_ipv6_address.name, tr(" permits inbound unencrypted external connections. Consider SSH tunnel or SSL proxy instead. Override with --"), arg.confirm_external_bind.name);
         return boost::none;
       }
     }
@@ -201,7 +193,7 @@ namespace cryptonote
       boost::asio::ip::make_address(config.restricted_bind_ip, ec);
       if (ec)
       {
-        LOG_ERROR(tr("Invalid IP address given for --") << arg.rpc_restricted_bind_ip.name);
+        LOG_ERROR("{}{}", tr("Invalid IP address given for --"), arg.rpc_restricted_bind_ip.name);
         return boost::none;
       }
     }
@@ -218,7 +210,7 @@ namespace cryptonote
       boost::asio::ip::make_address(config.restricted_bind_ipv6_address, ec);
       if (ec)
       {
-        LOG_ERROR(tr("Invalid IP address given for --") << arg.rpc_restricted_bind_ipv6_address.name);
+        LOG_ERROR("{}{}", tr("Invalid IP address given for --"), arg.rpc_restricted_bind_ipv6_address.name);
         return boost::none;
       }
     }
@@ -239,7 +231,7 @@ namespace cryptonote
 
       if (config.login->username.empty())
       {
-        LOG_ERROR(tr("Username specified with --") << arg.rpc_login.name << tr(" cannot be empty"));
+        LOG_ERROR("{}{}{}", tr("Username specified with --"), arg.rpc_login.name, tr(" cannot be empty"));
         return boost::none;
       }
     }

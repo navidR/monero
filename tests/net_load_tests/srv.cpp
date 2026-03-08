@@ -41,7 +41,7 @@
 
 using namespace net_load_tests;
 
-#define EXIT_ON_ERROR(cond) { if (!(cond)) { LOG_PRINT_L0("ERROR: " << #cond); exit(1); } else {} }
+#define EXIT_ON_ERROR(cond) { if (!(cond)) { LOG_PRINT_L0("ERROR: {}", #cond); exit(1); } else {} }
 
 namespace
 {
@@ -103,7 +103,7 @@ namespace
       rsp.opened_connections_count = m_tcp_server.get_config_object().get_connections_count();
       rsp.new_connection_counter = new_connection_counter();
       rsp.close_connection_counter = close_connection_counter();
-      LOG_PRINT_L0("Statistics: " << rsp.to_string());
+      LOG_PRINT_L0("Statistics: {}", rsp.to_string());
       return 1;
     }
 
@@ -120,7 +120,7 @@ namespace
       boost::unique_lock<boost::mutex> lock(m_open_close_test_mutex);
       if (0 == m_open_close_test_helper.get())
       {
-        LOG_PRINT_L0("Start open/close test (" << req.open_request_target << ", " << req.max_opened_conn_count << ")");
+        LOG_PRINT_L0("Start open/close test ({}, {})", req.open_request_target, req.max_opened_conn_count);
 
         m_open_close_test_conn_id = context.m_connection_id;
         m_open_close_test_helper.reset(new open_close_test_helper(m_tcp_server, req.open_request_target, req.max_opened_conn_count));
@@ -152,7 +152,7 @@ namespace
             m_tcp_server.get_config_object(), [=](int code, const CMD_DATA_REQUEST::response& rsp, const test_connection_context&) {
               if (code <= 0)
               {
-                LOG_PRINT_L0("Failed to invoke CMD_DATA_REQUEST. code = " << code);
+                LOG_PRINT_L0("Failed to invoke CMD_DATA_REQUEST. code = {}", code);
               }
           });
           if (!r)
@@ -167,7 +167,7 @@ namespace
   private:
     void close_connections(boost::uuids::uuid cmd_conn_id)
     {
-      LOG_PRINT_L0("Closing connections. Number of opened connections: " << m_tcp_server.get_config_object().get_connections_count());
+      LOG_PRINT_L0("Closing connections. Number of opened connections: {}", m_tcp_server.get_config_object().get_connections_count());
 
       size_t count = 0;
       m_tcp_server.get_config_object().foreach_connection([&](test_connection_context& ctx) {
@@ -181,7 +181,7 @@ namespace
           }
           else
           {
-            LOG_PRINT_L0(count << " connection already closed");
+            LOG_PRINT_L0("{} connection already closed", count);
           }
         }
         return true;
@@ -200,7 +200,7 @@ namespace
           }
           else
           {
-            LOG_PRINT_L0("ERROR: " << ec.message() << ':' << ec.value());
+            LOG_PRINT_L0("ERROR: {}{}{}", ec.message(), ':', ec.value());
           }
         });
       }

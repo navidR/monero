@@ -260,7 +260,7 @@ void TransactionHistoryImpl::refresh()
         ti->m_confirmations = 0;
         m_history.push_back(ti);
         
-        LOG_PRINT_L1(__FUNCTION__ << ": Unconfirmed payment found " << pd.m_amount);
+        LOG_PRINT_L1("{}: Unconfirmed payment found {}", __FUNCTION__, pd.m_amount);
     }
      
 }

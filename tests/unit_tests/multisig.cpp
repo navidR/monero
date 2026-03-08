@@ -85,7 +85,7 @@ static void make_wallet(unsigned int idx, tools::wallet2 &wallet)
   }
   catch (const std::exception &e)
   {
-    MFATAL("Error creating test wallet: " << e.what());
+    MFATAL("Error creating test wallet: {}", e.what());
     ASSERT_TRUE(0);
   }
 }

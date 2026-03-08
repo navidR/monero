@@ -144,8 +144,7 @@ int check_flush(cryptonote::core &core, std::vector<block_complete_entry> &block
     cryptonote::block block;
     if (!parse_and_validate_block_from_blob(b.block, block))
     {
-      MERROR("Failed to parse block: "
-          << epee::string_tools::buff_to_hex_nodelimer(b.block));
+      MERROR("Failed to parse block: {}", epee::string_tools::buff_to_hex_nodelimer(b.block));
       core.cleanup_handle_incoming_blocks();
       return 1;
     }
@@ -180,7 +179,7 @@ int check_flush(cryptonote::core &core, std::vector<block_complete_entry> &block
       {
         cryptonote::transaction transaction;
         if (cryptonote::parse_and_validate_tx_from_blob(tx_blob.blob, transaction))
-          MERROR("Transaction verification failed, tx_id = " << cryptonote::get_transaction_hash(transaction));
+          MERROR("Transaction verification failed, tx_id = {}", cryptonote::get_transaction_hash(transaction));
         else
           MERROR("Transaction verification failed, transaction is unparsable");
         core.cleanup_handle_incoming_blocks();
@@ -199,7 +198,7 @@ int check_flush(cryptonote::core &core, std::vector<block_complete_entry> &block
     {
       cryptonote::block block;
       if (cryptonote::parse_and_validate_block_from_blob(block_entry.block, block))
-        MERROR("Block verification failed, id = " << cryptonote::get_block_hash(block));
+        MERROR("Block verification failed, id = {}", cryptonote::get_block_hash(block));
       else
         MERROR("Block verification failed, block is unparsable");
       core.cleanup_handle_incoming_blocks();
@@ -231,7 +230,7 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
   boost::system::error_code ec;
   if (!boost::filesystem::exists(fs_import_file_path, ec))
   {
-    MFATAL("bootstrap file not found: " << fs_import_file_path);
+    MFATAL("bootstrap file not found: {}", fs_import_file_path);
     return false;
   }
 
@@ -245,7 +244,7 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
   std::streampos pos;
   // BootstrapFile bootstrap(import_file_path);
   uint64_t total_source_blocks = bootstrap.count_blocks(import_file_path, pos, seek_height, block_first);
-  MINFO("bootstrap file last block number: " << total_source_blocks+block_first-1 << " (zero-based height)  total blocks: " << total_source_blocks);
+  MINFO("bootstrap file last block number: {} (zero-based height)  total blocks: {}", total_source_blocks+block_first-1, total_source_blocks);
 
   if (total_source_blocks+block_first-1 <= start_height)
   {
@@ -290,8 +289,7 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
 
   // These are what we'll try to use, and they don't have to be a determination
   // from source and destination blockchains, but those are the defaults.
-  MINFO("start block: " << start_height << "  stop block: " <<
-      block_stop);
+  MINFO("start block: {}  stop block: {}", start_height, block_stop);
 
   bool use_batch = opt_batch && !opt_verify;
 
@@ -342,16 +340,16 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
     {
       throw std::runtime_error("Error in deserialization of chunk size");
     }
-    MDEBUG("chunk_size: " << chunk_size);
+    MDEBUG("chunk_size: {}", chunk_size);
 
     if (chunk_size > BUFFER_SIZE)
     {
-      MWARNING("WARNING: chunk_size " << chunk_size << " > BUFFER_SIZE " << BUFFER_SIZE);
+      MWARNING("WARNING: chunk_size {} > BUFFER_SIZE {}", chunk_size, BUFFER_SIZE);
       throw std::runtime_error("Aborting: chunk size exceeds buffer size");
     }
     if (chunk_size > CHUNK_SIZE_WARNING_THRESHOLD)
     {
-      MINFO("NOTE: chunk_size " << chunk_size << " > " << CHUNK_SIZE_WARNING_THRESHOLD);
+      MINFO("NOTE: chunk_size {} > {}", chunk_size, CHUNK_SIZE_WARNING_THRESHOLD);
     }
     else if (chunk_size == 0) {
       MFATAL("ERROR: chunk_size == 0");
@@ -368,13 +366,12 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
       }
       else
       {
-        MFATAL("ERROR: unexpected end of file: bytes read before error: "
-            << import_file.gcount() << " of chunk_size " << chunk_size);
+        MFATAL("ERROR: unexpected end of file: bytes read before error: {} of chunk_size {}", import_file.gcount(), chunk_size);
         return 2;
       }
     }
     bytes_read += chunk_size;
-    MDEBUG("Total bytes read: " << bytes_read);
+    MDEBUG("Total bytes read: {}", bytes_read);
 
     if (h > block_stop)
     {
@@ -382,7 +379,7 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
         << " / " << block_stop
         << "\r" << std::flush;
       std::cout << ENDL << ENDL;
-      MINFO("Specified block number reached - stopping.  block: " << h-1 << "  total blocks: " << h);
+      MINFO("Specified block number reached - stopping.  block: {}  total blocks: {}", h-1, h);
       quit = 1;
       break;
     }
@@ -419,14 +416,14 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
         if ((h-1) % display_interval == 0)
         {
           std::cout << refresh_string;
-          MDEBUG("loading block number " << h-1);
+          MDEBUG("loading block number {}", h-1);
         }
         else
         {
-          MDEBUG("loading block number " << h-1);
+          MDEBUG("loading block number {}", h-1);
         }
         b = bp.block;
-        MDEBUG("block prev_id: " << b.prev_id << ENDL);
+        MDEBUG("block prev_id: {}{}", b.prev_id, ENDL);
 
         if ((h-1) % progress_interval == 0)
         {
@@ -495,7 +492,7 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
           catch (const std::exception& e)
           {
             std::cout << refresh_string;
-            MFATAL("Error adding block to blockchain: " << e.what());
+            MFATAL("Error adding block to blockchain: {}", e.what());
             quit = 2; // make sure we don't commit partial block data
             break;
           }
@@ -525,7 +522,7 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
     catch (const std::exception& e)
     {
       std::cout << refresh_string;
-      MFATAL("exception while reading from file, height=" << h << ": " << e.what());
+      MFATAL("exception while reading from file, height={}: {}", h, e.what());
       return 2;
     }
   } // while
@@ -554,10 +551,10 @@ quitting:
   }
 
   core.get_blockchain_storage().get_db().show_stats();
-  MINFO("Number of blocks imported: " << num_imported);
+  MINFO("Number of blocks imported: {}", num_imported);
   if (h > 0)
     // TODO: if there was an error, the last added block is probably at zero-based height h-2
-    MINFO("Finished at block: " << h-1 << "  total blocks: " << h);
+    MINFO("Finished at block: {}  total blocks: {}", h-1, h);
 
   std::cout << ENDL;
   return 0;
@@ -701,31 +698,30 @@ int main(int argc, char* argv[])
   }
 
   MINFO("database: LMDB");
-  MINFO("verify:  " << std::boolalpha << opt_verify << std::noboolalpha);
+  MINFO("verify:  {}{}{}", std::boolalpha, opt_verify, std::noboolalpha);
   if (opt_batch)
   {
-    MINFO("batch:   " << std::boolalpha << opt_batch << std::noboolalpha
-        << "  batch size: " << db_batch_size);
+    MINFO("batch:   {}{}{}  batch size: {}", std::boolalpha, opt_batch, std::noboolalpha, db_batch_size);
   }
   else
   {
-    MINFO("batch:   " << std::boolalpha << opt_batch << std::noboolalpha);
+    MINFO("batch:   {}{}{}", std::boolalpha, opt_batch, std::noboolalpha);
   }
-  MINFO("resume:  " << std::boolalpha << opt_resume  << std::noboolalpha);
-  MINFO("nettype: " << (opt_testnet ? "testnet" : opt_stagenet ? "stagenet" : "mainnet"));
+  MINFO("resume:  {}{}{}", std::boolalpha, opt_resume, std::noboolalpha);
+  MINFO("nettype: {}", (opt_testnet ? "testnet" : opt_stagenet ? "stagenet" : "mainnet"));
 
-  MINFO("bootstrap file path: " << import_file_path);
-  MINFO("database path:       " << m_config_folder);
+  MINFO("bootstrap file path: {}", import_file_path);
+  MINFO("database path:       {}", m_config_folder);
 
   if (!opt_verify)
   {
     MCLOG_RED(el::Level::Warning, "global", "\n"
       "Import is set to proceed WITHOUT VERIFICATION.\n"
       "This is a DANGEROUS operation: if the file was tampered with in transit, or obtained from a malicious source,\n"
-      "you could end up with a compromised database. It is recommended to NOT use " << arg_noverify.name << ".\n"
+      "you could end up with a compromised database. It is recommended to NOT use {}.\n"
       "*****************************************************************************************\n"
       "You have 90 seconds to press ^C or terminate this program before unverified import starts\n"
-      "*****************************************************************************************");
+      "*****************************************************************************************", arg_noverify.name);
     sleep(90);
   }
 
@@ -751,9 +747,9 @@ int main(int argc, char* argv[])
   if (!command_line::is_arg_defaulted(vm, arg_pop_blocks))
   {
     num_blocks = command_line::get_arg(vm, arg_pop_blocks);
-    MINFO("height: " << core.get_blockchain_storage().get_current_blockchain_height());
+    MINFO("height: {}", core.get_blockchain_storage().get_current_blockchain_height());
     pop_blocks(core, num_blocks);
-    MINFO("height: " << core.get_blockchain_storage().get_current_blockchain_height());
+    MINFO("height: {}", core.get_blockchain_storage().get_current_blockchain_height());
     return 0;
   }
 

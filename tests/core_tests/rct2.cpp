@@ -64,7 +64,7 @@ bool gen_rct2_tx_validation_base::generate_with(std::vector<test_event_entry>& e
         false, "Failed to generate block");
     events.push_back(blocks[n]);
     prev_block = blocks + n;
-    LOG_PRINT_L0("Initial miner tx " << n << ": " << obj_to_json_str(blocks[n].miner_tx));
+    LOG_PRINT_L0("Initial miner tx {}: {}", n, obj_to_json_str(blocks[n].miner_tx));
   }
 
   // rewind
@@ -147,7 +147,7 @@ bool gen_rct2_tx_validation_base::generate_with(std::vector<test_event_entry>& e
 
     //events.push_back(rct_txes.back());
     starting_rct_tx_hashes.push_back(get_transaction_hash(rct_txes.back()));
-    LOG_PRINT_L0("Test tx: " << obj_to_json_str(rct_txes.back()));
+    LOG_PRINT_L0("Test tx: {}", obj_to_json_str(rct_txes.back()));
 
     for (int o = 0; amounts_paid[o] != (uint64_t)-1; ++o)
     {

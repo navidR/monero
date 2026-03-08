@@ -100,9 +100,9 @@ uint16_t parse_public_rpc_port(const po::variables_map &vm)
 
   if (address->is_loopback() || address->is_local())
   {
-    MLOG_RED(el::Level::Warning, "--" << public_node_arg.name 
-      << " is enabled, but RPC server " << address->str() 
-      << " may be unreachable from outside, please check RPC server bind address");
+    MLOG_RED(el::Level::Warning,
+      "--{} is enabled, but RPC server {} may be unreachable from outside, please check RPC server bind address",
+      public_node_arg.name, address->str());
   }
 
   return rpc_port;
@@ -114,7 +114,7 @@ bool isFat32(const wchar_t* root_path)
   std::vector<wchar_t> fs(MAX_PATH + 1);
   if (!::GetVolumeInformationW(root_path, nullptr, 0, nullptr, 0, nullptr, &fs[0], MAX_PATH))
   {
-    MERROR("Failed to get '" << root_path << "' filesystem name. Error code: " << ::GetLastError());
+    MERROR("Failed to get '{}' filesystem name. Error code: {}", root_path, ::GetLastError());
     return false;
   }
 
@@ -295,7 +295,7 @@ int main(int argc, char const * argv[])
       tools::set_max_concurrency(command_line::get_arg(vm, daemon_args::arg_max_concurrency));
 
     // logging is now set up
-    MGINFO("Monero '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")");
+    MGINFO("Monero '{}' (v{})", MONERO_RELEASE_NAME, MONERO_VERSION_FULL);
 
     // If there are positional options, we're running a daemon command
     {
@@ -363,7 +363,7 @@ int main(int argc, char const * argv[])
   }
   catch (std::exception const & ex)
   {
-    LOG_ERROR("Exception in main! " << ex.what());
+    LOG_ERROR("Exception in main! {}", ex.what());
   }
   catch (...)
   {

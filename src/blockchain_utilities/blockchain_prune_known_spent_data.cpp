@@ -49,7 +49,7 @@ static std::map<uint64_t, uint64_t> load_outputs(const std::string &filename)
   f = fopen(filename.c_str(), "r");
   if (!f)
   {
-    MERROR("Failed to load outputs from " << filename << ": " << strerror(errno));
+    MERROR("Failed to load outputs from {}: {}", filename, strerror(errno));
     return {};
   }
   while (1)
@@ -71,7 +71,7 @@ static std::map<uint64_t, uint64_t> load_outputs(const std::string &filename)
     }
     if (amount == std::numeric_limits<uint64_t>::max())
     {
-      MERROR("Bad format in " << filename);
+      MERROR("Bad format in {}", filename);
       continue;
     }
     if (sscanf(s, "%" PRIu64 "*%" PRIu64, &offset, &num_offsets) == 2 && num_offsets < std::numeric_limits<uint64_t>::max() - offset)
@@ -84,7 +84,7 @@ static std::map<uint64_t, uint64_t> load_outputs(const std::string &filename)
     }
     else
     {
-      MERROR("Bad format in " << filename);
+      MERROR("Bad format in {}", filename);
       continue;
     }
   }
@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
   }
 
   const std::string filename = (boost::filesystem::path(opt_data_dir) / db->get_db_name()).string();
-  LOG_PRINT_L0("Loading blockchain from folder " << filename << " ...");
+  LOG_PRINT_L0("Loading blockchain from folder {} ...", filename);
 
   try
   {
@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
   }
   catch (const std::exception& e)
   {
-    LOG_PRINT_L0("Error opening database: " << e.what());
+    LOG_PRINT_L0("Error opening database: {}", e.what());
     return 1;
   }
   r = core_storage->blockchain.init(db, net_type);
@@ -246,22 +246,22 @@ int main(int argc, char* argv[])
     if (i->first == 0 || is_valid_decomposed_amount(i->first))
     {
       if (opt_verbose)
-        MINFO("Ignoring output value " << i->first << ", with " << num_outputs << " outputs");
+        MINFO("Ignoring output value {}, with {} outputs", i->first, num_outputs);
       continue;
     }
     num_eligible_outputs += num_outputs;
     num_eligible_known_spent_outputs += i->second;
     if (opt_verbose)
-      MINFO(i->first << ": " << i->second << "/" << num_outputs);
+      MINFO("{}: {}/{}", i->first, i->second, num_outputs);
     if (num_outputs > i->second)
       continue;
     if (num_outputs && num_outputs < i->second)
     {
-      MERROR("More outputs are spent than known for amount " << i->first << ", not touching");
+      MERROR("More outputs are spent than known for amount {}, not touching", i->first);
       continue;
     }
     if (opt_verbose)
-      MINFO("Pruning data for " << num_outputs << " outputs");
+      MINFO("Pruning data for {} outputs", num_outputs);
     if (!opt_dry_run)
       db->prune_outputs(i->first);
     num_prunable_outputs += i->second;
@@ -269,11 +269,11 @@ int main(int argc, char* argv[])
 
   db->batch_stop();
 
-  MINFO("Total outputs: " << num_total_outputs);
-  MINFO("Known spent outputs: " << num_known_spent_outputs);
-  MINFO("Eligible outputs: " << num_eligible_outputs);
-  MINFO("Eligible known spent outputs: " << num_eligible_known_spent_outputs);
-  MINFO("Prunable outputs: " << num_prunable_outputs);
+  MINFO("Total outputs: {}", num_total_outputs);
+  MINFO("Known spent outputs: {}", num_known_spent_outputs);
+  MINFO("Eligible outputs: {}", num_eligible_outputs);
+  MINFO("Eligible known spent outputs: {}", num_eligible_known_spent_outputs);
+  MINFO("Prunable outputs: {}", num_prunable_outputs);
 
   LOG_PRINT_L0("Blockchain known spent data pruned OK");
   core_storage->blockchain.deinit();

@@ -159,7 +159,7 @@ static bool set_tx_extra(
       crypto::hash8 payment_id8 = crypto::null_hash8;
       if (cryptonote::get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id8))
       {
-        LOG_PRINT_L2("Encrypting payment id " << payment_id8);
+        LOG_PRINT_L2("Encrypting payment id {}", payment_id8);
         crypto::public_key view_key_pub = cryptonote::get_destination_view_key_pub(destinations, change.addr);
         if (view_key_pub == crypto::null_pkey)
         {
@@ -185,7 +185,7 @@ static bool set_tx_extra(
           LOG_ERROR("Failed to add encrypted payment id to tx extra");
           return false;
         }
-        LOG_PRINT_L1("Encrypted payment ID: " << payment_id8);
+        LOG_PRINT_L1("Encrypted payment ID: {}", payment_id8);
         add_dummy_payment_id = false;
       }
       else if (cryptonote::get_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id))
@@ -230,7 +230,7 @@ static bool set_tx_extra(
   cryptonote::remove_field_from_tx_extra(tx.extra, typeid(cryptonote::tx_extra_pub_key));
   cryptonote::add_tx_pub_key_to_extra(tx.extra, tx_public_key);
   cryptonote::remove_field_from_tx_extra(tx.extra, typeid(cryptonote::tx_extra_additional_pub_keys));
-  LOG_PRINT_L2("tx pubkey: " << tx_public_key);
+  LOG_PRINT_L2("tx pubkey: {}", tx_public_key);
   if (tx_aux_public_keys.size())
   {
     LOG_PRINT_L2("additional tx pubkeys: ");

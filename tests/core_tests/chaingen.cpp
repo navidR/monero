@@ -100,11 +100,11 @@ namespace
     {
       if (height < blocks.size())
       {
-        MDEBUG("Get hash for block height: " << height << " hash: " << blocks[height].hash);
+        MDEBUG("Get hash for block height: {} hash: {}", height, blocks[height].hash);
         return blocks[height].hash;
       }
 
-      MDEBUG("Get hash for block height: " << height << " zero-hash");
+      MDEBUG("Get hash for block height: {} zero-hash", height);
       crypto::hash hash = crypto::null_hash;
       *(uint64_t*)&hash = height;
       return hash;
@@ -1336,7 +1336,7 @@ bool test_chain_unit_base::verify(const std::string& cb_name, cryptonote::core& 
   auto cb_it = m_callbacks.find(cb_name);
   if(cb_it == m_callbacks.end())
   {
-    LOG_ERROR("Failed to find callback " << cb_name);
+    LOG_ERROR("Failed to find callback {}", cb_name);
     return false;
   }
   return cb_it->second(c, ev_index, events);

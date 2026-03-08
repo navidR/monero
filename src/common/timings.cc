@@ -34,7 +34,7 @@ bool TimingsDatabase::load()
   FILE *f = fopen(filename.c_str(), "r");
   if (!f)
   {
-    MDEBUG("Failed to load timings file " << filename << ": " << strerror(errno));
+    MDEBUG("Failed to load timings file {}: {}", filename, strerror(errno));
     return false;
   }
   while (1)
@@ -54,7 +54,7 @@ bool TimingsDatabase::load()
     boost::split(fields, ptr, boost::is_any_of(" "));
     if (fields.size() != N_EXPECTED_FIELDS)
     {
-      MERROR("Bad format: wrong number of fields: got " << fields.size() << " expected " << N_EXPECTED_FIELDS);
+      MERROR("Bad format: wrong number of fields: got {} expected {}", fields.size(), N_EXPECTED_FIELDS);
       continue;
     }
 
@@ -88,7 +88,7 @@ bool TimingsDatabase::save(const bool save_current_time /*=true*/)
   FILE *f = fopen(filename.c_str(), "a");  // append
   if (!f)
   {
-    MERROR("Failed to write to file " << filename << ": " << strerror(errno));
+    MERROR("Failed to write to file {}: {}", filename, strerror(errno));
     return false;
   }
 

@@ -62,7 +62,7 @@ namespace epee
       std::string blob;
       if(!stg.get_value(pname, blob, hparent_section))
         return false;
-      CHECK_AND_ASSERT_MES(blob.size() == sizeof(d), false, "unserialize_t_val_as_blob: size of " << typeid(t_type).name() << " = " << sizeof(t_type) << ", but stored blod size = " << blob.size() << ", value name = " << pname);
+      CHECK_AND_ASSERT_MES(blob.size() == sizeof(d), false, "unserialize_t_val_as_blob: size of {} = {}, but stored blod size = {}, value name = {}", typeid(t_type).name(), sizeof(t_type), blob.size(), pname);
       d = *(const t_type*)blob.data();
       return true;
     } 
@@ -71,7 +71,7 @@ namespace epee
     static bool serialize_t_obj(const serializible_type& obj, t_storage& stg, typename t_storage::hsection hparent_section, const char* pname)
     {
       typename t_storage::hsection	hchild_section = stg.open_section(pname, hparent_section, true);
-      CHECK_AND_ASSERT_MES(hchild_section, false, "serialize_t_obj: failed to open/create section " << pname);
+      CHECK_AND_ASSERT_MES(hchild_section, false, "serialize_t_obj: failed to open/create section {}", pname);
       return obj.store(stg, hchild_section);
     }
     //-------------------------------------------------------------------------------------------------------------------
@@ -138,7 +138,7 @@ namespace epee
         char *pelem = buff.data();
         CHECK_AND_ASSERT_MES(!(loaded_size%sizeof(typename stl_container::value_type)), 
           false, 
-          "size in blob " << loaded_size << " not have not zero modulo for sizeof(value_type) = " << sizeof(typename stl_container::value_type) << ", type " << typeid(typename stl_container::value_type).name());
+          "size in blob {} not have not zero modulo for sizeof(value_type) = {}, type {}", loaded_size, sizeof(typename stl_container::value_type), typeid(typename stl_container::value_type).name());
         size_t count = (loaded_size/sizeof(typename stl_container::value_type));
         hint_resize(container, count);
         for(size_t i = 0; i < count; i++)
@@ -160,7 +160,7 @@ namespace epee
       typename stl_container::const_iterator it = container.begin();
       typename t_storage::hsection hchild_section = nullptr;
       typename t_storage::harray hsec_array = stg.insert_first_section(pname, hchild_section, hparent_section);
-      CHECK_AND_ASSERT_MES(hsec_array && hchild_section, false, "failed to insert first section with section name " << pname);
+      CHECK_AND_ASSERT_MES(hsec_array && hchild_section, false, "failed to insert first section with section name {}", pname);
       res = it->store(stg, hchild_section);
       it++;
       for(;it!= container.end();it++)

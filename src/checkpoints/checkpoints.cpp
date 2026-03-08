@@ -99,7 +99,7 @@ namespace cryptonote
       }
       catch (...)
       {
-        LOG_ERROR("Failed to parse difficulty checkpoint: " << difficulty_str);
+        LOG_ERROR("Failed to parse difficulty checkpoint: {}", difficulty_str);
         return false;
       }
     }
@@ -120,11 +120,11 @@ namespace cryptonote
 
     if(it->second == h)
     {
-      MINFO("CHECKPOINT PASSED FOR HEIGHT " << height << " " << h);
+      MINFO("CHECKPOINT PASSED FOR HEIGHT {} {}", height, h);
       return true;
     }else
     {
-      MWARNING("CHECKPOINT FAILED FOR HEIGHT " << height << ". EXPECTED HASH: " << it->second << ", FETCHED HASH: " << h);
+      MWARNING("CHECKPOINT FAILED FOR HEIGHT {}. EXPECTED HASH: {}, FETCHED HASH: {}", height, it->second, h);
       return false;
     }
   }
@@ -286,11 +286,11 @@ namespace cryptonote
     LOG_PRINT_L1("Adding checkpoints from blockchain hashfile");
 
     uint64_t prev_max_height = get_max_height();
-    LOG_PRINT_L1("Hard-coded max checkpoint height is " << prev_max_height);
+    LOG_PRINT_L1("Hard-coded max checkpoint height is {}", prev_max_height);
     t_hash_json hashes;
     if (!epee::serialization::load_t_from_json_file(hashes, json_hashfile_fullpath))
     {
-      MERROR("Error loading checkpoints from " << json_hashfile_fullpath);
+      MERROR("Error loading checkpoints from {}", json_hashfile_fullpath);
       return false;
     }
     for (std::vector<t_hashline>::const_iterator it = hashes.hashlines.begin(); it != hashes.hashlines.end(); )
@@ -298,10 +298,10 @@ namespace cryptonote
       uint64_t height;
       height = it->height;
       if (height <= prev_max_height) {
-	LOG_PRINT_L1("ignoring checkpoint height " << height);
+	LOG_PRINT_L1("ignoring checkpoint height {}", height);
       } else {
 	std::string blockhash = it->hash;
-	LOG_PRINT_L1("Adding checkpoint height " << height << ", hash=" << blockhash);
+	LOG_PRINT_L1("Adding checkpoint height {}, hash={}", height, blockhash);
 	ADD_CHECKPOINT(height, blockhash);
       }
       ++it;

@@ -306,12 +306,12 @@ namespace cryptonote
       cryptonote::address_parse_info info;
       if (!get_account_address_from_str(info, nettype(), address))
       {
-        MFATAL("Invalid payment address: " << address);
+        MFATAL("Invalid payment address: {}", address);
         return false;
       }
       if (info.is_subaddress)
       {
-        MFATAL("Payment address may not be a subaddress: " << address);
+        MFATAL("Payment address may not be a subaddress: {}", address);
         return false;
       }
       uint64_t diff = command_line::get_arg(vm, arg_rpc_payment_difficulty);
@@ -363,12 +363,12 @@ namespace cryptonote
       // Consequently, sometimes the .key file wont't get copied, while the .crt file will.
       if (ssl_cert_file_exists != ssl_pkey_file_exists)
       {
-        MFATAL("Certificate (.crt) and private key (.key) files must both exist or both not exist at path: " << ssl_base_path);
+        MFATAL("Certificate (.crt) and private key (.key) files must both exist or both not exist at path: {}", ssl_base_path);
         return false;
       }
       else if (!ssl_cert_file_exists && ssl_fp_file_exists) // only fingerprint file is present
       {
-        MFATAL("Fingerprint file is present while certificate (.crt) and private key (.key) files are not at path: " << ssl_base_path);
+        MFATAL("Fingerprint file is present while certificate (.crt) and private key (.key) files are not at path: {}", ssl_base_path);
         return false;
       }
       else if (ssl_cert_file_exists) { // and ssl_pkey_file_exists
@@ -386,7 +386,7 @@ namespace cryptonote
             std::string fingerprint = epee::net_utils::get_hr_ssl_fingerprint_from_file(ssl_base_path + ".crt");
             if (!epee::file_io_utils::save_string_to_file(ssl_base_path + ".fingerprint", fingerprint))
             {
-              MWARNING("Could not save SSL fingerprint to file '" << ssl_base_path << ".fingerprint'");
+              MWARNING("Could not save SSL fingerprint to file '{}.fingerprint'", ssl_base_path);
             }
             const auto fp_perms = boost::filesystem::owner_read | boost::filesystem::group_read | boost::filesystem::others_read;
             boost::filesystem::permissions(ssl_base_path + ".fingerprint", fp_perms);
@@ -394,7 +394,7 @@ namespace cryptonote
           catch (const std::exception& e)
           {
             // Do nothing. The fingerprint file is helpful, but not at all necessary.
-            MWARNING("While trying to store SSL fingerprint file, got error (ignoring): " << e.what());
+            MWARNING("While trying to store SSL fingerprint file, got error (ignoring): {}", e.what());
           }
         }
       }
@@ -406,12 +406,12 @@ namespace cryptonote
 
     if (max_connections < max_connections_public)
     {
-      MFATAL(arg_rpc_max_connections_per_public_ip.name << " is bigger than " << arg_rpc_max_connections.name);
+      MFATAL("{} is bigger than {}", arg_rpc_max_connections_per_public_ip.name, arg_rpc_max_connections.name);
       return false;
     }
     if (max_connections < max_connections_private)
     {
-      MFATAL(arg_rpc_max_connections_per_private_ip.name << " is bigger than " << arg_rpc_max_connections.name);
+      MFATAL("{} is bigger than {}", arg_rpc_max_connections_per_private_ip.name, arg_rpc_max_connections.name);
       return false;
     }
 
@@ -431,7 +431,7 @@ namespace cryptonote
       // new keys were generated, store for next run
       const auto error = epee::net_utils::store_ssl_keys(m_net_server.get_ssl_context(), ssl_base_path);
       if (error)
-        MFATAL("Failed to store HTTP SSL cert/key for " << (restricted ? "restricted " : "") << "RPC server: " << error.message());
+        MFATAL("Failed to store HTTP SSL cert/key for {}RPC server: {}", (restricted ? "restricted " : ""), error.message());
       return !bool(error);
     }
     return inited;
@@ -491,7 +491,7 @@ namespace cryptonote
 
     CRITICAL_REGION_LOCAL(m_host_fails_score_lock);
     uint64_t fails = m_host_fails_score[ctx->m_remote_address.host_str()] += score;
-    MDEBUG("Host " << ctx->m_remote_address.host_str() << " fail score=" << fails);
+    MDEBUG("Host {} fail score={}", ctx->m_remote_address.host_str(), fails);
     if(fails > RPC_IP_FAILS_BEFORE_BLOCK)
     {
       auto it = m_host_fails_score.find(ctx->m_remote_address.host_str());
@@ -806,7 +806,7 @@ namespace cryptonote
             res.output_indices.back().indices.push_back({std::move(indices[i])});
         }
       }
-      MDEBUG("on_get_blocks: " << bs.size() << " blocks, " << ntxes << " txes, size " << size);
+      MDEBUG("on_get_blocks: {} blocks, {} txes, size {}", bs.size(), ntxes, size);
     }
 
     res.status = CORE_RPC_STATUS_OK;
@@ -834,7 +834,7 @@ namespace cryptonote
           res.blks_hashes.push_back(epee::string_tools::pod_to_hex(get_block_hash(blk)));
       }
 
-      MDEBUG("on_get_alt_blocks_hashes: " << blks.size() << " blocks " );
+      MDEBUG("on_get_alt_blocks_hashes: {} blocks ", blks.size());
       res.status = CORE_RPC_STATUS_OK;
       return true;
   }
@@ -997,7 +997,7 @@ namespace cryptonote
       return true;
     }
     res.status = CORE_RPC_STATUS_OK;
-    LOG_PRINT_L2("COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES: [" << res.o_indexes.size() << "]");
+    LOG_PRINT_L2("COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES: [{}]", res.o_indexes.size());
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
@@ -1043,7 +1043,7 @@ namespace cryptonote
       res.status = "Failed";
       return true;
     }
-    LOG_PRINT_L2("Found " << txs.size() << "/" << vh.size() << " transactions on the blockchain");
+    LOG_PRINT_L2("Found {}/{} transactions on the blockchain", txs.size(), vh.size());
 
     // try the pool for any missing txes
     size_t found_in_pool = 0;
@@ -1099,7 +1099,7 @@ namespace cryptonote
         }
         txs = sorted_txs;
       }
-      LOG_PRINT_L2("Found " << found_in_pool << "/" << vh.size() << " transactions in the pool");
+      LOG_PRINT_L2("Found {}/{} transactions in the pool", found_in_pool, vh.size());
     }
 
     CHECK_AND_ASSERT_MES(txs.size() + missed_txs.size() == vh.size(), false, "mismatched number of txs");
@@ -1208,7 +1208,7 @@ namespace cryptonote
         }
         else
         {
-          MERROR("Failed to determine pool info for " << tx_hash);
+          MERROR("Failed to determine pool info for {}", tx_hash);
           e.double_spend_seen = false;
           e.relayed = false;
           e.received_timestamp = 0;
@@ -1246,7 +1246,7 @@ namespace cryptonote
       res.missed_tx.push_back(string_tools::pod_to_hex(miss_tx));
     }
 
-    LOG_PRINT_L2(res.txs.size() << " transactions found, " << res.missed_tx.size() << " not found");
+    LOG_PRINT_L2("{} transactions found, {} not found", res.txs.size(), res.missed_tx.size());
     res.status = CORE_RPC_STATUS_OK;
     return true;
   }
@@ -1375,7 +1375,7 @@ namespace cryptonote
     std::string tx_blob;
     if(!string_tools::parse_hexstr_to_binbuff(req.tx_as_hex, tx_blob))
     {
-      LOG_PRINT_L0("[on_send_raw_tx]: Failed to parse tx from hexbuff: " << req.tx_as_hex);
+      LOG_PRINT_L0("[on_send_raw_tx]: Failed to parse tx from hexbuff: {}", req.tx_as_hex);
       res.status = "Failed";
       res.reason = "Hex decoding failed";
       return true;
@@ -1420,11 +1420,11 @@ namespace cryptonote
         const std::string punctuation = reason.empty() ? "" : ": ";
         if (tvc.m_verifivation_failed)
         {
-          LOG_PRINT_L0("[on_send_raw_tx]: tx verification failed" << punctuation << reason);
+          LOG_PRINT_L0("[on_send_raw_tx]: tx verification failed{}{}", punctuation, reason);
         }
         else
         {
-          LOG_PRINT_L0("[on_send_raw_tx]: Failed to process tx" << punctuation << reason);
+          LOG_PRINT_L0("[on_send_raw_tx]: Failed to process tx{}{}", punctuation, reason);
         }
         return true;
       }
@@ -2122,7 +2122,7 @@ namespace cryptonote
     }
     catch (const std::exception &e)
     {
-      MERROR("Caught unexpected error while hashing in " << __PRETTY_FUNCTION__ << ": " << e.what());
+      MERROR("Caught unexpected error while hashing in {}: {}", __PRETTY_FUNCTION__, e.what());
       error_resp.code = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
       error_resp.message = e.what();
       return false;
@@ -2488,7 +2488,7 @@ namespace cryptonote
       {
         uint64_t top_height = m_core.get_current_blockchain_height();
         m_should_use_bootstrap_daemon = top_height + 10 < bootstrap_daemon_height;
-        MINFO((m_should_use_bootstrap_daemon ? "Using" : "Not using") << " the bootstrap daemon (our height: " << top_height << ", bootstrap daemon's height: " << bootstrap_daemon_height << ")");
+        MINFO("{} the bootstrap daemon (our height: {}, bootstrap daemon's height: {})", (m_should_use_bootstrap_daemon ? "Using" : "Not using"), top_height, bootstrap_daemon_height);
 
         if (!m_should_use_bootstrap_daemon)
           return false;
@@ -2509,7 +2509,7 @@ namespace cryptonote
     }
     else
     {
-      MERROR("Unknown invoke_http_mode: " << mode);
+      MERROR("Unknown invoke_http_mode: {}", mode);
       return false;
     }
 
@@ -2520,7 +2520,7 @@ namespace cryptonote
 
     if (r && res.status != CORE_RPC_STATUS_PAYMENT_REQUIRED && res.status != CORE_RPC_STATUS_OK)
     {
-      MINFO("Failing RPC " << command_name << " due to peer return status " << res.status);
+      MINFO("Failing RPC {} due to peer return status {}", command_name, res.status);
       r = false;
     }
     res.untrusted = true;
@@ -3276,24 +3276,24 @@ namespace cryptonote
       MDEBUG("We don't have that file already, downloading");
       if (!tools::download(path.string(), res.auto_uri))
       {
-        MERROR("Failed to download " << res.auto_uri);
+        MERROR("Failed to download {}", res.auto_uri);
         return true;
       }
       if (!tools::sha256sum(path.string(), file_hash))
       {
-        MERROR("Failed to hash " << path);
+        MERROR("Failed to hash {}", path);
         return true;
       }
       if (hash != epee::string_tools::pod_to_hex(file_hash))
       {
-        MERROR("Download from " << res.auto_uri << " does not match the expected hash");
+        MERROR("Download from {} does not match the expected hash", res.auto_uri);
         return true;
       }
-      MINFO("New version downloaded to " << path);
+      MINFO("New version downloaded to {}", path);
     }
     else
     {
-      MDEBUG("We already have " << path << " with expected hash");
+      MDEBUG("We already have {} with expected hash", path);
     }
     res.path = path.string();
 
@@ -3736,8 +3736,7 @@ namespace cryptonote
         MINFO("This payment meets the current network difficulty");
         block_verification_context bvc;
         if(m_core.handle_block_found(block, bvc))
-          MGINFO_GREEN("Block found by RPC user at height " << get_block_height(block) << ": " <<
-              print_money(cryptonote::get_outs_money_amount(block.miner_tx)));
+          MGINFO_GREEN("Block found by RPC user at height {}: {}", get_block_height(block), print_money(cryptonote::get_outs_money_amount(block.miner_tx)));
         else
           MERROR("Seemingly valid block was not accepted");
       }

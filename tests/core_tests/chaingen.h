@@ -979,7 +979,7 @@ inline bool do_replay_file(const std::string& filename)
         g.generate(events); \
         if (!tools::serialize_obj_to_file(events, filename)) \
         { \
-            MERROR("Failed to serialize data to file: " << filename); \
+            MERROR("Failed to serialize data to file: {}", filename); \
             throw std::runtime_error("Failed to serialize data to file"); \
         } \
     }
@@ -988,18 +988,18 @@ inline bool do_replay_file(const std::string& filename)
 #define PLAY(filename, genclass) \
     if(!do_replay_file<genclass>(filename)) \
     { \
-      MERROR("Failed to pass test : " << #genclass); \
+      MERROR("Failed to pass test : {}", #genclass); \
       return 1; \
     }
 
 #define CATCH_REPLAY(genclass)                                                                             \
     catch (const std::exception& ex)                                                                       \
     {                                                                                                      \
-      MERROR(#genclass << " generation failed: what=" << ex.what());                                       \
+      MERROR("{} generation failed: what={}", #genclass, ex.what());                                       \
     }                                                                                                      \
     catch (...)                                                                                            \
     {                                                                                                      \
-      MERROR(#genclass << " generation failed: generic exception");                                        \
+      MERROR("{} generation failed: generic exception", #genclass);                                        \
     }
 
 #define REPLAY_CORE(genclass)                                                                              \
@@ -1009,7 +1009,7 @@ inline bool do_replay_file(const std::string& filename)
     }                                                                                                      \
     else                                                                                                   \
     {                                                                                                      \
-      MERROR("#TEST# Failed " << #genclass);                                                               \
+      MERROR("#TEST# Failed {}", #genclass);                                                               \
       failed_tests.push_back(#genclass);                                                                   \
     }
 
@@ -1020,7 +1020,7 @@ inline bool do_replay_file(const std::string& filename)
     }                                                                                                      \
     else                                                                                                   \
     {                                                                                                      \
-      MERROR("#TEST# Failed " << #genclass);                                                               \
+      MERROR("#TEST# Failed {}", #genclass);                                                               \
       failed_tests.push_back(#genclass);                                                                   \
     }
 
@@ -1065,7 +1065,7 @@ inline bool do_replay_file(const std::string& filename)
   {                                                                                                        \
     if(!function())                                                                                        \
     {                                                                                                      \
-      MERROR("#TEST# Failed " << test_name);                                                               \
+      MERROR("#TEST# Failed {}", test_name);                                                               \
       return 1;                                                                                            \
     }                                                                                                      \
     else                                                                                                   \

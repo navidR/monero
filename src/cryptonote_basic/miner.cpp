@@ -245,7 +245,7 @@ namespace cryptonote
     uint64_t dh = m_total_hashes - m_threads_autodetect.back().second;
     m_threads_autodetect.back().second = dh;
     float hs = dh / (dt / (float)1000000000);
-    MGINFO("Mining autodetection: " << m_threads_autodetect.size() << " threads: " << hs << " H/s");
+    MGINFO("Mining autodetection: {} threads: {} H/s", m_threads_autodetect.size(), hs);
 
     // when we don't increase by at least 2%, stop, otherwise check next
     // if N and N+1 have mostly the same hash rate, we want to "lighter" one
@@ -258,7 +258,7 @@ namespace cryptonote
       {
         m_threads_total = m_threads_autodetect.size() - 1;
         m_threads_autodetect.clear();
-        MGINFO("Optimal number of threads seems to be " << m_threads_total);
+        MGINFO("Optimal number of threads seems to be {}", m_threads_total);
         found = true;
       }
     }
@@ -302,7 +302,7 @@ namespace cryptonote
     {
       std::string buff;
       bool r = file_io_utils::load_file_to_string(command_line::get_arg(vm, arg_extra_messages), buff);
-      CHECK_AND_ASSERT_MES(r, false, "Failed to load file with extra messages: " << command_line::get_arg(vm, arg_extra_messages));
+      CHECK_AND_ASSERT_MES(r, false, "Failed to load file with extra messages: {}", command_line::get_arg(vm, arg_extra_messages));
       std::vector<std::string> extra_vec;
       boost::split(extra_vec, buff, boost::is_any_of("\n"), boost::token_compress_on );
       m_extra_messages.resize(extra_vec.size());
@@ -318,8 +318,8 @@ namespace cryptonote
       m_config_folder_path = boost::filesystem::path(command_line::get_arg(vm, arg_extra_messages)).parent_path().string();
       m_config = AUTO_VAL_INIT(m_config);
       const std::string filename = m_config_folder_path + "/" + MINER_CONFIG_FILE_NAME;
-      CHECK_AND_ASSERT_MES(epee::serialization::load_t_from_json_file(m_config, filename), false, "Failed to load data from " << filename);
-      MINFO("Loaded " << m_extra_messages.size() << " extra messages, current index " << m_config.current_extra_message_index);
+      CHECK_AND_ASSERT_MES(epee::serialization::load_t_from_json_file(m_config, filename), false, "Failed to load data from {}", filename);
+      MINFO("Loaded {} extra messages, current index {}", m_extra_messages.size(), m_config.current_extra_message_index);
     }
 
     if(command_line::has_arg(vm, arg_start_mining))
@@ -327,7 +327,7 @@ namespace cryptonote
       address_parse_info info;
       if(!cryptonote::get_account_address_from_str(info, nettype, command_line::get_arg(vm, arg_start_mining)) || info.is_subaddress)
       {
-        LOG_ERROR("Target account address " << command_line::get_arg(vm, arg_start_mining) << " has wrong format, starting daemon canceled");
+        LOG_ERROR("Target account address {} has wrong format, starting daemon canceled", command_line::get_arg(vm, arg_start_mining));
         return false;
       }
       m_mine_address = info.address;
@@ -409,7 +409,7 @@ namespace cryptonote
     if (threads_count == 0)
       MINFO("Mining has started, autodetecting optimal number of threads, good luck!" );
     else
-      MINFO("Mining has started with " << threads_count << " threads, good luck!" );
+      MINFO("Mining has started with {} threads, good luck!", threads_count);
 
     if( get_is_background_mining_enabled() )
     {
@@ -468,7 +468,7 @@ namespace cryptonote
     m_background_mining_thread.join();
     m_is_background_mining_enabled = false;
 
-    MINFO("Mining has been stopped, " << m_threads.size() << " finished" );
+    MINFO("Mining has been stopped, {} finished", m_threads.size());
     m_threads.clear();
     m_threads_autodetect.clear();
     return true;
@@ -502,7 +502,7 @@ namespace cryptonote
   void miner::pause()
   {
     CRITICAL_REGION_LOCAL(m_miners_count_lock);
-    MDEBUG("miner::pause: " << m_pausers_count << " -> " << (m_pausers_count + 1));
+    MDEBUG("miner::pause: {} -> {}", m_pausers_count, (m_pausers_count + 1));
     ++m_pausers_count;
     if(m_pausers_count == 1 && is_mining())
       MDEBUG("MINING PAUSED");
@@ -511,7 +511,7 @@ namespace cryptonote
   void miner::resume()
   {
     CRITICAL_REGION_LOCAL(m_miners_count_lock);
-    MDEBUG("miner::resume: " << m_pausers_count << " -> " << (m_pausers_count - 1));
+    MDEBUG("miner::resume: {} -> {}", m_pausers_count, (m_pausers_count - 1));
     --m_pausers_count;
     if(m_pausers_count < 0)
     {
@@ -528,7 +528,7 @@ namespace cryptonote
     bool rx_set = false;
 
     MLOG_SET_THREAD_NAME(std::string("[miner ") + std::to_string(th_local_index) + "]");
-    MGINFO("Miner thread was started ["<< th_local_index << "]");
+    MGINFO("Miner thread was started [{}]", th_local_index);
     uint32_t nonce = m_starter_nonce + th_local_index;
     uint64_t height = 0;
     difficulty_type local_diff = 0;
@@ -590,7 +590,7 @@ namespace cryptonote
       {
         //we lucky!
         ++m_config.current_extra_message_index;
-        MGINFO_GREEN("Found block " << get_block_hash(b) << " at height " << height << " for difficulty: " << local_diff);
+        MGINFO_GREEN("Found block {} at height {} for difficulty: {}", get_block_hash(b), height, local_diff);
         cryptonote::block_verification_context bvc;
         if(!m_phandler->handle_block_found(b, bvc) || !bvc.m_added_to_main_chain)
         {
@@ -607,7 +607,7 @@ namespace cryptonote
       ++m_total_hashes;
     }
     slow_hash_free_state();
-    MGINFO("Miner thread stopped ["<< th_local_index << "]");
+    MGINFO("Miner thread stopped [{}]", th_local_index);
     --m_threads_active;
     return true;
   }
@@ -767,10 +767,10 @@ namespace cryptonote
         uint8_t idle_percentage = get_percent_of_total(idle_diff, total_diff);
         uint8_t process_percentage = get_percent_of_total(process_diff, total_diff);
 
-        MDEBUG("idle percentage is " << unsigned(idle_percentage) << "\%, miner percentage is " << unsigned(process_percentage) << "\%, ac power : " << on_ac_power);
+        MDEBUG("idle percentage is {}\%, miner percentage is {}\%, ac power : {}", unsigned(idle_percentage), unsigned(process_percentage), on_ac_power);
         if( idle_percentage + process_percentage < get_idle_threshold() || !on_ac_power )
         {
-          MINFO("cpu is " << unsigned(idle_percentage) << "% idle, idle threshold is " << unsigned(get_idle_threshold()) << "\%, ac power : " << on_ac_power << ", background mining stopping, thanks for your contribution!");
+          MINFO("cpu is {}% idle, idle threshold is {}\%, ac power : {}, background mining stopping, thanks for your contribution!", unsigned(idle_percentage), unsigned(get_idle_threshold()), on_ac_power);
           m_is_background_mining_started = false;
 
           // reset process times
@@ -788,7 +788,7 @@ namespace cryptonote
           // fall below zero because all the time functions aggregate across all processors.
           // I'm just hard limiting to 5 millis min sleep here, other options?
           m_miner_extra_sleep = std::max( new_miner_extra_sleep , (int64_t)5 );
-          MDEBUG("m_miner_extra_sleep " << m_miner_extra_sleep);
+          MDEBUG("m_miner_extra_sleep {}", m_miner_extra_sleep);
         }
         
         prev_total_time = current_total_time;
@@ -808,10 +808,10 @@ namespace cryptonote
         uint64_t idle_diff = (current_idle_time - prev_idle_time);
         uint8_t idle_percentage = get_percent_of_total(idle_diff, total_diff);
 
-        MDEBUG("idle percentage is " << unsigned(idle_percentage));
+        MDEBUG("idle percentage is {}", unsigned(idle_percentage));
         if( idle_percentage >= get_idle_threshold() && on_ac_power )
         {
-          MINFO("cpu is " << unsigned(idle_percentage) << "% idle, idle threshold is " << unsigned(get_idle_threshold()) << "\%, ac power : " << on_ac_power << ", background mining started, good luck!");
+          MINFO("cpu is {}% idle, idle threshold is {}\%, ac power : {}, background mining started, good luck!", unsigned(idle_percentage), unsigned(get_idle_threshold()), on_ac_power);
           m_is_background_mining_started = true;
           m_is_background_mining_started_cond.notify_all();
 
@@ -858,14 +858,14 @@ namespace cryptonote
 
       if( !epee::file_io_utils::is_file_exist(STAT_FILE_PATH) )
       {
-        LOG_ERROR("'" << STAT_FILE_PATH << "' file does not exist");
+        LOG_ERROR("'{}' file does not exist", STAT_FILE_PATH);
         return false;
       }
 
       std::ifstream stat_file_stream(STAT_FILE_PATH);
       if( stat_file_stream.fail() )
       {
-        LOG_ERROR("failed to open '" << STAT_FILE_PATH << "'");
+        LOG_ERROR("failed to open '{}'", STAT_FILE_PATH);
         return false;
       }
 
@@ -876,7 +876,7 @@ namespace cryptonote
       uint64_t utime, ntime, stime, itime;
       if( !(stat_file_iss >> utime && stat_file_iss >> ntime && stat_file_iss >> stime && stat_file_iss >> itime) )
       {
-        LOG_ERROR("failed to read '" << STAT_FILE_PATH << "'");
+        LOG_ERROR("failed to read '{}'", STAT_FILE_PATH);
         return false;
       }
 
@@ -908,14 +908,12 @@ namespace cryptonote
       size_t n = sizeof(s.cp_time);
       if( sysctlbyname("kern.cp_time", s.cp_time, &n, NULL, 0) == -1 )
       {
-        LOG_ERROR("sysctlbyname(\"kern.cp_time\"): " << strerror(errno));
+        LOG_ERROR("sysctlbyname(\"kern.cp_time\"): {}", strerror(errno));
         return false;
       }
       if( n != sizeof(s.cp_time) )
       {
-        LOG_ERROR("sysctlbyname(\"kern.cp_time\") output is unexpectedly "
-          << n << " bytes instead of the expected " << sizeof(s.cp_time)
-          << " bytes.");
+        LOG_ERROR("sysctlbyname(\"kern.cp_time\") output is unexpectedly {} bytes instead of the expected {} bytes.", n, sizeof(s.cp_time));
         return false;
       }
 
@@ -1009,7 +1007,7 @@ namespace cryptonote
               std::ifstream power_supply_type_stream(power_supply_type_path.string());
               if (power_supply_type_stream.fail())
               {
-                LOG_PRINT_L0("Unable to read from " << power_supply_type_path << " to check power supply type");
+                LOG_PRINT_L0("Unable to read from {} to check power supply type", power_supply_type_path);
                 continue;
               }
 
@@ -1025,7 +1023,7 @@ namespace cryptonote
                   std::ifstream power_supply_online_stream(power_supply_online_path.string());
                   if (power_supply_online_stream.fail())
                   {
-                    LOG_PRINT_L0("Unable to read from " << power_supply_online_path << " to check ac power supply status");
+                    LOG_PRINT_L0("Unable to read from {} to check ac power supply status", power_supply_online_path);
                     continue;
                   }
 
@@ -1043,7 +1041,7 @@ namespace cryptonote
                   std::ifstream power_supply_status_stream(power_supply_status_path.string());
                   if (power_supply_status_stream.fail())
                   {
-                    LOG_PRINT_L0("Unable to read from " << power_supply_status_path << " to check battery power supply status");
+                    LOG_PRINT_L0("Unable to read from {} to check battery power supply status", power_supply_status_path);
                     continue;
                   }
 
@@ -1072,7 +1070,7 @@ namespace cryptonote
         static bool error_shown = false;
         if (!error_shown)
         {
-          LOG_ERROR("couldn't query power status from " << power_supply_class_path);
+          LOG_ERROR("couldn't query power status from {}", power_supply_class_path);
           error_shown = true;
         }
       }
@@ -1085,8 +1083,7 @@ namespace cryptonote
       {
         if( errno != ENOENT )
         {
-          LOG_ERROR("Cannot query battery status: "
-            << "sysctlbyname(\"hw.acpi.acline\"): " << strerror(errno));
+          LOG_ERROR("Cannot query battery status: sysctlbyname(\"hw.acpi.acline\"): {}", strerror(errno));
           return boost::logic::tribool(boost::logic::indeterminate);
         }
 
@@ -1095,8 +1092,7 @@ namespace cryptonote
         static const char* dev_apm = "/dev/apm";
         const int fd = open(dev_apm, O_RDONLY);
         if( fd == -1 ) {
-          LOG_ERROR("Cannot query battery status: "
-            << "open(): " << dev_apm << ": " << strerror(errno));
+          LOG_ERROR("Cannot query battery status: open(): {}: {}", dev_apm, strerror(errno));
           return boost::logic::tribool(boost::logic::indeterminate);
         }
 
@@ -1104,8 +1100,7 @@ namespace cryptonote
         apm_info info;
         if( ioctl(fd, APMIO_GETINFO, &info) == -1 ) {
           close(fd);
-          LOG_ERROR("Cannot query battery status: "
-            << "ioctl(" << dev_apm << ", APMIO_GETINFO): " << strerror(errno));
+          LOG_ERROR("Cannot query battery status: ioctl({}, APMIO_GETINFO): {}", dev_apm, strerror(errno));
           return boost::logic::tribool(boost::logic::indeterminate);
         }
 
@@ -1130,16 +1125,12 @@ namespace cryptonote
           return boost::logic::tribool(false);
         }
 
-        LOG_ERROR("Cannot query battery status: "
-          << "sysctl hw.acpi.acline is not available and /dev/apm returns "
-          << "unexpected ac-line status (" << info.ai_acline << ") and "
-          << "battery status (" << info.ai_batt_stat << ").");
+        LOG_ERROR("Cannot query battery status: sysctl hw.acpi.acline is not available and /dev/apm returns unexpected ac-line status ({}) and battery status ({}).", info.ai_acline, info.ai_batt_stat);
         return boost::logic::tribool(boost::logic::indeterminate);
       }
       if( n != sizeof(ac) )
       {
-        LOG_ERROR("sysctlbyname(\"hw.acpi.acline\") output is unexpectedly "
-          << n << " bytes instead of the expected " << sizeof(ac) << " bytes.");
+        LOG_ERROR("sysctlbyname(\"hw.acpi.acline\") output is unexpectedly {} bytes instead of the expected {} bytes.", n, sizeof(ac));
         return boost::logic::tribool(boost::logic::indeterminate);
 #endif
       }

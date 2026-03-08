@@ -200,7 +200,7 @@ void mock_daemon::try_init_and_run(boost::optional<unsigned> initial_port)
     {
       set_ports(m_vm, initial_port.get());
       load_params(m_vm);
-      MDEBUG("Ports changed, RPC: " << rpc_addr());
+      MDEBUG("Ports changed, RPC: {}", rpc_addr());
     }
 
     try
@@ -210,7 +210,7 @@ void mock_daemon::try_init_and_run(boost::optional<unsigned> initial_port)
     }
     catch(const std::exception &e)
     {
-      MWARNING("Could not init and start, attempt: " << attempts << ", reason: " << e.what());
+      MWARNING("Could not init and start, attempt: {}, reason: {}", attempts, e.what());
       if (attempts + 1 >= max_attempts)
       {
         throw;
@@ -249,7 +249,7 @@ bool mock_daemon::run_main()
     {
       if (!zmq_server.init_rpc("127.0.0.1", m_zmq_bind_port))
       {
-        MERROR("Failed to add TCP Socket (127.0.0.1:" << m_zmq_bind_port << ") to ZMQ RPC Server");
+        MERROR("Failed to add TCP Socket (127.0.0.1:{}) to ZMQ RPC Server", m_zmq_bind_port);
 
         stop_rpc();
         return false;
@@ -258,7 +258,7 @@ bool mock_daemon::run_main()
       MINFO("Starting ZMQ server...");
       zmq_server.run();
 
-      MINFO("ZMQ server started at 127.0.0.1: " << m_zmq_bind_port);
+      MINFO("ZMQ server started at 127.0.0.1: {}", m_zmq_bind_port);
     }
 
     if (m_start_p2p)
@@ -279,7 +279,7 @@ bool mock_daemon::run_main()
   }
   catch (std::exception const & ex)
   {
-    MFATAL("Uncaught exception! " << ex.what());
+    MFATAL("Uncaught exception! {}", ex.what());
     return false;
   }
   catch (...)
@@ -313,7 +313,7 @@ void mock_daemon::mine_blocks(size_t num_blocks, const std::string &miner_addres
 {
   bool blocks_mined = false;
   const uint64_t start_height = get_height();
-  MDEBUG("Current height before mining: " << start_height);
+  MDEBUG("Current height before mining: {}", start_height);
 
   start_mining(miner_address);
   auto mining_started = std::chrono::system_clock::now();
@@ -324,7 +324,7 @@ void mock_daemon::mine_blocks(size_t num_blocks, const std::string &miner_addres
 
     if (cur_height - start_height >= num_blocks)
     {
-      MDEBUG("Cur blocks: " << cur_height << " start: " << start_height);
+      MDEBUG("Cur blocks: {} start: {}", cur_height, start_height);
       blocks_mined = true;
       break;
     }

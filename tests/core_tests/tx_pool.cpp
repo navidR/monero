@@ -70,7 +70,7 @@ bool txpool_base::check_txpool_spent_keys(cryptonote::core& c, size_t /*ev_index
   std::vector<cryptonote::spent_key_image_info> key_images{};
   if (!c.get_pool_transactions_and_spent_keys_info(infos, key_images) || infos.size() != m_broadcasted_tx_count || key_images.size() != m_broadcasted_tx_count)
   {
-    MERROR("Failed broadcasted spent keys retrieval - Expected Broadcasted Count: " << m_broadcasted_tx_count << " Actual Info Count: " << infos.size() << " Actual Key Image Count: " << key_images.size());
+    MERROR("Failed broadcasted spent keys retrieval - Expected Broadcasted Count: {} Actual Info Count: {} Actual Key Image Count: {}", m_broadcasted_tx_count, infos.size(), key_images.size());
     return false;
   }
 
@@ -78,7 +78,7 @@ bool txpool_base::check_txpool_spent_keys(cryptonote::core& c, size_t /*ev_index
   key_images.clear();
   if (!c.get_pool_transactions_and_spent_keys_info(infos, key_images, false) || infos.size() != m_broadcasted_tx_count || key_images.size() != m_broadcasted_tx_count)
   {
-    MERROR("Failed broadcasted spent keys retrieval - Expected Broadcasted Count: " << m_broadcasted_tx_count << " Actual Info Count: " << infos.size() << " Actual Key Image Count: " << key_images.size());
+    MERROR("Failed broadcasted spent keys retrieval - Expected Broadcasted Count: {} Actual Info Count: {} Actual Key Image Count: {}", m_broadcasted_tx_count, infos.size(), key_images.size());
     return false;
   }
 
@@ -86,7 +86,7 @@ bool txpool_base::check_txpool_spent_keys(cryptonote::core& c, size_t /*ev_index
   key_images.clear();
   if (!c.get_pool_transactions_and_spent_keys_info(infos, key_images, true) || infos.size() != m_all_tx_count || key_images.size() != m_all_tx_count)
   {
-    MERROR("Failed all spent keys retrieval - Expected All Count: " << m_all_tx_count << " Actual Info Count: " << infos.size() << " Actual Key Image Count: " << key_images.size());
+    MERROR("Failed all spent keys retrieval - Expected All Count: {} Actual Info Count: {} Actual Key Image Count: {}", m_all_tx_count, infos.size(), key_images.size());
     return false;
   }
 
@@ -180,13 +180,13 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
 
   if (new_broadcasted_hash_count != m_broadcasted_hashes.size())
   {
-    MERROR("Expected " << new_broadcasted_hash_count << " broadcasted hashes but got " << m_broadcasted_hashes.size());
+    MERROR("Expected {} broadcasted hashes but got {}", new_broadcasted_hash_count, m_broadcasted_hashes.size());
     return false;
   }
 
   if (m_broadcasted_hashes.size() != c.get_pool_transactions_count())
   {
-    MERROR("Expected " << m_broadcasted_hashes.size() << " broadcasted hashes but got " << c.get_pool_transactions_count());
+    MERROR("Expected {} broadcasted hashes but got {}", m_broadcasted_hashes.size(), c.get_pool_transactions_count());
     return false;
   }
 
@@ -202,7 +202,7 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
 
   if (new_broadcasted_hash_count != m_broadcasted_hashes.size())
   {
-    MERROR("Expected " << new_broadcasted_hash_count << " broadcasted hashes but got " << m_broadcasted_hashes.size());
+    MERROR("Expected {} broadcasted hashes but got {}", new_broadcasted_hash_count, m_broadcasted_hashes.size());
     return false;
   }
 
@@ -219,7 +219,7 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
 
   if (new_all_hash_count != m_all_hashes.size())
   {
-    MERROR("Expected " << new_all_hash_count << " all hashes but got " << m_all_hashes.size());
+    MERROR("Expected {} all hashes but got {}", new_all_hash_count, m_all_hashes.size());
     return false;
   }
 
@@ -235,7 +235,7 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
     {
       if (!c.pool_has_tx(hash))
       {
-        MERROR("Expected public tx " << hash << " to be listed in pool");
+        MERROR("Expected public tx {} to be listed in pool", hash);
         return false;
       }
     }
@@ -271,14 +271,14 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
       {
         if (entry->second >= info.receive_time)
         {
-          MERROR("Last relay time did not change as expected - last at " << entry->second << " and current at " << info.receive_time);
+          MERROR("Last relay time did not change as expected - last at {} and current at {}", entry->second, info.receive_time);
           return false;
         }
         entry->second = info.receive_time;
       }
       else if (entry->second != info.receive_time)
       {
-        MERROR("Last relayed time changed unexpectedly from " << entry->second << " to " << info.receive_time);
+        MERROR("Last relayed time changed unexpectedly from {} to {}", entry->second, info.receive_time);
         return false;
       }
     }
@@ -301,7 +301,7 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
     {
       if (!c.pool_has_tx(hash))
       {
-        MERROR("Expected broadcasted tx " << hash << " to be listed in pool");
+        MERROR("Expected broadcasted tx {} to be listed in pool", hash);
         return false;
       }
 
@@ -313,7 +313,7 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
     }
     if (!public_hashes.empty())
     {
-      MERROR(public_hashes.size() << " transaction(s) were missing from the public pool");
+      MERROR("{} transaction(s) were missing from the public pool", public_hashes.size());
       return false;
     }
   }
@@ -342,7 +342,7 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
     }
     if (!public_hashes.empty())
     {
-      MERROR(public_hashes.size() << " transaction(s) were missing from the public pool");
+      MERROR("{} transaction(s) were missing from the public pool", public_hashes.size());
       return false;
     }
   }
@@ -370,7 +370,7 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
     }
     if (!all_hashes.empty())
     {
-      MERROR(m_broadcasted_hashes.size() << " transaction(s) were missing from the all pool");
+      MERROR("{} transaction(s) were missing from the all pool", m_broadcasted_hashes.size());
       return false;
     }
   }
@@ -385,7 +385,7 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
 
     if (m_broadcasted_hashes.size() != entries.size())
     {
-      MERROR("Expected " << m_broadcasted_hashes.size() << " in the broadcasted txpool backlog but got " << entries.size());
+      MERROR("Expected {} in the broadcasted txpool backlog but got {}", m_broadcasted_hashes.size(), entries.size());
       return false;
     }
   }
@@ -395,7 +395,7 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
     cryptonote::blobdata tx_blob{};
     if (!c.get_pool_transaction(hash.first, tx_blob, cryptonote::relay_category::all))
     {
-      MERROR("Failed to retrieve tx expected to be in pool: " << hash.first);
+      MERROR("Failed to retrieve tx expected to be in pool: {}", hash.first);
       return false;
     }
   }
@@ -412,20 +412,20 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
     {
       if (c.pool_has_tx(hash.first))
       {
-        MERROR("Did not expect private/hidden tx " << hash.first << " to be listed in pool");
+        MERROR("Did not expect private/hidden tx {} to be listed in pool", hash.first);
         return false;
       }
 
       cryptonote::blobdata tx_blob{};
       if (c.get_pool_transaction(hash.first, tx_blob, cryptonote::relay_category::broadcasted))
       {
-        MERROR("Tx " << hash.first << " is not supposed to be in broadcasted pool");
+        MERROR("Tx {} is not supposed to be in broadcasted pool", hash.first);
         return false;
       }
 
       if (!c.get_pool_transaction(hash.first, tx_blob, cryptonote::relay_category::all))
       {
-        MERROR("Tx " << hash.first << " blob could not be retrieved from pool");
+        MERROR("Tx {} blob could not be retrieved from pool", hash.first);
         return false;
       }
     }
@@ -435,19 +435,19 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
     cryptonote::txpool_stats stats{};
     if (!c.get_pool_transaction_stats(stats) || stats.txs_total != m_broadcasted_hashes.size())
     {
-      MERROR("Expected broadcasted stats to list " << m_broadcasted_hashes.size() << " txes but got " << stats.txs_total);
+      MERROR("Expected broadcasted stats to list {} txes but got {}", m_broadcasted_hashes.size(), stats.txs_total);
       return false;
     }
 
     if (!c.get_pool_transaction_stats(stats, false) || stats.txs_total != m_broadcasted_hashes.size())
     {
-      MERROR("Expected broadcasted stats to list " << m_broadcasted_hashes.size() << " txes but got " << stats.txs_total);
+      MERROR("Expected broadcasted stats to list {} txes but got {}", m_broadcasted_hashes.size(), stats.txs_total);
       return false;
     }
 
     if (!c.get_pool_transaction_stats(stats, true) || stats.txs_total != m_all_hashes.size())
     {
-      MERROR("Expected all stats to list " << m_all_hashes.size() << " txes but got " << stats.txs_total);
+      MERROR("Expected all stats to list {} txes but got {}", m_all_hashes.size(), stats.txs_total);
       return false;
     }
   }
@@ -457,7 +457,7 @@ bool txpool_double_spend_base::check_changed(cryptonote::core& c, const size_t e
     cryptonote::rpc::key_images_with_tx_hashes key_images{};
     if (!c.get_pool_for_rpc(infos, key_images) || infos.size() != m_broadcasted_hashes.size() || key_images.size() != m_broadcasted_hashes.size())
     {
-      MERROR("Expected broadcasted rpc data to return " << m_broadcasted_hashes.size() << " but got " << infos.size() << " infos and " << key_images.size() << "key images");
+      MERROR("Expected broadcasted rpc data to return {} but got {} infos and {}key images", m_broadcasted_hashes.size(), infos.size(), key_images.size());
       return false;
     }
   }

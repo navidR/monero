@@ -99,7 +99,7 @@ namespace net_utils
 					entry.m_etc_header_fields.push_back(std::pair<std::string, std::string>(result[field_etc_name], result[field_val]));
 				else
 				{
-					LOG_ERROR("simple_http_connection_handler::parse_header() not matched last entry in:"<<std::string(it_current_bound, it_end));
+					LOG_ERROR("simple_http_connection_handler::parse_header() not matched last entry in:{}", std::string(it_current_bound, it_end));
 				}
 
 				it_current_bound = result[(int)result.size()-1].first;
@@ -120,7 +120,7 @@ namespace net_utils
 
 			if(!parse_header(it_begin, end_header_it+4, entry))
 			{
-				LOG_ERROR("Failed to parse header:" << std::string(it_begin, end_header_it+2));
+				LOG_ERROR("Failed to parse header:{}", std::string(it_begin, end_header_it+2));
 				return false;
 			}
 		
@@ -137,7 +137,7 @@ namespace net_utils
 			std::string boundary;
 			if(!match_boundary(content_type, boundary))
 			{
-				MERROR("Failed to match boundary in content type: " << content_type);
+				MERROR("Failed to match boundary in content type: {}", content_type);
 				return false;
 			}
 			
@@ -264,7 +264,7 @@ namespace net_utils
 	bool simple_http_connection_handler<t_connection_context>::handle_recv(const void* ptr, size_t cb)
 	{
 		std::string buf((const char*)ptr, cb);
-		//LOG_PRINT_L0("HTTP_RECV: " << ptr << "\r\n" << buf);
+		//LOG_PRINT_L0("HTTP_RECV: {}\r\n{}", ptr, buf);
 		//file_io_utils::save_string_to_file(string_tools::get_current_module_folder() + "/" + boost::lexical_cast<std::string>(ptr), std::string((const char*)ptr, cb));
 
 		bool res = handle_buff_in(buf);
@@ -282,7 +282,7 @@ namespace net_utils
 		m_bytes_read += buf.size();
 		if (m_bytes_read > m_config.m_max_content_length)
 		{
-			LOG_ERROR("simple_http_connection_handler::handle_buff_in: Too much data: got " << m_bytes_read);
+			LOG_ERROR("simple_http_connection_handler::handle_buff_in: Too much data: got {}", m_bytes_read);
 			m_state = http_state_error;
 			return false;
 		}
@@ -327,7 +327,7 @@ namespace net_utils
 					m_is_stop_handling = true;
 					if(m_cache.size() > HTTP_MAX_URI_LEN)
 					{
-						LOG_ERROR_CC(m_conn_context, "simple_http_connection_handler::handle_buff_out: Too long URI line");
+						MERROR("{}simple_http_connection_handler::handle_buff_out: Too long URI line", m_conn_context);
 						m_state = http_state_error;
 						return false;
 					}
@@ -341,7 +341,7 @@ namespace net_utils
 						m_is_stop_handling = true;
 						if(m_cache.size() > HTTP_MAX_HEADER_LEN)
 						{
-							LOG_ERROR_CC(m_conn_context, "simple_http_connection_handler::handle_buff_in: Too long header area");
+							MERROR("{}simple_http_connection_handler::handle_buff_in: Too long header area", m_conn_context);
 							m_state = http_state_error;
 							return false;
 						}	
@@ -356,10 +356,10 @@ namespace net_utils
 			case http_state_connection_close:
 				return false;
 			default:
-				LOG_ERROR_CC(m_conn_context, "simple_http_connection_handler::handle_char_out: Wrong state: " << m_state);
+				MERROR("{}simple_http_connection_handler::handle_char_out: Wrong state: {}", m_conn_context, m_state);
 				return false;
 			case http_state_error:
-				LOG_ERROR_CC(m_conn_context, "simple_http_connection_handler::handle_char_out: Error state!!!");
+				MERROR("{}simple_http_connection_handler::handle_char_out: Error state!!!", m_conn_context);
 				return false;
 			}
 
@@ -428,7 +428,7 @@ namespace net_utils
 		}else
 		{
 			m_state = http_state_error;
-			LOG_ERROR_CC(m_conn_context, "simple_http_connection_handler<t_connection_context>::handle_invoke_query_line(): Failed to match first line: " << m_cache);
+			MERROR("{}simple_http_connection_handler<t_connection_context>::handle_invoke_query_line(): Failed to match first line: {}", m_conn_context, m_cache);
 			return false;
 		}
 
@@ -452,14 +452,14 @@ namespace net_utils
   template<class t_connection_context>
 	bool simple_http_connection_handler<t_connection_context>::analize_cached_request_header_and_invoke_state(size_t pos)
 	{ 
-		LOG_PRINT_L3("HTTP HEAD:\r\n" << m_cache.substr(0, pos));
+		LOG_PRINT_L3("HTTP HEAD:\r\n{}", m_cache.substr(0, pos));
 
 		m_query_info.m_full_request_buf_size = pos;
     m_query_info.m_request_head.assign(m_cache.begin(), m_cache.begin()+pos); 
 
 		if(!parse_cached_header(m_query_info.m_header_info, m_cache, pos))
 		{
-			LOG_ERROR_CC(m_conn_context, "simple_http_connection_handler<t_connection_context>::analize_cached_request_header_and_invoke_state(): failed to anilize request header: " << m_cache);
+			MERROR("{}simple_http_connection_handler<t_connection_context>::analize_cached_request_header_and_invoke_state(): failed to anilize request header: {}", m_conn_context, m_cache);
 			m_state = http_state_error;
 			return false;
 		}
@@ -475,7 +475,7 @@ namespace net_utils
 			m_body_transfer_type = http_body_transfer_measure;
 			if(!get_len_from_content_lenght(m_query_info.m_header_info.m_content_length, m_len_summary))
 			{
-				LOG_ERROR_CC(m_conn_context, "simple_http_connection_handler<t_connection_context>::analize_cached_request_header_and_invoke_state(): Failed to get_len_from_content_lenght();, m_query_info.m_content_length="<<m_query_info.m_header_info.m_content_length);
+				MERROR("{}simple_http_connection_handler<t_connection_context>::analize_cached_request_header_and_invoke_state(): Failed to get_len_from_content_lenght();, m_query_info.m_content_length={}", m_conn_context, m_query_info.m_header_info.m_content_length);
 				m_state = http_state_error;
 				return false;
 			}
@@ -508,7 +508,7 @@ namespace net_utils
 		case http_body_transfer_multipart:
 		case http_body_transfer_undefined:
 		default:
-			LOG_ERROR_CC(m_conn_context, "simple_http_connection_handler<t_connection_context>::handle_retriving_query_body(): Unexpected m_body_query_type state:" << m_body_transfer_type);
+			MERROR("{}simple_http_connection_handler<t_connection_context>::handle_retriving_query_body(): Unexpected m_body_query_type state:{}", m_conn_context, m_body_transfer_type);
 			m_state = http_state_error;
 			return false;
 		}
@@ -589,7 +589,7 @@ namespace net_utils
 				body_info.m_etc_fields.push_back(std::pair<std::string, std::string>(result[field_etc_name], result[field_val]));
 			else
 			{
-				LOG_ERROR_CC(m_conn_context, "simple_http_connection_handler<t_connection_context>::parse_cached_header() not matched last entry in:" << m_cache_to_process);
+				MERROR("{}simple_http_connection_handler<t_connection_context>::parse_cached_header() not matched last entry in:{}", m_conn_context, m_cache_to_process);
 			}
 
 			it_current_bound = result[(int)result.size()-1]. first;
@@ -633,9 +633,9 @@ namespace net_utils
 		}
 
 		std::string response_data = get_response_header(response);
-		//LOG_PRINT_L0("HTTP_SEND: << \r\n" << response_data + response.m_body);
+		//LOG_PRINT_L0("HTTP_SEND: << \r\n{}", response_data + response.m_body);
 
-		LOG_PRINT_L3("HTTP_RESPONSE_HEAD: << \r\n" << response_data);
+		LOG_PRINT_L3("HTTP_RESPONSE_HEAD: << \r\n{}", response_data);
 
 		if ((response.m_body.size() && (query_info.m_http_method != http::http_method_head)) || (query_info.m_http_method == http::http_method_options))
 			response_data += response.m_body;
@@ -659,7 +659,7 @@ namespace net_utils
 		m_config.m_lock.unlock();
 		if(!file_io_utils::load_file_to_string(destination_file_path.c_str(), response.m_body))
 		{
-			MWARNING("URI \""<< query_info.m_full_request_str.substr(0, query_info.m_full_request_str.size()-2) << "\" [" << destination_file_path << "] Not Found (404 )");
+			MWARNING("URI \"{}\" [{}] Not Found (404 )", query_info.m_full_request_str.substr(0, query_info.m_full_request_str.size()-2), destination_file_path);
 			response.m_body = get_not_found_response_body(query_info.m_URI);
 			response.m_response_code = 404;
 			response.m_response_comment = "Not found";
@@ -667,7 +667,7 @@ namespace net_utils
 			return true;
 		}
 
-		MDEBUG(" -->> " << query_info.m_full_request_str << "\r\n<<--OK");
+		MDEBUG(" -->> {}\r\n<<--OK", query_info.m_full_request_str);
 		response.m_response_code = 200;
 		response.m_response_comment = "OK";
 		response.m_mime_tipe = get_file_mime_tipe(uri_to_path);

@@ -201,7 +201,7 @@ namespace tools
       }
       else
       {
-        MGINFO_RED("Got control signal " << type << ". Exiting without saving...");
+        MGINFO_RED("Got control signal {}. Exiting without saving...", type);
         return FALSE;
       }
       return TRUE;

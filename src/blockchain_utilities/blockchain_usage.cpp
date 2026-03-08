@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
   LOG_PRINT_L0("database: LMDB");
 
   const std::string filename = input;
-  LOG_PRINT_L0("Loading blockchain from folder " << filename << " ...");
+  LOG_PRINT_L0("Loading blockchain from folder {} ...", filename);
 
   try
   {
@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
   }
   catch (const std::exception& e)
   {
-    LOG_PRINT_L0("Error opening database: " << e.what());
+    LOG_PRINT_L0("Error opening database: {}", e.what());
     return 1;
   }
   r = core_storage->blockchain.init(db, net_type);
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
   std::unordered_map<output_data, std::list<reference>> outputs;
   std::unordered_map<uint64_t,uint64_t> indices;
 
-  LOG_PRINT_L0("Reading blockchain from " << input);
+  LOG_PRINT_L0("Reading blockchain from {}", input);
   core_storage->blockchain.for_all_transactions([&](const crypto::hash &hash, const cryptonote::transaction &tx)->bool
   {
     const bool coinbase = tx.vin.size() == 1 && tx.vin[0].type() == typeid(txin_gen);
@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
     for (const auto &c: counts)
     {
       float percent = 100.f * c.second / total;
-      MINFO(std::to_string(c.second) << " outputs used " << c.first << " times (" << percent << "%)");
+      MINFO("{} outputs used {} times ({}%)", std::to_string(c.second), c.first, percent);
     }
   }
   else

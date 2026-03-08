@@ -152,7 +152,7 @@ namespace levin
         return true;
       });
 
-      MDEBUG("Found " << outs.size() << " out connections having height >= " << blockchain_height);
+      MDEBUG("Found {} out connections having height >= {}", outs.size(), blockchain_height);
       return outs;
     }
 
@@ -336,8 +336,7 @@ namespace levin
         if (!channel.connection.is_nil())
           channel.queue.push_back(std::move(message_));
         else if (destination_ == 0 && zone_->connection_count == 0)
-          MWARNING("Unable to send transaction(s) to " << epee::net_utils::zone_to_string(zone_->nzone) <<
-			" - no available outbound connections");
+          MWARNING("Unable to send transaction(s) to {} - no available outbound connections", epee::net_utils::zone_to_string(zone_->nzone));
       }
     };
 
@@ -437,7 +436,7 @@ namespace levin
         crypto::random_poisson_subseconds out_duration(fluff_average_out);
 
 
-        MDEBUG("Queueing " << txs.size() << " transaction(s) for Dandelion++ fluffing");
+        MDEBUG("Queueing {} transaction(s) for Dandelion++ fluffing", txs.size());
         for (auto &e: zone->contexts)
         {
           auto &id = e.first;
@@ -564,7 +563,7 @@ namespace levin
             {
               /* Source is intentionally omitted in debug log for privacy - a
                  nil uuid indicates source is that node. */
-              MDEBUG("Sent " << txs_.size() << " transaction(s) to " << destination << " using Dandelion++ stem");
+              MDEBUG("Sent {} transaction(s) to {} using Dandelion++ stem", txs_.size(), destination);
               return;
             }
 
@@ -606,7 +605,7 @@ namespace levin
         assert(zone_->strand.running_in_this_thread());
 
         if (zone_->nzone == epee::net_utils::zone::public_)
-          MDEBUG("Starting new Dandelion++ epoch: " << (fluffing_ ? "fluff" : "stem"));
+          MDEBUG("Starting new Dandelion++ epoch: {}", (fluffing_ ? "fluff" : "stem"));
 
         zone_->map = std::move(map_);
         zone_->fluffing = fluffing_;
@@ -673,8 +672,7 @@ namespace levin
 
             auto connections = get_out_connections(*zone_->p2p, height);
             if (connections.empty())
-              MWARNING("Unable to send transaction(s) to " << epee::net_utils::zone_to_string(zone_->nzone) <<
-			" - no suitable outbound connections at height " << height);
+              MWARNING("Unable to send transaction(s) to {} - no suitable outbound connections at height {}", epee::net_utils::zone_to_string(zone_->nzone), height);
 
             boost::asio::post(zone_->strand, update_channels{zone_, std::move(connections)});
           }

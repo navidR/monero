@@ -105,7 +105,7 @@ namespace cryptonote {
     }
 
     if(current_block_weight > 2 * median_weight) {
-      MERROR("Block cumulative weight is too big: " << current_block_weight << ", expected less than " << 2 * median_weight);
+      MERROR("Block cumulative weight is too big: {}, expected less than {}", current_block_weight, 2 * median_weight);
       return false;
     }
 
@@ -219,9 +219,7 @@ namespace cryptonote {
         info.has_payment_id = false;
       }
       else {
-        LOG_PRINT_L1("Wrong address prefix: " << prefix << ", expected " << address_prefix 
-          << " or " << integrated_address_prefix
-          << " or " << subaddress_prefix);
+        LOG_PRINT_L1("Wrong address prefix: {}, expected {} or {} or {}", prefix, address_prefix, integrated_address_prefix, subaddress_prefix);
         return false;
       }
 
@@ -260,7 +258,7 @@ namespace cryptonote {
 
       if(buff.size()!=sizeof(public_address_outer_blob))
       {
-        LOG_PRINT_L1("Wrong public address size: " << buff.size() << ", expected size: " << sizeof(public_address_outer_blob));
+        LOG_PRINT_L1("Wrong public address size: {}, expected size: {}", buff.size(), sizeof(public_address_outer_blob));
         return false;
       }
 
@@ -269,7 +267,7 @@ namespace cryptonote {
 
       if(blob.m_ver > CRYPTONOTE_PUBLIC_ADDRESS_TEXTBLOB_VER)
       {
-        LOG_PRINT_L1("Unknown version of public address: " << blob.m_ver << ", expected " << CRYPTONOTE_PUBLIC_ADDRESS_TEXTBLOB_VER);
+        LOG_PRINT_L1("Unknown version of public address: {}, expected {}", blob.m_ver, CRYPTONOTE_PUBLIC_ADDRESS_TEXTBLOB_VER);
         return false;
       }
 
@@ -366,7 +364,7 @@ bool parse_hash256(const std::string &str_hash, crypto::hash& hash)
   bool res = epee::string_tools::parse_hexstr_to_binbuff(str_hash, buf);
   if (!res || buf.size() != sizeof(crypto::hash))
   {
-    MERROR("invalid hash format: " << str_hash);
+    MERROR("invalid hash format: {}", str_hash);
     return false;
   }
   else

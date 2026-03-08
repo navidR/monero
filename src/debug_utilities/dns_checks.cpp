@@ -52,19 +52,19 @@ static std::vector<std::string> lookup(lookup_t type, const char *hostname)
   {
     case LOOKUP_A: res = tools::DNSResolver::instance().get_ipv4(hostname, dnssec_available, dnssec_valid); break;
     case LOOKUP_TXT: res = tools::DNSResolver::instance().get_txt_record(hostname, dnssec_available, dnssec_valid); break;
-    default: MERROR("Invalid lookup type: " << (int)type); return {};
+    default: MERROR("Invalid lookup type: {}", (int)type); return {};
   }
   if (!dnssec_available)
   {
-    MWARNING("No DNSSEC for " << hostname);
+    MWARNING("No DNSSEC for {}", hostname);
     return {};
   }
   if (!dnssec_valid)
   {
-    MWARNING("Invalid DNSSEC check for " << hostname);
+    MWARNING("Invalid DNSSEC check for {}", hostname);
     return {};
   }
-  MINFO(res.size() << " valid signed result(s) for " << hostname);
+  MINFO("{} valid signed result(s) for {}", res.size(), hostname);
   return res;
 }
 
@@ -89,9 +89,9 @@ static void lookup(lookup_t type, const std::vector<std::string> hostnames)
   if (results.size() > 1)
   {
     if (count < results.size())
-      MERROR("Only " << count << "/" << results.size() << " records match");
+      MERROR("Only {}/{} records match", count, results.size());
     else
-      MINFO(count << "/" << results.size() << " records match");
+      MINFO("{}/{} records match", count, results.size());
   }
 }
 

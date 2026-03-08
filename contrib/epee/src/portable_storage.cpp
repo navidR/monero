@@ -89,7 +89,7 @@ namespace serialization
       m_root.m_entries.clear();
       if(source.size() < sizeof(storage_block_header))
       {
-        LOG_ERROR("portable_storage: wrong binary format, packet size = " << source.size() << " less than expected sizeof(storage_block_header)=" << sizeof(storage_block_header));
+        LOG_ERROR("portable_storage: wrong binary format, packet size = {} less than expected sizeof(storage_block_header)={}", source.size(), sizeof(storage_block_header));
         return false;
       }
       storage_block_header* pbuff = (storage_block_header*)source.data();
@@ -102,7 +102,7 @@ namespace serialization
       }
       if(pbuff->m_ver != PORTABLE_STORAGE_FORMAT_VER)
       {
-        LOG_ERROR("portable_storage: wrong binary format - unknown format ver = " << pbuff->m_ver);
+        LOG_ERROR("portable_storage: wrong binary format - unknown format ver = {}", pbuff->m_ver);
         return false;
       }
       TRY_ENTRY();
@@ -236,7 +236,7 @@ namespace serialization
       TRY_ENTRY();
       CHECK_AND_ASSERT(hsec_array, false);
       CHECK_AND_ASSERT_MES(hsec_array->type() == typeid(array_entry_t<section>), 
-        false, "unexpected type(not 'section') in insert_next_section, type: " << hsec_array->type().name());
+        false, "unexpected type(not 'section') in insert_next_section, type: {}", hsec_array->type().name());
 
       array_entry_t<section>& sec_array = boost::get<array_entry_t<section>>(*hsec_array);
       hinserted_childsection = &sec_array.insert_next_value(section());

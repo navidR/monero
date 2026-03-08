@@ -105,7 +105,7 @@ static int flock_exnb(int fd)
   fl.l_len = 0;
   ret = fcntl(fd, F_SETLK, &fl);
   if (ret < 0)
-    MERROR("Error locking fd " << fd << ": " << errno << " (" << strerror(errno) << ")");
+    MERROR("Error locking fd {}: {} ({})", fd, errno, strerror(errno));
   return ret;
 }
 #endif
@@ -248,7 +248,7 @@ namespace tools
       boost::system::error_code ec{};
       boost::filesystem::remove(filename, ec);
       if (ec) {
-        MERROR("Failed to remove " << filename << ": " << ec.message());
+        MERROR("Failed to remove {}: {}", filename, ec.message());
         return {};
       }
     }
@@ -280,7 +280,7 @@ namespace tools
     }
     catch (const std::exception &e)
     {
-      MERROR("Failed to convert path \"" << filename << "\" to UTF-16: " << e.what());
+      MERROR("Failed to convert path \"{}\" to UTF-16: {}", filename, e.what());
       return;
     }
     m_fd = CreateFileW(filename_wide.c_str(), GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -290,14 +290,14 @@ namespace tools
       memset(&ov, 0, sizeof(ov));
       if (!LockFileEx(m_fd, LOCKFILE_FAIL_IMMEDIATELY | LOCKFILE_EXCLUSIVE_LOCK, 0, 1, 0, &ov))
       {
-        MERROR("Failed to lock " << filename << ": " << std::error_code(GetLastError(), std::system_category()));
+        MERROR("Failed to lock {}: {}", filename, std::error_code(GetLastError(), std::system_category()));
         CloseHandle(m_fd);
         m_fd = INVALID_HANDLE_VALUE;
       }
     }
     else
     {
-      MERROR("Failed to open " << filename << ": " << std::error_code(GetLastError(), std::system_category()));
+      MERROR("Failed to open {}: {}", filename, std::error_code(GetLastError(), std::system_category()));
     }
 #else
     m_fd = open(filename.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0666);
@@ -305,14 +305,14 @@ namespace tools
     {
       if (flock_exnb(m_fd) == -1)
       {
-        MERROR("Failed to lock " << filename << ": " << std::strerror(errno));
+        MERROR("Failed to lock {}: {}", filename, std::strerror(errno));
         close(m_fd);
         m_fd = -1;
       }
     }
     else
     {
-      MERROR("Failed to open " << filename << ": " << std::strerror(errno));
+      MERROR("Failed to open {}: {}", filename, std::strerror(errno));
     }
 #endif
   }
@@ -350,7 +350,7 @@ namespace tools
       }
       catch (const std::exception &e)
       {
-        MERROR("utf16_to_utf8 failed: " << e.what());
+        MERROR("utf16_to_utf8 failed: {}", e.what());
         return "";
       }
     }
@@ -398,11 +398,11 @@ namespace tools
     bool res = fs::create_directories(fs_path, ec);
     if (res)
     {
-      LOG_PRINT_L2("Created directory: " << path);
+      LOG_PRINT_L2("Created directory: {}", path);
     }
     else
     {
-      LOG_PRINT_L2("Can't create directory: " << path << ", err: "<< ec.message());
+      LOG_PRINT_L2("Can't create directory: {}, err: {}", path, ec.message());
     }
 
     return res;
@@ -446,7 +446,7 @@ namespace tools
     // if no threads, bails out early with UB_NOERROR, otherwise fails with UB_AFTERFINAL id already finalized
     bool with_threads = ub_ctx_async(ctx, 1) != 0; // UB_AFTERFINAL is not defined in public headers, check any error
     ub_ctx_delete(ctx);
-    MINFO("libunbound was built " << (with_threads ? "with" : "without") << " threads");
+    MINFO("libunbound was built {} threads", (with_threads ? "with" : "without"));
     return with_threads;
   }
 
@@ -549,7 +549,7 @@ namespace tools
 #ifdef __GLIBC__
     const char *ver = gnu_get_libc_version();
     if (!strcmp(ver, "2.25"))
-      MCLOG_RED(el::Level::Warning, "global", "Running with glibc " << ver << ", hangs may occur - change glibc version if possible");
+      MCLOG_RED(el::Level::Warning, "global", "Running with glibc {}, hangs may occur - change glibc version if possible", ver);
 #endif
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000 || defined(LIBRESSL_VERSION_TEXT)
@@ -649,34 +649,34 @@ namespace tools
     epee::net_utils::http::url_content u_c;
     if (!epee::net_utils::parse_url(address, u_c))
     {
-      MWARNING("Failed to determine whether address '" << address << "' is local, assuming not");
+      MWARNING("Failed to determine whether address '{}' is local, assuming not", address);
       return false;
     }
     if (u_c.host.empty())
     {
-      MWARNING("Failed to determine whether address '" << address << "' is local, assuming not");
+      MWARNING("Failed to determine whether address '{}' is local, assuming not", address);
       return false;
     }
 
     if (u_c.host == "localhost" || boost::ends_with(u_c.host, ".localhost")) { // RFC 6761 (6.3)
-      MDEBUG("Address '" << address << "' is local");
+      MDEBUG("Address '{}' is local", address);
       return true;
     }
 
     boost::system::error_code ec;
     const auto parsed_ip = boost::asio::ip::make_address(u_c.host, ec);
     if (ec) {
-      MDEBUG("Failed to parse '" << address << "' as IP address: " << ec.message() << ". Considering it not local");
+      MDEBUG("Failed to parse '{}' as IP address: {}. Considering it not local", address, ec.message());
       return false;
     }
 
     if (parsed_ip.is_loopback())
     {
-      MDEBUG("Address '" << address << "' is local");
+      MDEBUG("Address '{}' is local", address);
       return true;
     }
 
-    MDEBUG("Address '" << address << "' is not local");
+    MDEBUG("Address '{}' is not local", address);
     return false;
   }
   int vercmp(const char *v0, const char *v1)

@@ -160,7 +160,7 @@ namespace
       if (full_match)
       {
         *language = *it1;
-        MINFO("Full match for language " << (*language)->get_english_language_name());
+        MINFO("Full match for language {}", (*language)->get_english_language_name());
         return true;
       }
       // Some didn't match. Clear the index array.
@@ -174,7 +174,7 @@ namespace
     if (fallback)
     {
       *language = fallback;
-      MINFO("Fallback match for language " << (*language)->get_english_language_name());
+      MINFO("Fallback match for language {}", (*language)->get_english_language_name());
       return true;
     }
 
@@ -233,7 +233,7 @@ namespace
     epee::wipeable_string trimmed_last_word = last_word.length() > unique_prefix_length ? Language::utf8prefix(last_word, unique_prefix_length) :
       last_word;
     bool ret = Language::WordEqual()(trimmed_checksum, trimmed_last_word);
-    MINFO("Checksum is " << (ret ? "valid" : "invalid"));
+    MINFO("Checksum is {}", (ret ? "valid" : "invalid"));
     return ret;
   }
 }

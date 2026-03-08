@@ -81,7 +81,7 @@ std::vector<std::string> PendingTransactionImpl::txid() const
 bool PendingTransactionImpl::commit(const std::string &filename, bool overwrite)
 {
 
-    LOG_PRINT_L3("m_pending_tx size: " << m_pending_tx.size());
+    LOG_PRINT_L3("m_pending_tx size: {}", m_pending_tx.size());
 
     try {
       // Save tx to file

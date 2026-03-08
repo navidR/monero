@@ -185,9 +185,9 @@ bool gen_multisig_tx_validation_base::generate_with(std::vector<test_event_entry
   for (size_t n = 0; n < n_coinbases; ++n)
   {
     tx_pub_key[n] = get_tx_pub_key_from_extra(blocks[n].miner_tx);
-    MDEBUG("tx_pub_key: " << tx_pub_key);
+    MDEBUG("tx_pub_key: {}", tx_pub_key);
     cryptonote::get_output_public_key(blocks[n].miner_tx.vout[0], output_pub_key[n]);
-    MDEBUG("output_pub_key: " << output_pub_key);
+    MDEBUG("output_pub_key: {}", output_pub_key);
   }
 
   std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
@@ -226,19 +226,19 @@ bool gen_multisig_tx_validation_base::generate_with(std::vector<test_event_entry
         r = multisig::generate_multisig_key_image(miner_account[msidx].get_keys(), kiidx, output_pub_key[tdidx], account_ki[msidx][tdidx][kiidx]);
         CHECK_AND_ASSERT_MES(r, false, "Failed to generate multisig export key image");
       }
-      MDEBUG("Party " << msidx << ":");
-      MDEBUG("spend: sec " << crypto::secret_key_explicit_print_ref{miner_account[msidx].get_keys().m_spend_secret_key} << ", pub " << miner_account[msidx].get_keys().m_account_address.m_spend_public_key);
-      MDEBUG("view: sec " << crypto::secret_key_explicit_print_ref{miner_account[msidx].get_keys().m_view_secret_key} << ", pub " << miner_account[msidx].get_keys().m_account_address.m_view_public_key);
+      MDEBUG("Party {}:", msidx);
+      MDEBUG("spend: sec {}, pub {}", crypto::secret_key_explicit_print_ref{miner_account[msidx].get_keys().m_spend_secret_key}, miner_account[msidx].get_keys().m_account_address.m_spend_public_key);
+      MDEBUG("view: sec {}, pub {}", crypto::secret_key_explicit_print_ref{miner_account[msidx].get_keys().m_view_secret_key}, miner_account[msidx].get_keys().m_account_address.m_view_public_key);
       for (const auto &k: miner_account[msidx].get_multisig_keys())
-        MDEBUG("msk: " << crypto::secret_key_explicit_print_ref{k});
+        MDEBUG("msk: {}", crypto::secret_key_explicit_print_ref{k});
       for (size_t n = 0; n < account_k[msidx][tdidx].size(); ++n)
       {
-        MDEBUG("k: " << crypto::secret_key_explicit_print_ref{account_k[msidx][tdidx][n]});
-        MDEBUG("L: " << account_L[msidx][tdidx][n]);
-        MDEBUG("R: " << account_R[msidx][tdidx][n]);
+        MDEBUG("k: {}", crypto::secret_key_explicit_print_ref{account_k[msidx][tdidx][n]});
+        MDEBUG("L: {}", account_L[msidx][tdidx][n]);
+        MDEBUG("R: {}", account_R[msidx][tdidx][n]);
       }
       for (const auto &ki: account_ki[msidx][tdidx])
-        MDEBUG("ki: " << ki);
+        MDEBUG("ki: {}", ki);
     }
   }
 
@@ -255,7 +255,7 @@ bool gen_multisig_tx_validation_base::generate_with(std::vector<test_event_entry
         pkis.push_back(account_ki[msidx][tdidx][n]);
     r = multisig::generate_multisig_composite_key_image(miner_account[0].get_keys(), subaddresses, output_pub_key[tdidx], tx_pub_key[tdidx], additional_tx_keys, 0, pkis, (crypto::key_image&)kLRki.ki);
     CHECK_AND_ASSERT_MES(r, false, "Failed to generate composite key image");
-    MDEBUG("composite ki: " << kLRki.ki);
+    MDEBUG("composite ki: {}", kLRki.ki);
     for (size_t n = 1; n < total; ++n)
     {
       rct::key ki;
@@ -286,7 +286,7 @@ bool gen_multisig_tx_validation_base::generate_with(std::vector<test_event_entry
       crypto::public_key output_public_key;
       cryptonote::get_output_public_key(blocks[m].miner_tx.vout[0], output_public_key);
       ctkey.dest = rct::pk2rct(output_public_key);
-      MDEBUG("using " << (m == n ? "real" : "fake") << " input " << ctkey.dest);
+      MDEBUG("using {} input {}", (m == n ? "real" : "fake"), ctkey.dest);
       ctkey.mask = rct::commit(blocks[m].miner_tx.vout[0].amount, rct::identity()); // since those are coinbases, the masks are known
       src.outputs.push_back(std::make_pair(m, ctkey));
     }
@@ -401,12 +401,12 @@ bool gen_multisig_tx_validation_base::generate_with(std::vector<test_event_entry
     multisig::signing::tx_builder_ringct_t signer_tx_builder;
     CHECK_AND_ASSERT_MES(signer_tx_builder.init(miner_account[signer].get_keys(), {}, 0, {0}, sources, destinations, {}, {rct::RangeProofPaddedBulletproof, 4}, true, true, tx_key, additional_tx_secret_keys, multisig_tx_key_entropy, tx), false, "error: multisig::signing::tx_builder_ringct_t::init");
 
-    MDEBUG("signing with k size " << k.size());
+    MDEBUG("signing with k size {}", k.size());
     for (size_t n = 0; n < multisig::signing::kAlphaComponents; ++n)
-      MDEBUG("signing with k " << k.back()[n]);
-    MDEBUG("signing with sk " << skey);
+      MDEBUG("signing with k {}", k.back()[n]);
+    MDEBUG("signing with sk {}", skey);
     for (const auto &sk: used_keys)
-      MDEBUG("  created with sk " << crypto::secret_key_explicit_print_ref{sk});
+      MDEBUG("  created with sk {}", crypto::secret_key_explicit_print_ref{sk});
     CHECK_AND_ASSERT_MES(signer_tx_builder.next_partial_sign(sig.total_alpha_G, sig.total_alpha_H, k, skey, sig.c_0, sig.s), false, "error: multisig::signing::tx_builder_ringct_t::next_partial_sign");
 
     // in round-robin signing, the last signer finalizes the tx
@@ -450,7 +450,7 @@ bool gen_multisig_tx_validation_base::generate_with(std::vector<test_event_entry
   if (!valid)
     DO_CALLBACK(events, "mark_invalid_tx");
   events.push_back(tx);
-  LOG_PRINT_L0("Test tx: " << obj_to_json_str(tx));
+  LOG_PRINT_L0("Test tx: {}", obj_to_json_str(tx));
 
   return true;
 }

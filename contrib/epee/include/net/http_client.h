@@ -187,13 +187,13 @@ namespace net_utils
 				{
 					if (!m_auto_connect)
 					{
-						MWARNING("Auto connect attempt to " << m_host_buff << ":" << m_port << " disabled");
+						MWARNING("Auto connect attempt to {}:{} disabled", m_host_buff, m_port);
 						return false;
 					}
 					MDEBUG("Reconnecting...");
 					if(!connect(timeout))
 					{
-						MDEBUG("Failed to connect to " << m_host_buff << ":" << m_port);
+						MDEBUG("Failed to connect to {}:{}", m_host_buff, m_port);
 						return false;
 					}
 				}
@@ -336,7 +336,7 @@ namespace net_utils
 				}
 				else
                 {
-                  LOG_PRINT_L3("Returning false because of wrong state machine. state: " << m_state);
+                  LOG_PRINT_L3("Returning false because of wrong state machine. state: {}", m_state);
                   return false;
                 }
 			}
@@ -532,7 +532,7 @@ namespace net_utils
 						}
 						if(!get_chunk_head(m_chunked_cache, m_len_in_remain, is_matched))
 						{
-							LOG_ERROR("http_stream_filter::handle_chunked(*) Failed to get length from chunked head:" << m_chunked_cache);
+							LOG_ERROR("http_stream_filter::handle_chunked(*) Failed to get length from chunked head:{}", m_chunked_cache);
 							m_state = reciev_machine_state_error;
 							return false;
 						}
@@ -582,7 +582,7 @@ namespace net_utils
 						return true;
 					case http_chunked_state_undefined:
 					default:
-						LOG_ERROR("http_stream_filter::handle_chunked(): Wrong state" << m_chunked_state);
+						LOG_ERROR("http_stream_filter::handle_chunked(): Wrong state{}", m_chunked_state);
 						return false;
 					}
 				}
@@ -608,7 +608,7 @@ namespace net_utils
 					// optional space (not in RFC, but in previous code)
 					if (*ptr == ' ')
 						++ptr;
-					CHECK_AND_ASSERT_MES(*ptr == ':', true, "http_stream_filter::parse_cached_header() invalid header in: " << m_cache_to_process);
+					CHECK_AND_ASSERT_MES(*ptr == ':', true, "http_stream_filter::parse_cached_header() invalid header in: {}", m_cache_to_process);
 					++ptr;
 					// optional whitespace, but not newlines - line folding is obsolete, let's ignore it
 					while (isblank(*ptr))
@@ -622,7 +622,7 @@ namespace net_utils
 						--value_end;
 					if (*ptr == '\r')
 						++ptr;
-					CHECK_AND_ASSERT_MES(*ptr == '\n', true, "http_stream_filter::parse_cached_header() invalid header in: " << m_cache_to_process);
+					CHECK_AND_ASSERT_MES(*ptr == '\n', true, "http_stream_filter::parse_cached_header() invalid header in: {}", m_cache_to_process);
 					++ptr;
 
 					const std::string key = std::string(key_pos, key_end - key_pos);
@@ -669,9 +669,9 @@ namespace net_utils
 				CHECK_AND_ASSERT_MES(ul <= INT_MAX && *end =='.', false, "Invalid first response line: " + m_header_cache);
 				m_response_info.m_http_ver_hi = ul;
 				ptr = end + 1;
-				CHECK_AND_ASSERT_MES(epee::misc_utils::parse::isdigit(*ptr), false, "Invalid first response line: " + m_header_cache + ", ptr: " << ptr);
+				CHECK_AND_ASSERT_MES(epee::misc_utils::parse::isdigit(*ptr), false, "Invalid first response line: {}, ptr: {}", m_header_cache, ptr);
 				ul = strtoul(ptr, &end, 10);
-				CHECK_AND_ASSERT_MES(ul <= INT_MAX && isblank(*end), false, "Invalid first response line: " + m_header_cache + ", ptr: " << ptr);
+				CHECK_AND_ASSERT_MES(ul <= INT_MAX && isblank(*end), false, "Invalid first response line: {}, ptr: {}", m_header_cache, ptr);
 				m_response_info.m_http_ver_lo = ul;
 				ptr = end + 1;
 				while (isblank(*ptr))
@@ -686,7 +686,7 @@ namespace net_utils
 					++ptr;
 				if (*ptr == '\r')
 					++ptr;
-				CHECK_AND_ASSERT_MES(*ptr == '\n', false, "Invalid first response line: " << m_header_cache);
+				CHECK_AND_ASSERT_MES(*ptr == '\n', false, "Invalid first response line: {}", m_header_cache);
 				++ptr;
 
 				m_header_cache.erase(0, ptr - m_header_cache.c_str());
@@ -718,7 +718,7 @@ namespace net_utils
 				std::string fake_str; //gcc error workaround
 
 				bool res = parse_header(m_response_info.m_header_info, m_header_cache);
-				CHECK_AND_ASSERT_MES(res, false, "http_stream_filter::analize_cached_reply_header_and_invoke_state(): failed to anilize reply header: " << m_header_cache);
+				CHECK_AND_ASSERT_MES(res, false, "http_stream_filter::analize_cached_reply_header_and_invoke_state(): failed to anilize reply header: {}", m_header_cache);
 
 				set_reply_content_encoder();
 
@@ -740,7 +740,7 @@ namespace net_utils
 					string_tools::trim(m_response_info.m_header_info.m_transfer_encoding);
 					if(string_tools::compare_no_case(m_response_info.m_header_info.m_transfer_encoding, "chunked"))
 					{
-						LOG_ERROR("Wrong Transfer-Encoding:" << m_response_info.m_header_info.m_transfer_encoding);
+						LOG_ERROR("Wrong Transfer-Encoding:{}", m_response_info.m_header_info.m_transfer_encoding);
 						m_state = reciev_machine_state_error;
 						return false;
 					}
@@ -753,7 +753,7 @@ namespace net_utils
 					//In the response header the length was specified
 					if(!content_len_valid)
 					{
-						LOG_ERROR("http_stream_filter::analize_cached_reply_header_and_invoke_state(): Failed to get_len_from_content_lenght();, m_query_info.m_content_length="<<m_response_info.m_header_info.m_content_length);
+						LOG_ERROR("http_stream_filter::analize_cached_reply_header_and_invoke_state(): Failed to get_len_from_content_lenght();, m_query_info.m_content_length={}", m_response_info.m_header_info.m_content_length);
 						m_state = reciev_machine_state_error;
 						return false;
 					}
@@ -779,7 +779,7 @@ namespace net_utils
 				}else
 				{   //Apparently there are no signs of the form of transfer, will receive data until the connection is closed
 					m_state = reciev_machine_state_error;
-					MERROR("Undefined transfer type, consider http_body_transfer_connection_close method. header: " << m_header_cache);
+					MERROR("Undefined transfer type, consider http_body_transfer_connection_close method. header: {}", m_header_cache);
 					return false;
 				} 
 				return false;
@@ -810,7 +810,7 @@ namespace net_utils
 						boundary = result[7];
 					else 
 					{
-						LOG_ERROR("Failed to match boundary in content-type=" << head_info.m_content_type);
+						LOG_ERROR("Failed to match boundary in content-type={}", head_info.m_content_type);
 						return false;
 					}
 					return true;

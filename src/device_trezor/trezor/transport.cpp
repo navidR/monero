@@ -292,7 +292,7 @@ namespace trezor{
 
   static void assert_port_number(uint32_t port)
   {
-    CHECK_AND_ASSERT_THROW_MES(port >= 1024 && port < 65535, "Invalid port number: " << port);
+    CHECK_AND_ASSERT_THROW_MES(port >= 1024 && port < 65535, "Invalid port number: {}", port);
   }
 
   Transport::Transport(): m_open_counter(0) {
@@ -301,12 +301,12 @@ namespace trezor{
 
   bool Transport::pre_open(){
     if (m_open_counter > 0){
-      MTRACE("Already opened, count: " << m_open_counter);
+      MTRACE("Already opened, count: {}", m_open_counter);
       m_open_counter += 1;
       return false;
 
     } else if (m_open_counter < 0){
-      MTRACE("Negative open value: " << m_open_counter);
+      MTRACE("Negative open value: {}", m_open_counter);
 
     }
 
@@ -319,7 +319,7 @@ namespace trezor{
     m_open_counter -= 1;
 
     if (m_open_counter < 0){
-      MDEBUG("Already closed. Counter " << m_open_counter);
+      MDEBUG("Already closed. Counter {}", m_open_counter);
 
     } else if (m_open_counter == 0) {
       return true;
@@ -348,11 +348,11 @@ namespace trezor{
       if (!bridge_host && (env_bridge_port = getenv("TREZOR_BRIDGE_PORT")) != nullptr)
       {
         uint16_t bridge_port;
-        CHECK_AND_ASSERT_THROW_MES(epee::string_tools::get_xtype_from_string(bridge_port, env_bridge_port), "Invalid bridge port: " << env_bridge_port);
+        CHECK_AND_ASSERT_THROW_MES(epee::string_tools::get_xtype_from_string(bridge_port, env_bridge_port), "Invalid bridge port: {}", env_bridge_port);
         assert_port_number(bridge_port);
 
         m_bridge_host = std::string("127.0.0.1:") + boost::lexical_cast<std::string>(env_bridge_port);
-        MDEBUG("Bridge host: " << m_bridge_host);
+        MDEBUG("Bridge host: {}", m_bridge_host);
       }
 
       m_http_client.set_server(m_bridge_host, boost::none, epee::net_utils::ssl_support_t::e_ssl_support_disabled);
@@ -389,11 +389,11 @@ namespace trezor{
           const auto id_product = (uint16_t) itr_product->value.GetUint64();
           const auto device_idx = get_device_idx(id_vendor, id_product);
           if (!is_device_supported(device_idx)){
-            MDEBUG("Device with idx " << device_idx << " is not supported. Vendor: " << id_vendor << ", product: " << id_product);
+            MDEBUG("Device with idx {} is not supported. Vendor: {}, product: {}", device_idx, id_vendor, id_product);
             continue;
           }
         } catch(const std::exception &e){
-          MERROR("Could not detect vendor & product: " << e.what());
+          MERROR("Could not detect vendor & product: {}", e.what());
         }
       }
 
@@ -543,7 +543,7 @@ namespace trezor{
       parse_udp_path(m_device_host, m_device_port, device_path.get());
     } else if ((env_trezor_path = getenv("TREZOR_PATH")) != nullptr && boost::starts_with(env_trezor_path, UdpTransport::PATH_PREFIX)){
       parse_udp_path(m_device_host, m_device_port, std::string(env_trezor_path));
-      MDEBUG("Applied TREZOR_PATH: " << m_device_host << ":" << m_device_port);
+      MDEBUG("Applied TREZOR_PATH: {}:{}", m_device_host, m_device_port);
     } else {
       m_device_host = DEFAULT_HOST;
     }
@@ -693,7 +693,7 @@ namespace trezor{
       } catch(exc::CommunicationException const& e){
         throw;
       } catch(std::exception const& e){
-        MWARNING("Error reading chunk, reason: " << e.what());
+        MWARNING("Error reading chunk, reason: {}", e.what());
         throw exc::CommunicationException(std::string("Chunk read error: ") + std::string(e.what()));
       }
     }
@@ -742,7 +742,7 @@ namespace trezor{
       throw exc::TimeoutException();
 
     } else if (ec) {
-      MWARNING("Reading from UDP socket failed: " << ec.message());
+      MWARNING("Reading from UDP socket failed: {}", ec.message());
       throw exc::CommunicationException();
 
     }
@@ -920,13 +920,13 @@ namespace trezor{
       throw std::runtime_error("Unable to enumerate libusb devices");
     }
 
-    MTRACE("Libusb devices: " << cnt);
+    MTRACE("Libusb devices: {}", cnt);
 
     for(ssize_t i = 0; i < cnt; i++) {
       libusb_device_descriptor desc{};
       r = libusb_get_device_descriptor(devs[i], &desc);
       if (r < 0){
-        MERROR("Unable to get libusb device descriptor " << i);
+        MERROR("Unable to get libusb device descriptor {}", i);
         continue;
       }
 
@@ -935,7 +935,7 @@ namespace trezor{
         continue;
       }
 
-      MTRACE("Found Trezor device: " << desc.idVendor << ":" << desc.idProduct << " dev_idx " << (int)trezor_dev_idx);
+      MTRACE("Found Trezor device: {}:{} dev_idx {}", desc.idVendor, desc.idProduct, (int)trezor_dev_idx);
 
       auto t = std::make_shared<WebUsbTransport>(boost::make_optional(&desc));
       t->m_bus_id = libusb_get_bus_number(devs[i]);
@@ -991,7 +991,7 @@ namespace trezor{
       libusb_device_descriptor desc{};
       r = libusb_get_device_descriptor(devs[i], &desc);
       if (r < 0){
-        MERROR("Unable to get libusb device descriptor " << i);
+        MERROR("Unable to get libusb device descriptor {}", i);
         continue;
       }
 
@@ -1006,9 +1006,7 @@ namespace trezor{
       // Port resolution may fail. Non-critical error, just addressing precision is decreased.
       get_libusb_ports(devs[i], path);
 
-      MTRACE("Found Trezor device: " << desc.idVendor << ":" << desc.idProduct
-                                     << ", dev_idx: " << (int)trezor_dev_idx
-                                     << ". path: " << get_usb_path(bus_id, path));
+      MTRACE("Found Trezor device: {}:{}, dev_idx: {}. path: {}", desc.idVendor, desc.idProduct, (int)trezor_dev_idx, get_usb_path(bus_id, path));
 
       if (bus_id == m_bus_id && path == m_port_numbers) {
         found = true;
@@ -1057,7 +1055,7 @@ namespace trezor{
 
     int r = libusb_release_interface(m_usb_device_handle, get_interface());
     if (r != 0){
-      MERROR("Could not release libusb interface: " << r);
+      MERROR("Could not release libusb interface: {}", r);
     }
 
     m_usb_device = nullptr;
@@ -1126,7 +1124,7 @@ namespace trezor{
 
     int transferred = 0;
     int r = libusb_interrupt_transfer(m_usb_device_handle, endpoint, (unsigned char*)buff, (int)size, &transferred, 0);
-    CHECK_AND_ASSERT_THROW_MES(r == 0, "Unable to transfer, r: " << r);
+    CHECK_AND_ASSERT_THROW_MES(r == 0, "Unable to transfer, r: {}", r);
     if (transferred != (int)size){
       throw exc::CommunicationException("Could not transfer chunk");
     }
@@ -1139,7 +1137,7 @@ namespace trezor{
 
     int transferred = 0;
     int r = libusb_interrupt_transfer(m_usb_device_handle, endpoint, (unsigned char*)buff, (int)size, &transferred, 0);
-    CHECK_AND_ASSERT_THROW_MES(r == 0, "Unable to transfer, r: " << r);
+    CHECK_AND_ASSERT_THROW_MES(r == 0, "Unable to transfer, r: {}", r);
     if (transferred != (int)size){
       throw exc::CommunicationException("Could not read the chunk");
     }
@@ -1174,7 +1172,7 @@ namespace trezor{
     try{
       bt.enumerate(res);
     } catch (const std::exception & e){
-      MERROR("BridgeTransport enumeration failed:" << e.what());
+      MERROR("BridgeTransport enumeration failed:{}", e.what());
     }
 
 #ifdef WITH_DEVICE_TREZOR_WEBUSB
@@ -1182,7 +1180,7 @@ namespace trezor{
     try{
       btw.enumerate(res);
     } catch (const std::exception & e){
-      MERROR("WebUsbTransport enumeration failed:" << e.what());
+      MERROR("WebUsbTransport enumeration failed:{}", e.what());
     }
 #endif
 
@@ -1191,7 +1189,7 @@ namespace trezor{
     try{
       btu.enumerate(res);
     } catch (const std::exception & e){
-      MERROR("UdpTransport enumeration failed:" << e.what());
+      MERROR("UdpTransport enumeration failed:{}", e.what());
     }
 #endif
   }
@@ -1290,4 +1288,3 @@ namespace trezor{
 
 }
 }
-

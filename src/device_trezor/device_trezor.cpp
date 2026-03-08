@@ -69,7 +69,7 @@ namespace trezor {
         device_trezor::disconnect();
         device_trezor::release();
       } catch(std::exception const& e){
-        MWARNING("Could not disconnect and release: " << e.what());
+        MWARNING("Could not disconnect and release: {}", e.what());
       }
     }
 
@@ -114,7 +114,7 @@ namespace trezor {
         }
         catch(const std::exception & e)
         {
-          MERROR("Live refresh could not be terminated: " << e.what());
+          MERROR("Live refresh could not be terminated: {}", e.what());
         }
       }
 
@@ -151,7 +151,7 @@ namespace trezor {
         }
         catch(const std::exception &e)
         {
-          MWARNING("Live refresh auto-finish failed: " << e.what());
+          MWARNING("Live refresh auto-finish failed: {}", e.what());
         }
       }
     }
@@ -173,7 +173,7 @@ namespace trezor {
         return true;
 
       } catch(std::exception const& e){
-        MERROR("Get public address exception: " << e.what());
+        MERROR("Get public address exception: {}", e.what());
         return false;
       }
     }
@@ -206,7 +206,7 @@ namespace trezor {
         return true;
 
       } catch(std::exception const& e){
-        MERROR("Get secret keys exception: " << e.what());
+        MERROR("Get secret keys exception: {}", e.what());
         return false;
       }
     }
@@ -350,7 +350,7 @@ namespace trezor {
           kis.push_back(ckis);
         }
 
-        MTRACE("Batch " << cur << " / " << num_batches << " batches processed");
+        MTRACE("Batch {} / {} batches processed", cur, num_batches);
         EVENT_PROGRESS((double)cur * batch_size / mtds.size());
       }
       EVENT_PROGRESS(1.);
@@ -395,7 +395,7 @@ namespace trezor {
       try{
         return is_live_refresh_enabled();
       } catch(const std::exception & e){
-        MERROR("Could not detect if live refresh is enabled: " << e.what());
+        MERROR("Could not detect if live refresh is enabled: {}", e.what());
       }
       return false;
     }
@@ -484,7 +484,7 @@ namespace trezor {
       }
       catch(const std::exception & e)
       {
-        MWARNING("KI computation state change failed, started: " << started << ", e: " << e.what());
+        MWARNING("KI computation state change failed, started: {}, e: {}", started, e.what());
       }
     }
 
@@ -547,7 +547,7 @@ namespace trezor {
 
         // Transaction check
         try {
-          MDEBUG("signed transaction: " << cryptonote::get_transaction_hash(cpend.tx) << ENDL << cryptonote::obj_to_json_str(cpend.tx) << ENDL);
+          MDEBUG("signed transaction: {}{}{}{}", cryptonote::get_transaction_hash(cpend.tx), ENDL, cryptonote::obj_to_json_str(cpend.tx), ENDL);
           transaction_check(cdata, aux_data);
         } catch(const std::exception &e){
           throw exc::ProtocolException(std::string("Transaction verification failed: ") + e.what());
@@ -705,7 +705,7 @@ namespace trezor {
       if ((env_trezor_client_version = getenv("TREZOR_CLIENT_VERSION")) != nullptr){
         auto succ = epee::string_tools::get_xtype_from_string(client_version, env_trezor_client_version);
         if (succ){
-          MINFO("Trezor client version overridden by TREZOR_CLIENT_VERSION to: " << client_version);
+          MINFO("Trezor client version overridden by TREZOR_CLIENT_VERSION to: {}", client_version);
         }
       }
 #endif

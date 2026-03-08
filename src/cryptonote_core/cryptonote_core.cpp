@@ -66,7 +66,7 @@ using namespace epee;
 
 DISABLE_VS_WARNINGS(4355)
 
-#define MERROR_VER(x) MCERROR("verify", x)
+#define MERROR_VER(...) MCERROR("verify", __VA_ARGS__)
 
 // basically at least how many bytes the block itself serializes to without the miner tx
 #define BLOCK_SIZE_SANITY_LEEWAY 100
@@ -492,7 +492,7 @@ namespace cryptonote
       const boost::filesystem::path old_files = folder;
       if (boost::filesystem::exists(old_files / "blockchain.bin"))
       {
-        MWARNING("Found old-style blockchain.bin in " << old_files.string());
+        MWARNING("Found old-style blockchain.bin in {}", old_files.string());
         MWARNING("Monero now uses a new format. You can either remove blockchain.bin to start syncing");
         MWARNING("the blockchain anew, or use monero-blockchain-export and monero-blockchain-import to");
         MWARNING("convert your existing blockchain.bin to the new format. See README.md for instructions.");
@@ -510,7 +510,7 @@ namespace cryptonote
     }
 
     folder /= db->get_db_name();
-    MGINFO("Loading blockchain from folder " << folder.string() << " ...");
+    MGINFO("Loading blockchain from folder {} ...", folder.string());
 
     const std::string filename = folder.string();
     // default to fast:async:1 if overridden
@@ -523,7 +523,7 @@ namespace cryptonote
       // reset the db by removing the database file before opening it
       if (!db->remove_data_file(filename))
       {
-        MERROR("Failed to remove data file in " << filename);
+        MERROR("Failed to remove data file in {}", filename);
         return false;
       }
     }
@@ -538,7 +538,7 @@ namespace cryptonote
       const bool db_sync_mode_is_default = command_line::is_arg_defaulted(vm, cryptonote::arg_db_sync_mode);
 
       for(const auto &option : options)
-        MDEBUG("option: " << option);
+        MDEBUG("option: {}", option);
 
       // default to fast:async:1
       uint64_t DEFAULT_FLAGS = DBF_FAST;
@@ -601,7 +601,7 @@ namespace cryptonote
         }
         else
         {
-          LOG_ERROR("Invalid db sync mode: " << options[2]);
+          LOG_ERROR("Invalid db sync mode: {}", options[2]);
           return false;
         }
       }
@@ -615,7 +615,7 @@ namespace cryptonote
     }
     catch (const DB_ERROR& e)
     {
-      LOG_ERROR("Error opening database: " << e.what());
+      LOG_ERROR("Error opening database: {}", e.what());
       return false;
     }
 
@@ -642,7 +642,7 @@ namespace cryptonote
     }
     catch (const std::exception &e)
     {
-      MERROR("Failed to parse block notify spec: " << e.what());
+      MERROR("Failed to parse block notify spec: {}", e.what());
     }
 
     try
@@ -652,7 +652,7 @@ namespace cryptonote
     }
     catch (const std::exception &e)
     {
-      MERROR("Failed to parse reorg notify spec: " << e.what());
+      MERROR("Failed to parse reorg notify spec: {}", e.what());
     }
 
     try
@@ -662,7 +662,7 @@ namespace cryptonote
     }
     catch (const std::exception &e)
     {
-      MERROR("Failed to parse block rate notify spec: " << e.what());
+      MERROR("Failed to parse block rate notify spec: {}", e.what());
     }
 
     const std::pair<uint8_t, uint64_t> regtest_hard_forks[3] = {std::make_pair(1, 0), std::make_pair(mainnet_hard_forks[num_mainnet_hard_forks-1].version, 1), std::make_pair(0, 0)};
@@ -680,9 +680,9 @@ namespace cryptonote
     uint64_t session_start_height = m_blockchain_storage.get_current_blockchain_height() - 1; // use top block's height
     uint8_t hardfork_version_start = m_blockchain_storage.get_hard_fork_version(session_start_height);
     uint8_t hardfork_version_current = m_blockchain_storage.get_current_hard_fork_version();
-    MDEBUG("Current height: " << session_start_height);
-    MDEBUG("Start hardfork version: " << (int) hardfork_version_start);
-    MDEBUG("Current hardfork version: " << (int) hardfork_version_current);
+    MDEBUG("Current height: {}", session_start_height);
+    MDEBUG("Start hardfork version: {}", (int) hardfork_version_start);
+    MDEBUG("Current hardfork version: {}", (int) hardfork_version_current);
     
     // now that we have a valid m_blockchain_storage, we can clean out any
     // transactions in the pool that do not conform to the current fork
@@ -699,7 +699,7 @@ namespace cryptonote
 
     block_sync_size = command_line::get_arg(vm, arg_block_sync_size);
     if (block_sync_size > BLOCKS_SYNCHRONIZING_MAX_COUNT)
-      MERROR("Error --block-sync-size cannot be greater than " << BLOCKS_SYNCHRONIZING_MAX_COUNT);
+      MERROR("Error --block-sync-size cannot be greater than {}", BLOCKS_SYNCHRONIZING_MAX_COUNT);
 
     if(block_sync_size)
       MWARNING("When --block-sync-size defined, the --batch-max-weight is not going to have any effect.");
@@ -707,13 +707,13 @@ namespace cryptonote
     batch_max_weight = command_line::get_arg(vm, arg_batch_max_weight);
     if (batch_max_weight > BATCH_MAX_ALLOWED_WEIGHT)
     {
-      MERROR("Error --batch-max-weight cannot be greater than " << BATCH_MAX_ALLOWED_WEIGHT << " [mB]");
+      MERROR("Error --batch-max-weight cannot be greater than {} [mB]", BATCH_MAX_ALLOWED_WEIGHT);
       batch_max_weight = BATCH_MAX_ALLOWED_WEIGHT;
     }
 
     if (batch_max_weight == 0)
     {
-      MINFO("Using default --batch-max-weight of " << BATCH_MAX_WEIGHT << " [mB]");
+      MINFO("Using default --batch-max-weight of {} [mB]", BATCH_MAX_WEIGHT);
       batch_max_weight = BATCH_MAX_WEIGHT;
     }
 
@@ -736,7 +736,7 @@ namespace cryptonote
     else if (check_updates_string == "update")
       check_updates_level = UPDATES_UPDATE;
     else {
-      MERROR("Invalid argument to --check-updates: " << check_updates_string);
+      MERROR("Invalid argument to --check-updates: {}", check_updates_string);
       return false;
     }
 
@@ -818,7 +818,7 @@ namespace cryptonote
 
     if (tx_blob.size() > get_max_tx_size())
     {
-      LOG_PRINT_L1("WRONG TRANSACTION BLOB, too big size " << tx_blob.size() << ", rejected");
+      LOG_PRINT_L1("WRONG TRANSACTION BLOB, too big size {}, rejected", tx_blob.size());
       tvc.m_verifivation_failed = true;
       tvc.m_too_big = true;
       return false;
@@ -839,21 +839,21 @@ namespace cryptonote
 
     if (tvc.m_verifivation_failed)
     {
-      MERROR_VER("Transaction verification failed: " << txid);
+      MERROR_VER("Transaction verification failed: {}", txid);
       return false;
     }
     else if (tvc.m_verifivation_impossible)
     {
-      MERROR_VER("Transaction verification impossible: " << txid);
+      MERROR_VER("Transaction verification impossible: {}", txid);
       return false;
     }
     else if (!tvc.m_added_to_pool)
     {
-      MDEBUG("Transaction " << txid << " not added to pool");
+      MDEBUG("Transaction {} not added to pool", txid);
       return true;
     }
 
-    MDEBUG("tx added to pool: " << txid);
+    MDEBUG("tx added to pool: {}", txid);
 
     return true;
     CATCH_ENTRY_L0("core::handle_incoming_tx()", false);
@@ -864,7 +864,7 @@ namespace cryptonote
   {
     if(!tx.vin.size())
     {
-      MERROR_VER("tx with empty inputs, rejected for tx id= " << get_transaction_hash(tx));
+      MERROR_VER("tx with empty inputs, rejected for tx id= {}", get_transaction_hash(tx));
       tvc.m_verifivation_failed = true;
       tvc.m_invalid_input = true;
       return false;
@@ -872,7 +872,7 @@ namespace cryptonote
 
     if(!check_inputs_types_supported(tx))
     {
-      MERROR_VER("unsupported input types for tx id= " << get_transaction_hash(tx));
+      MERROR_VER("unsupported input types for tx id= {}", get_transaction_hash(tx));
       tvc.m_verifivation_failed = true;
       tvc.m_invalid_input = true;
       return false;
@@ -880,7 +880,7 @@ namespace cryptonote
 
     if(!check_outs_valid(tx))
     {
-      MERROR_VER("tx with invalid outputs, rejected for tx id= " << get_transaction_hash(tx));
+      MERROR_VER("tx with invalid outputs, rejected for tx id= {}", get_transaction_hash(tx));
       tvc.m_verifivation_failed = true;
       tvc.m_invalid_output = true;
       return false;
@@ -889,7 +889,7 @@ namespace cryptonote
     {
       if (tx.rct_signatures.outPk.size() != tx.vout.size())
       {
-        MERROR_VER("tx with mismatched vout/outPk count, rejected for tx id= " << get_transaction_hash(tx));
+        MERROR_VER("tx with mismatched vout/outPk count, rejected for tx id= {}", get_transaction_hash(tx));
         tvc.m_verifivation_failed = true;
         tvc.m_invalid_output = true;
         return false;
@@ -898,7 +898,7 @@ namespace cryptonote
 
     if(!check_money_overflow(tx))
     {
-      MERROR_VER("tx has money overflow, rejected for tx id= " << get_transaction_hash(tx));
+      MERROR_VER("tx has money overflow, rejected for tx id= {}", get_transaction_hash(tx));
       tvc.m_verifivation_failed = true;
       tvc.m_overspend = true;
       return false;
@@ -912,7 +912,7 @@ namespace cryptonote
 
       if(amount_in <= amount_out)
       {
-        MERROR_VER("tx with wrong amounts: ins " << amount_in << ", outs " << amount_out << ", rejected for tx id= " << get_transaction_hash(tx));
+        MERROR_VER("tx with wrong amounts: ins {}, outs {}, rejected for tx id= {}", amount_in, amount_out, get_transaction_hash(tx));
         tvc.m_verifivation_failed = true;
         tvc.m_overspend = true;
         return false;
@@ -978,25 +978,23 @@ namespace cryptonote
       std::vector<uint64_t> last_n_blocks_weights;
       m_blockchain_storage.get_last_n_blocks_weights(last_n_blocks_weights, number_of_blocks);
       uint64_t max_weight = *std::max_element(last_n_blocks_weights.begin(), last_n_blocks_weights.end());
-      MINFO("Max block size seen within the last " << number_of_blocks
-             << " blocks is " << max_weight
-             << " bytes and the max average blocksize in the queue is " << max_average_of_blocksize_in_queue << " bytes");
+      MINFO("Max block size seen within the last {} blocks is {} bytes and the max average blocksize in the queue is {} bytes", number_of_blocks, max_weight, max_average_of_blocksize_in_queue);
       uint64_t projected_blocksize = std::max(max_average_of_blocksize_in_queue, max_weight);
       uint64_t blocks_huge_threshold = (batch_max_weight / 2);
       if ((projected_blocksize * BLOCKS_MAX_WINDOW) < batch_max_weight)
       {
         res = BLOCKS_MAX_WINDOW;
-        MINFO("blocks are tiny, " << projected_blocksize << " bytes, sync " << res << " blocks in next batch");
+        MINFO("blocks are tiny, {} bytes, sync {} blocks in next batch", projected_blocksize, res);
       }
       else if (projected_blocksize >= blocks_huge_threshold)
       {
         res = 1;
-        MINFO("blocks are projected to surpass 50% of " << batch_max_weight << " bytes, syncing just a single block in next batch");
+        MINFO("blocks are projected to surpass 50% of {} bytes, syncing just a single block in next batch", batch_max_weight);
       }
       else
       {
         res = batch_max_weight / projected_blocksize;
-        MINFO("projected blocksize is " << projected_blocksize << " bytes, sync " << res << " blocks in next batch");
+        MINFO("projected blocksize is {} bytes, sync {} blocks in next batch", projected_blocksize, res);
       }
     }
 
@@ -1022,7 +1020,7 @@ namespace cryptonote
       static bool warned = false;
       if (!warned)
       {
-        MWARNING("Clamping block sync size to " << max_block_size);
+        MWARNING("Clamping block sync size to {}", max_block_size);
         warned = true;
       }
       res = max_block_size;
@@ -1124,13 +1122,13 @@ namespace cryptonote
   {
     if(m_mempool.have_tx(tx_hash, relay_category::legacy))
     {
-      LOG_PRINT_L2("tx " << tx_hash << "already have transaction in tx_pool");
+      LOG_PRINT_L2("tx {}already have transaction in tx_pool", tx_hash);
       return true;
     }
 
     if(m_blockchain_storage.have_tx(tx_hash))
     {
-      LOG_PRINT_L2("tx " << tx_hash << " already have transaction in blockchain");
+      LOG_PRINT_L2("tx {} already have transaction in blockchain", tx_hash);
       return true;
     }
 
@@ -1371,8 +1369,7 @@ namespace cryptonote
         LOG_PRINT_L1("Block found but, seems that reorganize just happened after that, do not relay this block");
         return true;
       }
-      CHECK_AND_ASSERT_MES(!missed_txs.size(), false, "can't find some transactions in found block:" << get_block_hash(b)
-        << " b.tx_hashes.size()=" << b.tx_hashes.size() << ", missed_txs.size()" << missed_txs.size());
+      CHECK_AND_ASSERT_MES(!missed_txs.size(), false, "can't find some transactions in found block:{} b.tx_hashes.size()={}, missed_txs.size(){}", get_block_hash(b), b.tx_hashes.size(), missed_txs.size());
 
       block_to_blob(b, arg.b.block);
       // Relay an empty fluffy block
@@ -1450,7 +1447,7 @@ namespace cryptonote
     }
 
     if (((size_t)-1) <= 0xffffffff && block_blob.size() >= 0x3fffffff)
-      MWARNING("This block's size is " << block_blob.size() << ", closing on the 32 bit limit");
+      MWARNING("This block's size is {}, closing on the 32 bit limit", block_blob.size());
 
     block lb;
     if (!b)
@@ -1515,7 +1512,7 @@ namespace cryptonote
     // plus the tx hashes, the weight will typically be much larger than the blob size
     if(block_blob.size() > m_blockchain_storage.get_current_cumulative_block_weight_limit() + BLOCK_SIZE_SANITY_LEEWAY)
     {
-      LOG_PRINT_L1("WRONG BLOCK BLOB, sanity check failed on size " << block_blob.size() << ", rejected");
+      LOG_PRINT_L1("WRONG BLOCK BLOB, sanity check failed on size {}, rejected", block_blob.size());
       return false;
     }
     return true;
@@ -1634,15 +1631,7 @@ namespace cryptonote
         main_message = "The daemon is running offline and will not attempt to sync to the Monero network.";
       else
         main_message = "The daemon will start synchronizing with the network. This may take a long time to complete.";
-      MGINFO_YELLOW(ENDL << "**********************************************************************" << ENDL
-        << main_message << ENDL
-        << ENDL
-        << "You can set the level of process detailization through \"set_log <level|categories>\" command," << ENDL
-        << "where <level> is between 0 (no details) and 4 (very verbose), or custom category based levels (eg, *:WARNING)." << ENDL
-        << ENDL
-        << "Use the \"help\" command to see the list of available commands." << ENDL
-        << "Use \"help <command>\" to see a command's documentation." << ENDL
-        << "**********************************************************************" << ENDL);
+      MGINFO_YELLOW("{}**********************************************************************{}{}{}{}You can set the level of process detailization through \"set_log <level|categories>\" command,{}where <level> is between 0 (no details) and 4 (very verbose), or custom category based levels (eg, *:WARNING).{}{}Use the \"help\" command to see the list of available commands.{}Use \"help <command>\" to see a command's documentation.{}**********************************************************************{}", ENDL, ENDL, main_message, ENDL, ENDL, ENDL, ENDL, ENDL, ENDL, ENDL, ENDL);
       m_starter_message_showed = true;
     }
 
@@ -1695,7 +1684,7 @@ namespace cryptonote
       return true;
 
     std::string version, hash;
-    MCDEBUG("updates", "Checking for a new " << software << " version for " << buildtag);
+    MCDEBUG("updates", "Checking for a new {} version for {}", software, buildtag);
     if (!tools::check_updates(software, buildtag, version, hash))
       return false;
 
@@ -1706,7 +1695,7 @@ namespace cryptonote
     }
 
     std::string url = tools::get_update_url(software, subdir, buildtag, version, true);
-    MCLOG_CYAN(el::Level::Info, "global", "Version " << version << " of " << software << " for " << buildtag << " is available: " << url << ", SHA256 hash " << hash);
+    MCLOG_CYAN(el::Level::Info, "global", "Version {} of {} for {} is available: {}, SHA256 hash {}", version, software, buildtag, url, hash);
     m_update_available = true;
 
     if (check_updates_level == UPDATES_NOTIFY)
@@ -1747,20 +1736,20 @@ namespace cryptonote
           crypto::hash file_hash;
           if (!tools::sha256sum(tmppath, file_hash))
           {
-            MCERROR("updates", "Failed to hash " << tmppath);
+            MCERROR("updates", "Failed to hash {}", tmppath);
             remove = true;
             good = false;
           }
           else if (hash != epee::string_tools::pod_to_hex(file_hash))
           {
-            MCERROR("updates", "Download from " << uri << " does not match the expected hash");
+            MCERROR("updates", "Download from {} does not match the expected hash", uri);
             remove = true;
             good = false;
           }
         }
         else
         {
-          MCERROR("updates", "Failed to download " << uri);
+          MCERROR("updates", "Failed to download {}", uri);
           good = false;
         }
         boost::unique_lock<boost::mutex> lock(m_update_mutex);
@@ -1783,19 +1772,19 @@ namespace cryptonote
           }
         }
         if (good)
-          MCLOG_CYAN(el::Level::Info, "updates", "New version downloaded to " << path.string());
+          MCLOG_CYAN(el::Level::Info, "updates", "New version downloaded to {}", path.string());
       }, [this](const std::string &path, const std::string &uri, size_t length, ssize_t content_length) {
         if (length >= m_last_update_length + 1024 * 1024 * 10)
         {
           m_last_update_length = length;
-          MCDEBUG("updates", "Downloaded " << length << "/" << (content_length ? std::to_string(content_length) : "unknown"));
+          MCDEBUG("updates", "Downloaded {}/{}", length, (content_length ? std::to_string(content_length) : "unknown"));
         }
         return true;
       });
     }
     else
     {
-      MCDEBUG("updates", "We already have " << path << " with expected hash");
+      MCDEBUG("updates", "We already have {} with expected hash", path);
     }
 
     lock.unlock();
@@ -1813,7 +1802,7 @@ namespace cryptonote
     if (free_space < 1ull * 1024 * 1024 * 1024) // 1 GB
     {
       const el::Level level = el::Level::Warning;
-      MCLOG_RED(level, "global", "Free space is below 1 GB on " << m_config_folder);
+      MCLOG_RED(level, "global", "Free space is below 1 GB on {}", m_config_folder);
     }
     return true;
   }
@@ -1871,10 +1860,10 @@ namespace cryptonote
       const time_t time_boundary = now - static_cast<time_t>(seconds[n]);
       for (time_t ts: timestamps) b += ts >= time_boundary;
       const double p = probability(b, seconds[n] / DIFFICULTY_TARGET_V2);
-      MDEBUG("blocks in the last " << seconds[n] / 60 << " minutes: " << b << " (probability " << p << ")");
+      MDEBUG("blocks in the last {} minutes: {} (probability {})", seconds[n] / 60, b, p);
       if (p < threshold)
       {
-        MWARNING("There were " << b << (b == max_blocks_checked ? " or more" : "") << " blocks in the last " << seconds[n] / 60 << " minutes, there might be large hash rate changes, or we might be partitioned, cut off from the Monero network or under attack, or your computer's time is off. Or it could be just sheer bad luck.");
+        MWARNING("There were {}{} blocks in the last {} minutes, there might be large hash rate changes, or we might be partitioned, cut off from the Monero network or under attack, or your computer's time is off. Or it could be just sheer bad luck.", b, (b == max_blocks_checked ? " or more" : ""), seconds[n] / 60);
 
         std::shared_ptr<tools::Notify> block_rate_notify = m_block_rate_notify;
         if (block_rate_notify)

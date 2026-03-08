@@ -123,11 +123,11 @@ bool wallet_tools::fill_tx_sources(tools::wallet2 * wallet, std::vector<cryptono
     if (td.m_tx.unlock_time < CRYPTONOTE_MAX_BLOCK_NUMBER && td.m_tx.unlock_time > cur_height + 1)
       continue;
     if (selected_idx.find((size_t)i) != selected_idx.end()){
-      MERROR("Should not happen (selected_idx not found): " << i);
+      MERROR("Should not happen (selected_idx not found): {}", i);
       continue;
     }
     if (selected_kis.find(td.m_key_image) != selected_kis.end()){
-      MERROR("Should not happen (selected KI): " << i << "ki: " << dump_keys(td.m_key_image.data));
+      MERROR("Should not happen (selected KI): {}ki: {}", i, dump_keys(td.m_key_image.data));
       continue;
     }
 
@@ -140,11 +140,7 @@ bool wallet_tools::fill_tx_sources(tools::wallet2 * wallet, std::vector<cryptono
                                               .ntrans=ntrans, .iters=iters, .sum=sum, .cur_utxo=cur_utxo}, should_abort_search))
           continue;
 
-      MDEBUG("Selected " << i << " from tx: " << dump_keys(td.m_txid.data)
-                        << " ki: " << dump_keys(td.m_key_image.data)
-                        << " amnt: " << td.amount()
-                        << " rct: " << td.is_rct()
-                        << " glob: " << td.m_global_output_index);
+      MDEBUG("Selected {} from tx: {} ki: {} amnt: {} rct: {} glob: {}", i, dump_keys(td.m_txid.data), dump_keys(td.m_key_image.data), td.amount(), td.is_rct(), td.m_global_output_index);
 
       sum += td.amount();
       cur_utxo += 1;
@@ -155,16 +151,14 @@ bool wallet_tools::fill_tx_sources(tools::wallet2 * wallet, std::vector<cryptono
       selected_kis.insert(td.m_key_image);
 
     } catch(const std::exception &e){
-      MTRACE("Output " << i << ", from: " <<  dump_keys(td.m_txid.data)
-                       << ", amnt: " << td.amount() << ", rct: " << td.is_rct()
-                       << ", glob: " << td.m_global_output_index << " is not applicable: " << e.what());
+      MTRACE("Output {}, from: {}, amnt: {}, rct: {}, glob: {} is not applicable: {}", i, dump_keys(td.m_txid.data), td.amount(), td.is_rct(), td.m_global_output_index, e.what());
     }
   }
 
   EVAL_BRK_COND();
   const auto res = brk_cond >= brk_thresh;
   if (!res) {
-    MDEBUG("fill_tx_sources fails, brk_cond: " << brk_cond << ", brk_thresh: " << brk_thresh << ", utxos: " << cur_utxo << ", sum: " << sum);
+    MDEBUG("fill_tx_sources fails, brk_cond: {}, brk_thresh: {}, utxos: {}, sum: {}", brk_cond, brk_thresh, cur_utxo, sum);
   }
   return res;
 #undef EVAL_BRK_COND

@@ -187,7 +187,7 @@ struct Wallet2CallbackImpl : public tools::i_wallet2_callback
         // get_refresh_from_block_height() returns the blockheight from when the wallet was 
         // created or the restore height specified when wallet was recovered
         if(height >= m_wallet->m_wallet->get_refresh_from_block_height() || height % 1000 == 0) {
-            // LOG_PRINT_L3(__FUNCTION__ << ": new block. height: " << height);
+            // LOG_PRINT_L3("{}: new block. height: {}", __FUNCTION__, height);
             if (m_listener) {
                 m_listener->newBlock(height);
             }
@@ -199,12 +199,7 @@ struct Wallet2CallbackImpl : public tools::i_wallet2_callback
 
         std::string tx_hash =  epee::string_tools::pod_to_hex(txid);
 
-        LOG_PRINT_L3(__FUNCTION__ << ": money received. height:  " << height
-                     << ", tx: " << tx_hash
-                     << ", amount: " << print_money(amount - burnt)
-                     << ", burnt: " << print_money(burnt)
-                     << ", raw_output_value: " << print_money(amount)
-                     << ", idx: " << subaddr_index);
+        LOG_PRINT_L3("{}: money received. height:  {}, tx: {}, amount: {}, burnt: {}, raw_output_value: {}, idx: {}", __FUNCTION__, height, tx_hash, print_money(amount - burnt), print_money(burnt), print_money(amount), subaddr_index);
         // do not signal on received tx if wallet is not syncronized completely
         if (m_listener && m_wallet->synchronized()) {
             m_listener->moneyReceived(tx_hash, amount - burnt);
@@ -217,10 +212,7 @@ struct Wallet2CallbackImpl : public tools::i_wallet2_callback
 
         std::string tx_hash =  epee::string_tools::pod_to_hex(txid);
 
-        LOG_PRINT_L3(__FUNCTION__ << ": unconfirmed money received. height:  " << height
-                     << ", tx: " << tx_hash
-                     << ", amount: " << print_money(amount)
-                     << ", idx: " << subaddr_index);
+        LOG_PRINT_L3("{}: unconfirmed money received. height:  {}, tx: {}, amount: {}, idx: {}", __FUNCTION__, height, tx_hash, print_money(amount), subaddr_index);
         // do not signal on received tx if wallet is not syncronized completely
         if (m_listener && m_wallet->synchronized()) {
             m_listener->unconfirmedMoneyReceived(tx_hash, amount);
@@ -233,10 +225,7 @@ struct Wallet2CallbackImpl : public tools::i_wallet2_callback
     {
         // TODO;
         std::string tx_hash = epee::string_tools::pod_to_hex(txid);
-        LOG_PRINT_L3(__FUNCTION__ << ": money spent. height:  " << height
-                     << ", tx: " << tx_hash
-                     << ", amount: " << print_money(amount)
-                     << ", idx: " << subaddr_index);
+        LOG_PRINT_L3("{}: money spent. height:  {}, tx: {}, amount: {}, idx: {}", __FUNCTION__, height, tx_hash, print_money(amount), subaddr_index);
         // do not signal on sent tx if wallet is not syncronized completely
         if (m_listener && m_wallet->synchronized()) {
             m_listener->moneySpent(tx_hash, amount);
@@ -470,7 +459,7 @@ WalletImpl::~WalletImpl()
       m_wallet2Callback->getListener()->onSetWallet(nullptr);
     }
 
-    LOG_PRINT_L1(__FUNCTION__ << " finished");
+    LOG_PRINT_L1("{} finished", __FUNCTION__);
 }
 
 bool WalletImpl::create(const std::string &path, const std::string &password, const std::string &language)
@@ -482,9 +471,8 @@ bool WalletImpl::create(const std::string &path, const std::string &password, co
     bool keys_file_exists;
     bool wallet_file_exists;
     tools::wallet2::wallet_exists(path, keys_file_exists, wallet_file_exists);
-    LOG_PRINT_L3("wallet_path: " << path << "");
-    LOG_PRINT_L3("keys_file_exists: " << std::boolalpha << keys_file_exists << std::noboolalpha
-                 << "  wallet_file_exists: " << std::boolalpha << wallet_file_exists << std::noboolalpha);
+    LOG_PRINT_L3("wallet_path: {}", path);
+    LOG_PRINT_L3("keys_file_exists: {}{}{}  wallet_file_exists: {}{}{}", std::boolalpha, keys_file_exists, std::noboolalpha, std::boolalpha, wallet_file_exists, std::noboolalpha);
 
 
     // add logic to error out if new wallet requested but named wallet file exists
@@ -502,7 +490,7 @@ bool WalletImpl::create(const std::string &path, const std::string &password, co
         m_password = password;
         clearStatus();
     } catch (const std::exception &e) {
-        LOG_ERROR("Error creating wallet: " << e.what());
+        LOG_ERROR("Error creating wallet: {}", e.what());
         setStatusCritical(e.what());
         return false;
     }
@@ -521,9 +509,8 @@ bool WalletImpl::createWatchOnly(const std::string &path, const std::string &pas
     bool keys_file_exists;
     bool wallet_file_exists;
     tools::wallet2::wallet_exists(path, keys_file_exists, wallet_file_exists);
-    LOG_PRINT_L3("wallet_path: " << path << "");
-    LOG_PRINT_L3("keys_file_exists: " << std::boolalpha << keys_file_exists << std::noboolalpha
-                 << "  wallet_file_exists: " << std::boolalpha << wallet_file_exists << std::noboolalpha);
+    LOG_PRINT_L3("wallet_path: {}", path);
+    LOG_PRINT_L3("keys_file_exists: {}{}{}  wallet_file_exists: {}{}{}", std::boolalpha, keys_file_exists, std::noboolalpha, std::boolalpha, wallet_file_exists, std::noboolalpha);
 
     // add logic to error out if new wallet requested but named wallet file exists
     if (keys_file_exists || wallet_file_exists) {
@@ -567,7 +554,7 @@ bool WalletImpl::createWatchOnly(const std::string &path, const std::string &pas
         view_wallet->import_key_images(key_images.second, key_images.first, spent, unspent, false);
         clearStatus();
     } catch (const std::exception &e) {
-        LOG_ERROR("Error creating view only wallet: " << e.what());
+        LOG_ERROR("Error creating view only wallet: {}", e.what());
         setStatusError(e.what());
         return false;
     }
@@ -723,7 +710,7 @@ bool WalletImpl::open(const std::string &path, const std::string &password)
 
         m_password = password;
     } catch (const std::exception &e) {
-        LOG_ERROR("Error opening wallet: " << e.what());
+        LOG_ERROR("Error opening wallet: {}", e.what());
         setStatusCritical(e.what());
     }
     return status() == Status_Ok;
@@ -793,7 +780,7 @@ bool WalletImpl::close(bool store)
         clearStatus();
     } catch (const std::exception &e) {
         setStatusCritical(e.what());
-        LOG_ERROR("Error closing wallet: " << e.what());
+        LOG_ERROR("Error closing wallet: {}", e.what());
     }
     return result;
 }
@@ -943,7 +930,7 @@ bool WalletImpl::store(const std::string &path)
             m_wallet->store_to(path, m_password);
         }
     } catch (const std::exception &e) {
-        LOG_ERROR("Error saving wallet: " << e.what());
+        LOG_ERROR("Error saving wallet: {}", e.what());
         setStatusError(e.what());
         return false;
     }
@@ -1022,7 +1009,7 @@ uint64_t WalletImpl::daemonBlockChainHeight() const
     std::string err;
     uint64_t result = m_wallet->get_daemon_blockchain_height(err);
     if (!err.empty()) {
-        LOG_ERROR(__FUNCTION__ << ": " << err);
+        LOG_ERROR("{}: {}", __FUNCTION__, err);
         result = 0;
         setStatusError(err);
     } else {
@@ -1038,7 +1025,7 @@ uint64_t WalletImpl::daemonBlockChainTargetHeight() const
     std::string err;
     uint64_t result = m_wallet->get_daemon_blockchain_target_height(err);
     if (!err.empty()) {
-        LOG_ERROR(__FUNCTION__ << ": " << err);
+        LOG_ERROR("{}: {}", __FUNCTION__, err);
         result = 0;
         setStatusError(err);
     } else {
@@ -1074,7 +1061,7 @@ bool WalletImpl::refresh()
 
 void WalletImpl::refreshAsync()
 {
-    LOG_PRINT_L3(__FUNCTION__ << ": Refreshing asynchronously..");
+    LOG_PRINT_L3("{}: Refreshing asynchronously..", __FUNCTION__);
     clearStatus();
     m_refreshCV.notify_one();
 }
@@ -1100,8 +1087,7 @@ void WalletImpl::rescanBlockchainAsync()
 void WalletImpl::setAutoRefreshInterval(int millis)
 {
     if (millis > MAX_REFRESH_INTERVAL_MILLIS) {
-        LOG_ERROR(__FUNCTION__<< ": invalid refresh interval " << millis
-                  << " ms, maximum allowed is " << MAX_REFRESH_INTERVAL_MILLIS << " ms");
+        LOG_ERROR("{}: invalid refresh interval {} ms, maximum allowed is {} ms", __FUNCTION__, millis, MAX_REFRESH_INTERVAL_MILLIS);
         m_refreshIntervalMillis = MAX_REFRESH_INTERVAL_MILLIS;
     } else {
         m_refreshIntervalMillis = millis;
@@ -1174,7 +1160,7 @@ bool WalletImpl::exportKeyImages(const string &filename, bool all)
   }
   catch (const std::exception &e)
   {
-    LOG_ERROR("Error exporting key images: " << e.what());
+    LOG_ERROR("Error exporting key images: {}", e.what());
     setStatusError(e.what());
     return false;
   }
@@ -1193,12 +1179,11 @@ bool WalletImpl::importKeyImages(const string &filename)
   {
     uint64_t spent = 0, unspent = 0;
     uint64_t height = m_wallet->import_key_images(filename, spent, unspent);
-    LOG_PRINT_L2("Signed key images imported to height " << height << ", "
-        << print_money(spent) << " spent, " << print_money(unspent) << " unspent");
+    LOG_PRINT_L2("Signed key images imported to height {}, {} spent, {} unspent", height, print_money(spent), print_money(unspent));
   }
   catch (const std::exception &e)
   {
-    LOG_ERROR("Error exporting key images: " << e.what());
+    LOG_ERROR("Error exporting key images: {}", e.what());
     setStatusError(string(tr("Failed to import key images: ")) + e.what());
     return false;
   }
@@ -1222,19 +1207,19 @@ bool WalletImpl::exportOutputs(const string &filename, bool all)
         bool r = m_wallet->save_to_file(filename, data);
         if (!r)
         {
-            LOG_ERROR("Failed to save file " << filename);
+            LOG_ERROR("Failed to save file {}", filename);
             setStatusError(string(tr("Failed to save file: ")) + filename);
             return false;
         }
     }
     catch (const std::exception &e)
     {
-        LOG_ERROR("Error exporting outputs: " << e.what());
+        LOG_ERROR("Error exporting outputs: {}", e.what());
         setStatusError(string(tr("Error exporting outputs: ")) + e.what());
         return false;
     }
 
-    LOG_PRINT_L2("Outputs exported to " << filename);
+    LOG_PRINT_L2("Outputs exported to {}", filename);
     return true;
 }
 
@@ -1252,7 +1237,7 @@ bool WalletImpl::importOutputs(const string &filename)
     bool r = m_wallet->load_from_file(filename, data);
     if (!r)
     {
-        LOG_ERROR("Failed to read file: " << filename);
+        LOG_ERROR("Failed to read file: {}", filename);
         setStatusError(string(tr("Failed to read file: ")) + filename);
         return false;
     }
@@ -1260,11 +1245,11 @@ bool WalletImpl::importOutputs(const string &filename)
     try
     {
         size_t n_outputs = m_wallet->import_outputs_from_str(data);
-        LOG_PRINT_L2(std::to_string(n_outputs) << " outputs imported");
+        LOG_PRINT_L2("{} outputs imported", std::to_string(n_outputs));
     }
     catch (const std::exception &e)
     {
-        LOG_ERROR("Failed to import outputs: " << e.what());
+        LOG_ERROR("Failed to import outputs: {}", e.what());
         setStatusError(string(tr("Failed to import outputs: ")) + e.what());
         return false;
     }
@@ -1306,7 +1291,7 @@ bool WalletImpl::scanTransactions(const std::vector<std::string> &txids)
     }
     catch (const std::exception &e)
     {
-        LOG_ERROR("Failed to scan transaction: " << e.what());
+        LOG_ERROR("Failed to scan transaction: {}", e.what());
         setStatusError(string(tr("Failed to scan transaction: ")) + e.what());
         return false;
     }
@@ -1338,7 +1323,7 @@ bool WalletImpl::setupBackgroundSync(const Wallet::BackgroundSyncType background
     }
     catch (const std::exception &e)
     {
-        LOG_ERROR("Failed to setup background sync: " << e.what());
+        LOG_ERROR("Failed to setup background sync: {}", e.what());
         setStatusError(string(tr("Failed to setup background sync: ")) + e.what());
         return false;
     }
@@ -1366,7 +1351,7 @@ bool WalletImpl::startBackgroundSync()
     }
     catch (const std::exception &e)
     {
-        LOG_ERROR("Failed to start background sync: " << e.what());
+        LOG_ERROR("Failed to start background sync: {}", e.what());
         setStatusError(string(tr("Failed to start background sync: ")) + e.what());
         return false;
     }
@@ -1383,7 +1368,7 @@ bool WalletImpl::stopBackgroundSync(const std::string &wallet_password)
     }
     catch (const std::exception &e)
     {
-        LOG_ERROR("Failed to stop background sync: " << e.what());
+        LOG_ERROR("Failed to stop background sync: {}", e.what());
         setStatusError(string(tr("Failed to stop background sync: ")) + e.what());
         return false;
     }
@@ -1420,7 +1405,7 @@ std::string WalletImpl::getSubaddressLabel(uint32_t accountIndex, uint32_t addre
     }
     catch (const std::exception &e)
     {
-        LOG_ERROR("Error getting subaddress label: " << e.what());
+        LOG_ERROR("Error getting subaddress label: {}", e.what());
         setStatusError(string(tr("Failed to get subaddress label: ")) + e.what());
         return "";
     }
@@ -1435,7 +1420,7 @@ void WalletImpl::setSubaddressLabel(uint32_t accountIndex, uint32_t addressIndex
     }
     catch (const std::exception &e)
     {
-        LOG_ERROR("Error setting subaddress label: " << e.what());
+        LOG_ERROR("Error setting subaddress label: {}", e.what());
         setStatusError(string(tr("Failed to set subaddress label: ")) + e.what());
     }
 }
@@ -1463,7 +1448,7 @@ string WalletImpl::getMultisigInfo() const {
         clearStatus();
         return m_wallet->get_multisig_first_kex_msg();
     } catch (const exception& e) {
-        LOG_ERROR("Error on generating multisig info: " << e.what());
+        LOG_ERROR("Error on generating multisig info: {}", e.what());
         setStatusError(string(tr("Failed to get multisig info: ")) + e.what());
     }
 
@@ -1482,7 +1467,7 @@ string WalletImpl::makeMultisig(const vector<string>& info, const uint32_t thres
 
         return m_wallet->make_multisig(epee::wipeable_string(m_password), info, threshold);
     } catch (const exception& e) {
-        LOG_ERROR("Error on making multisig wallet: " << e.what());
+        LOG_ERROR("Error on making multisig wallet: {}", e.what());
         setStatusError(string(tr("Failed to make multisig: ")) + e.what());
     }
 
@@ -1496,7 +1481,7 @@ std::string WalletImpl::exchangeMultisigKeys(const std::vector<std::string> &inf
 
         return m_wallet->exchange_multisig_keys(epee::wipeable_string(m_password), info, force_update_use_with_caution);
     } catch (const exception& e) {
-        LOG_ERROR("Error on exchanging multisig keys: " << e.what());
+        LOG_ERROR("Error on exchanging multisig keys: {}", e.what());
         setStatusError(string(tr("Failed to exchange multisig keys: ")) + e.what());
     }
 
@@ -1511,7 +1496,7 @@ std::string WalletImpl::getMultisigKeyExchangeBooster(const std::vector<std::str
 
         return m_wallet->get_multisig_key_exchange_booster(epee::wipeable_string(m_password), info, threshold, num_signers);
     } catch (const exception& e) {
-        LOG_ERROR("Error on boosting multisig key exchange: " << e.what());
+        LOG_ERROR("Error on boosting multisig key exchange: {}", e.what());
         setStatusError(string(tr("Failed to boost multisig key exchange: ")) + e.what());
     }
 
@@ -1527,7 +1512,7 @@ bool WalletImpl::exportMultisigImages(string& images) {
         images = epee::string_tools::buff_to_hex_nodelimer(blob);
         return true;
     } catch (const exception& e) {
-        LOG_ERROR("Error on exporting multisig images: " << e.what());
+        LOG_ERROR("Error on exporting multisig images: {}", e.what());
         setStatusError(string(tr("Failed to export multisig images: ")) + e.what());
     }
 
@@ -1555,7 +1540,7 @@ size_t WalletImpl::importMultisigImages(const vector<string>& images) {
 
         return m_wallet->import_multisig(blobs);
     } catch (const exception& e) {
-        LOG_ERROR("Error on importing multisig images: " << e.what());
+        LOG_ERROR("Error on importing multisig images: {}", e.what());
         setStatusError(string(tr("Failed to import multisig images: ")) + e.what());
     }
 
@@ -1569,7 +1554,7 @@ bool WalletImpl::hasMultisigPartialKeyImages() const {
 
         return m_wallet->has_multisig_partial_key_images();
     } catch (const exception& e) {
-        LOG_ERROR("Error on checking for partial multisig key images: " << e.what());
+        LOG_ERROR("Error on checking for partial multisig key images: {}", e.what());
         setStatusError(string(tr("Failed to check for partial multisig key images: ")) + e.what());
     }
 
@@ -1597,7 +1582,7 @@ PendingTransaction* WalletImpl::restoreMultisigTransaction(const string& signDat
 
         return ptx;
     } catch (exception& e) {
-        LOG_ERROR("Error on restoring multisig transaction: " << e.what());
+        LOG_ERROR("Error on restoring multisig transaction: {}", e.what());
         setStatusError(string(tr("Failed to restore multisig transaction: ")) + e.what());
     }
 
@@ -2385,14 +2370,14 @@ void WalletImpl::setStatus(int status, const std::string& message) const
 
 void WalletImpl::refreshThreadFunc()
 {
-    LOG_PRINT_L3(__FUNCTION__ << ": starting refresh thread");
+    LOG_PRINT_L3("{}: starting refresh thread", __FUNCTION__);
 
     while (true) {
         boost::mutex::scoped_lock lock(m_refreshMutex);
         if (m_refreshThreadDone) {
             break;
         }
-        LOG_PRINT_L3(__FUNCTION__ << ": waiting for refresh...");
+        LOG_PRINT_L3("{}: waiting for refresh...", __FUNCTION__);
         // if auto refresh enabled, we wait for the "m_refreshIntervalSeconds" interval.
         // if not - we wait forever
         if (m_refreshIntervalMillis > 0) {
@@ -2402,16 +2387,16 @@ void WalletImpl::refreshThreadFunc()
             m_refreshCV.wait(lock);
         }
 
-        LOG_PRINT_L3(__FUNCTION__ << ": refresh lock acquired...");
-        LOG_PRINT_L3(__FUNCTION__ << ": m_refreshEnabled: " << m_refreshEnabled);
-        LOG_PRINT_L3(__FUNCTION__ << ": m_status: " << status());
-        LOG_PRINT_L3(__FUNCTION__ << ": m_refreshShouldRescan: " << m_refreshShouldRescan);
+        LOG_PRINT_L3("{}: refresh lock acquired...", __FUNCTION__);
+        LOG_PRINT_L3("{}: m_refreshEnabled: {}", __FUNCTION__, m_refreshEnabled);
+        LOG_PRINT_L3("{}: m_status: {}", __FUNCTION__, status());
+        LOG_PRINT_L3("{}: m_refreshShouldRescan: {}", __FUNCTION__, m_refreshShouldRescan);
         if (m_refreshEnabled) {
-            LOG_PRINT_L3(__FUNCTION__ << ": refreshing...");
+            LOG_PRINT_L3("{}: refreshing...", __FUNCTION__);
             doRefresh();
         }
     }
-    LOG_PRINT_L3(__FUNCTION__ << ": refresh thread stopped");
+    LOG_PRINT_L3("{}: refresh thread stopped", __FUNCTION__);
 }
 
 void WalletImpl::doRefresh()
@@ -2420,7 +2405,7 @@ void WalletImpl::doRefresh()
     // synchronizing async and sync refresh calls
     boost::lock_guard<boost::mutex> guarg(m_refreshMutex2);
     do try {
-        LOG_PRINT_L3(__FUNCTION__ << ": doRefresh, rescan = "<<rescan);
+        LOG_PRINT_L3("{}: doRefresh, rescan = {}", __FUNCTION__, rescan);
         // Syncing daemon and refreshing wallet simultaneously is very resource intensive.
         // Disable refresh if wallet is disconnected or daemon isn't synced.
         if (daemonSynced()) {
@@ -2435,7 +2420,7 @@ void WalletImpl::doRefresh()
                 m_history->refresh();
             }
         } else {
-           LOG_PRINT_L3(__FUNCTION__ << ": skipping refresh - daemon is not synced");
+           LOG_PRINT_L3("{}: skipping refresh - daemon is not synced", __FUNCTION__);
         }
     } catch (const std::exception &e) {
         setStatusError(e.what());
@@ -2451,7 +2436,7 @@ void WalletImpl::doRefresh()
 void WalletImpl::startRefresh()
 {
     if (!m_refreshEnabled) {
-        LOG_PRINT_L2(__FUNCTION__ << ": refresh started/resumed...");
+        LOG_PRINT_L2("{}: refresh started/resumed...", __FUNCTION__);
         m_refreshEnabled = true;
         m_refreshCV.notify_one();
     }
@@ -2471,7 +2456,7 @@ void WalletImpl::stopRefresh()
 
 void WalletImpl::pauseRefresh()
 {
-    LOG_PRINT_L2(__FUNCTION__ << ": refresh paused...");
+    LOG_PRINT_L2("{}: refresh paused...", __FUNCTION__);
     // TODO synchronize access
     if (!m_refreshThreadDone) {
         m_refreshEnabled = false;
@@ -2512,12 +2497,12 @@ bool WalletImpl::doInit(const string &daemon_address, const std::string &proxy_a
     // in case new wallet, this will force fast-refresh (pulling hashes instead of blocks)
     // If daemon isn't synced a calculated block height will be used instead
     if (isNewWallet() && daemonSynced()) {
-        LOG_PRINT_L2(__FUNCTION__ << ":New Wallet - fast refresh until " << daemonBlockChainHeight());
+        LOG_PRINT_L2("{}:New Wallet - fast refresh until {}", __FUNCTION__, daemonBlockChainHeight());
         m_wallet->set_refresh_from_block_height(daemonBlockChainHeight());
     }
 
     if (m_rebuildWalletCache)
-      LOG_PRINT_L2(__FUNCTION__ << ": Rebuilding wallet cache, fast refresh until block " << m_wallet->get_refresh_from_block_height());
+      LOG_PRINT_L2("{}: Rebuilding wallet cache, fast refresh until block {}", __FUNCTION__, m_wallet->get_refresh_from_block_height());
 
     if (Utils::isAddressLocal(daemon_address)) {
         this->setTrustedDaemon(true);
@@ -2574,7 +2559,7 @@ bool WalletImpl::rescanSpent()
   try {
       m_wallet->rescan_spent();
   } catch (const std::exception &e) {
-      LOG_ERROR(__FUNCTION__ << " error: " << e.what());
+      LOG_ERROR("{} error: {}", __FUNCTION__, e.what());
       setStatusError(e.what());
       return false;
   }
@@ -2800,7 +2785,7 @@ bool WalletImpl::reconnectDevice()
         r = m_wallet->reconnect_device();
     }
     catch (const std::exception &e) {
-        LOG_ERROR(__FUNCTION__ << " error: " << e.what());
+        LOG_ERROR("{} error: {}", __FUNCTION__, e.what());
         setStatusError(e.what());
         return false;
     }

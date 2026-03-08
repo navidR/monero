@@ -2495,7 +2495,7 @@ namespace tools
     {
       std::string indexes;
       std::for_each(src.outputs.begin(), src.outputs.end(), [&](const cryptonote::tx_source_entry::output_entry& s_e) { indexes += boost::to_string(s_e.first) + " "; });
-      LOG_PRINT_L0("amount=" << cryptonote::print_money(src.amount) << ", real_output=" <<src.real_output << ", real_output_in_tx_index=" << src.real_output_in_tx_index << ", indexes: " << indexes);
+      LOG_PRINT_L0("amount={}, real_output={}, real_output_in_tx_index={}, indexes: {}", cryptonote::print_money(src.amount), src.real_output, src.real_output_in_tx_index, indexes);
     }
     //----------------------------------------------------------------------------------------------------
   }

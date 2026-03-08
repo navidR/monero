@@ -91,10 +91,10 @@ namespace epee
       m_net_server.set_response_soft_limit(response_soft_limit);
       m_net_server.set_connection_limit(this);
 
-      MGINFO("Binding on " << bind_ip << " (IPv4):" << bind_port);
+      MGINFO("Binding on {} (IPv4):{}", bind_ip, bind_port);
       if (use_ipv6)
       {
-        MGINFO("Binding on " << bind_ipv6_address << " (IPv6):" << bind_port);
+        MGINFO("Binding on {} (IPv6):{}", bind_ipv6_address, bind_port);
       }
       bool res = m_net_server.init_server(bind_port, bind_ip, bind_port, bind_ipv6_address, use_ipv6, require_ipv4, std::move(ssl_options));
       if(!res)
@@ -108,7 +108,7 @@ namespace epee
     bool run(size_t threads_count, bool wait = true)
     {
       //go to loop
-      MINFO("Run net_service loop( " << threads_count << " threads)...");
+      MINFO("Run net_service loop( {} threads)...", threads_count);
       if(!m_net_server.run_server(threads_count, wait))
       {
         LOG_ERROR("Failed to run net tcp server!");

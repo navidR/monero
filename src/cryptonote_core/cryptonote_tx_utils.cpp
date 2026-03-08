@@ -72,7 +72,7 @@ namespace cryptonote
         }
       }
     }
-    LOG_PRINT_L2("destinations include " << num_stdaddresses << " standard addresses and " << num_subaddresses << " subaddresses");
+    LOG_PRINT_L2("destinations include {} standard addresses and {} subaddresses", num_stdaddresses, num_subaddresses);
   }
   //---------------------------------------------------------------
   bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, const account_public_address &miner_address, transaction& tx, const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version) {
@@ -99,8 +99,7 @@ namespace cryptonote
     }
 
 #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
-    LOG_PRINT_L1("Creating block template: reward " << block_reward <<
-      ", fee " << fee);
+    LOG_PRINT_L1("Creating block template: reward {}, fee {}", block_reward, fee);
 #endif
     block_reward += fee;
 
@@ -144,10 +143,10 @@ namespace cryptonote
       crypto::key_derivation derivation = AUTO_VAL_INIT(derivation);
       crypto::public_key out_eph_public_key = AUTO_VAL_INIT(out_eph_public_key);
       bool r = crypto::generate_key_derivation(miner_address.m_view_public_key, txkey.sec, derivation);
-      CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to generate_key_derivation(" << miner_address.m_view_public_key << ", " << crypto::secret_key_explicit_print_ref{txkey.sec} << ")");
+      CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to generate_key_derivation({}, {})", miner_address.m_view_public_key, crypto::secret_key_explicit_print_ref{txkey.sec});
 
       r = crypto::derive_public_key(derivation, no, miner_address.m_spend_public_key, out_eph_public_key);
-      CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to derive_public_key(" << derivation << ", " << no << ", "<< miner_address.m_spend_public_key << ")");
+      CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to derive_public_key({}, {}, {})", derivation, no, miner_address.m_spend_public_key);
 
       uint64_t amount = out_amounts[no];
       summary_amounts += amount;
@@ -163,7 +162,7 @@ namespace cryptonote
       tx.vout.push_back(out);
     }
 
-    CHECK_AND_ASSERT_MES(summary_amounts == block_reward, false, "Failed to construct miner tx, summary_amounts = " << summary_amounts << " not equal block_reward = " << block_reward);
+    CHECK_AND_ASSERT_MES(summary_amounts == block_reward, false, "Failed to construct miner tx, summary_amounts = {} not equal block_reward = {}", summary_amounts, block_reward);
 
     if (hard_fork_version >= 4)
       tx.version = 2;
@@ -235,7 +234,7 @@ namespace cryptonote
         crypto::hash8 payment_id8 = null_hash8;
         if (get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id8))
         {
-          LOG_PRINT_L2("Encrypting payment id " << payment_id8);
+          LOG_PRINT_L2("Encrypting payment id {}", payment_id8);
           crypto::public_key view_key_pub = get_destination_view_key_pub(destinations, change_addr);
           if (view_key_pub == null_pkey)
           {
@@ -257,7 +256,7 @@ namespace cryptonote
             LOG_ERROR("Failed to add encrypted payment id to tx extra");
             return false;
           }
-          LOG_PRINT_L1("Encrypted payment ID: " << payment_id8);
+          LOG_PRINT_L1("Encrypted payment ID: {}", payment_id8);
           add_dummy_payment_id = false;
         }
         else if (get_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id))
@@ -313,7 +312,7 @@ namespace cryptonote
       ++idx;
       if(src_entr.real_output >= src_entr.outputs.size())
       {
-        LOG_ERROR("real_output index (" << src_entr.real_output << ")bigger than output_keys.size()=" << src_entr.outputs.size());
+        LOG_ERROR("real_output index ({})bigger than output_keys.size()={}", src_entr.real_output, src_entr.outputs.size());
         return false;
       }
       summary_inputs_money += src_entr.amount;
@@ -332,11 +331,9 @@ namespace cryptonote
       //check that derivated key is equal with real output key
       if(!(in_ephemeral.pub == src_entr.outputs[src_entr.real_output].second.dest) )
       {
-        LOG_ERROR("derived public key mismatch with output public key at index " << idx << ", real out " << src_entr.real_output << "! "<< ENDL << "derived_key:"
-          << string_tools::pod_to_hex(in_ephemeral.pub) << ENDL << "real output_public_key:"
-          << string_tools::pod_to_hex(src_entr.outputs[src_entr.real_output].second.dest) );
-        LOG_ERROR("amount " << src_entr.amount << ", rct " << src_entr.rct);
-        LOG_ERROR("tx pubkey " << src_entr.real_out_tx_key << ", real_output_in_tx_index " << src_entr.real_output_in_tx_index);
+        LOG_ERROR("derived public key mismatch with output public key at index {}, real out {}! {}derived_key:{}{}real output_public_key:{}", idx, src_entr.real_output, ENDL, string_tools::pod_to_hex(in_ephemeral.pub), ENDL, string_tools::pod_to_hex(src_entr.outputs[src_entr.real_output].second.dest));
+        LOG_ERROR("amount {}, rct {}", src_entr.amount, src_entr.rct);
+        LOG_ERROR("tx pubkey {}, real_output_in_tx_index {}", src_entr.real_out_tx_key, src_entr.real_output_in_tx_index);
         return false;
       }
 
@@ -405,7 +402,7 @@ namespace cryptonote
     size_t output_index = 0;
     for(const tx_destination_entry& dst_entr: destinations)
     {
-      CHECK_AND_ASSERT_MES(dst_entr.amount > 0 || tx.version > 1, false, "Destination with wrong amount: " << dst_entr.amount);
+      CHECK_AND_ASSERT_MES(dst_entr.amount > 0 || tx.version > 1, false, "Destination with wrong amount: {}", dst_entr.amount);
       crypto::public_key out_eph_public_key;
       crypto::view_tag view_tag;
 
@@ -425,7 +422,7 @@ namespace cryptonote
 
     remove_field_from_tx_extra(tx.extra, typeid(tx_extra_additional_pub_keys));
 
-    LOG_PRINT_L2("tx pubkey: " << txkey_pub);
+    LOG_PRINT_L2("tx pubkey: {}", txkey_pub);
     if (need_additional_txkeys)
     {
       LOG_PRINT_L2("additional tx pubkeys: ");
@@ -437,12 +434,12 @@ namespace cryptonote
     if (!sort_tx_extra(tx.extra, tx.extra))
       return false;
 
-    CHECK_AND_ASSERT_MES(tx.extra.size() <= MAX_TX_EXTRA_SIZE, false, "TX extra size (" << tx.extra.size() << ") is greater than max allowed (" << MAX_TX_EXTRA_SIZE << ")");
+    CHECK_AND_ASSERT_MES(tx.extra.size() <= MAX_TX_EXTRA_SIZE, false, "TX extra size ({}) is greater than max allowed ({})", tx.extra.size(), MAX_TX_EXTRA_SIZE);
 
     //check money
     if(summary_outs_money > summary_inputs_money )
     {
-      LOG_ERROR("Transaction inputs money ("<< summary_inputs_money << ") less than outputs money (" << summary_outs_money << ")");
+      LOG_ERROR("Transaction inputs money ({}) less than outputs money ({})", summary_inputs_money, summary_outs_money);
       return false;
     }
 
@@ -488,7 +485,7 @@ namespace cryptonote
         i++;
       }
 
-      MCINFO("construct_tx", "transaction_created: " << get_transaction_hash(tx) << ENDL << obj_to_json_str(tx) << ENDL << ss_ring_s.str());
+      MCINFO("construct_tx", "transaction_created: {}{}{}{}{}", get_transaction_hash(tx), ENDL, obj_to_json_str(tx), ENDL, ss_ring_s.str());
     }
     else
     {
@@ -598,7 +595,7 @@ namespace cryptonote
 
       CHECK_AND_ASSERT_MES(tx.vout.size() == outSk.size(), false, "outSk size does not match vout");
 
-      MCINFO("construct_tx", "transaction_created: " << get_transaction_hash(tx) << ENDL << obj_to_json_str(tx) << ENDL);
+      MCINFO("construct_tx", "transaction_created: {}{}{}{}", get_transaction_hash(tx), ENDL, obj_to_json_str(tx), ENDL);
     }
 
     tx.invalidate_hashes();

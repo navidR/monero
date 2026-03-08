@@ -285,7 +285,7 @@ namespace epee
       CHECK_AND_ASSERT(hval_array, false);
 
       CHECK_AND_ASSERT_MES(hval_array->type() == typeid(array_entry_t<t_real_value>),
-        false, "unexpected type in insert_next_value: " << typeid(array_entry_t<t_real_value>).name());
+        false, "unexpected type in insert_next_value: {}", typeid(array_entry_t<t_real_value>).name());
 
       array_entry_t<t_real_value>& arr_typed = boost::get<array_entry_t<t_real_value> >(*hval_array);
       arr_typed.insert_next_value(std::forward<t_value>(target));

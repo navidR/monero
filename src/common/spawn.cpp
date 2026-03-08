@@ -59,7 +59,7 @@ int spawn(const char *filename, const std::vector<std::string>& args, bool wait)
   PROCESS_INFORMATION pi;
   if (!CreateProcessA(filename, commandLine, nullptr, nullptr, false, 0, nullptr, nullptr, &si, &pi))
   {
-    MERROR("CreateProcess failed. Error code " << GetLastError());
+    MERROR("CreateProcess failed. Error code {}", GetLastError());
     return -1;
   }
   
@@ -78,18 +78,18 @@ int spawn(const char *filename, const std::vector<std::string>& args, bool wait)
   DWORD result = WaitForSingleObject(pi.hProcess, INFINITE);
   if (result != WAIT_OBJECT_0)
   {
-    MERROR("WaitForSingleObject failed. Result " << result << ", error code " << GetLastError());
+    MERROR("WaitForSingleObject failed. Result {}, error code {}", result, GetLastError());
     return -1;
   }
 
   DWORD exitCode;
   if (!GetExitCodeProcess(pi.hProcess, &exitCode))
   {
-    MERROR("GetExitCodeProcess failed. Error code " << GetLastError());
+    MERROR("GetExitCodeProcess failed. Error code {}", GetLastError());
     return -1;
   }
 
-  MINFO("Child exited with " << exitCode);
+  MINFO("Child exited with {}", exitCode);
   return static_cast<int>(exitCode);
 #else
   std::vector<char*> argv(args.size() + 1);
@@ -100,7 +100,7 @@ int spawn(const char *filename, const std::vector<std::string>& args, bool wait)
   pid_t pid = fork();
   if (pid < 0)
   {
-    MERROR("Error forking: " << strerror(errno));
+    MERROR("Error forking: {}", strerror(errno));
     return -1;
   }
 
@@ -111,7 +111,7 @@ int spawn(const char *filename, const std::vector<std::string>& args, bool wait)
     close(0);
     char *envp[] = {NULL};
     execve(filename, argv.data(), envp);
-    MERROR("Failed to execve: " << strerror(errno));
+    MERROR("Failed to execve: {}", strerror(errno));
     return -1;
   }
 
@@ -129,17 +129,17 @@ int spawn(const char *filename, const std::vector<std::string>& args, bool wait)
       int wstatus = 0;
       pid_t w = waitpid(pid, &wstatus, WUNTRACED | WCONTINUED);
       if (w  < 0) {
-        MERROR("Error waiting for child: " << strerror(errno));
+        MERROR("Error waiting for child: {}", strerror(errno));
         return -1;
       }
       if (WIFEXITED(wstatus))
       {
-        MINFO("Child exited with " << WEXITSTATUS(wstatus));
+        MINFO("Child exited with {}", WEXITSTATUS(wstatus));
         return WEXITSTATUS(wstatus);
       }
       if (WIFSIGNALED(wstatus))
       {
-        MINFO("Child killed by " << WEXITSTATUS(wstatus));
+        MINFO("Child killed by {}", WEXITSTATUS(wstatus));
         return WEXITSTATUS(wstatus);
       }
     }

@@ -52,7 +52,7 @@ bool BlocksdatFile::open_writer(const boost::filesystem::path& file_path, uint64
     {
       if (!boost::filesystem::is_directory(dir_path))
       {
-        MFATAL("export directory path is a file: " << dir_path);
+        MFATAL("export directory path is a file: {}", dir_path);
         return false;
       }
     }
@@ -60,7 +60,7 @@ bool BlocksdatFile::open_writer(const boost::filesystem::path& file_path, uint64
     {
       if (!boost::filesystem::create_directory(dir_path))
       {
-        MFATAL("Failed to create directory " << dir_path);
+        MFATAL("Failed to create directory {}", dir_path);
         return false;
       }
     }
@@ -139,16 +139,16 @@ bool BlocksdatFile::store_blockchain_raw(Blockchain* _blockchain_storage, tx_mem
 
   uint64_t block_start = 0;
   uint64_t block_stop = 0;
-  MINFO("source blockchain height: " <<  m_blockchain_storage->get_current_blockchain_height()-1);
+  MINFO("source blockchain height: {}", m_blockchain_storage->get_current_blockchain_height()-1);
   if ((requested_block_stop > 0) && (requested_block_stop < m_blockchain_storage->get_current_blockchain_height()))
   {
-    MINFO("Using requested block height: " << requested_block_stop);
+    MINFO("Using requested block height: {}", requested_block_stop);
     block_stop = requested_block_stop;
   }
   else
   {
     block_stop = m_blockchain_storage->get_current_blockchain_height() - 1;
-    MINFO("Using block height of source blockchain: " << block_stop);
+    MINFO("Using block height of source blockchain: {}", block_stop);
   }
   MINFO("Storing blocks raw data...");
   if (!BlocksdatFile::open_writer(output_file, block_stop))
@@ -174,7 +174,7 @@ bool BlocksdatFile::store_blockchain_raw(Blockchain* _blockchain_storage, tx_mem
   std::cout << refresh_string;
   std::cout << "block " << m_cur_height-1 << "/" << block_stop << ENDL;
 
-  MINFO("Number of blocks exported: " << num_blocks_written);
+  MINFO("Number of blocks exported: {}", num_blocks_written);
 
   return BlocksdatFile::close();
 }

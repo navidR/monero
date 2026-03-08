@@ -49,7 +49,7 @@ class WalletSubaddress : public ::testing::Test
       }
       catch (const std::exception& e)
       {
-        LOG_ERROR("failed to generate wallet: " << e.what());
+        LOG_ERROR("failed to generate wallet: {}", e.what());
         throw;
       }
 

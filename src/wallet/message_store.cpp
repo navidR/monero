@@ -487,7 +487,7 @@ bool message_store::get_signer_index_by_monero_address(const cryptonote::account
       return true;
     }
   }
-  MWARNING("No authorized signer with Monero address " << account_address_to_string(monero_address));
+  MWARNING("No authorized signer with Monero address {}", account_address_to_string(monero_address));
   return false;
 }
 
@@ -502,7 +502,7 @@ bool message_store::get_signer_index_by_label(const std::string label, uint32_t 
       return true;
     }
   }
-  MWARNING("No authorized signer with label " << label);
+  MWARNING("No authorized signer with label {}", label);
   return false;
 }
 
@@ -601,7 +601,7 @@ bool message_store::get_message_index_by_id(uint32_t id, size_t &index) const
       return true;
     }
   }
-  MWARNING("No message found with an id of " << id);
+  MWARNING("No message found with an id of {}", id);
   return false;
 }
 
@@ -775,7 +775,7 @@ void message_store::read_from_file(const multisig_wallet_state &state, const std
   {
     // Simply do nothing if the file is not there; allows e.g. easy recovery
     // from problems with the MMS by deleting the file
-    MINFO("No message store file found: " << filename);
+    MINFO("No message store file found: {}", filename);
     return;
   }
 
@@ -795,7 +795,7 @@ void message_store::read_from_file(const multisig_wallet_state &state, const std
   catch (...) {}
   if (!loaded)
   {
-    MERROR("MMS file " << filename << " has bad structure <iv,encrypted_data>");
+    MERROR("MMS file {} has bad structure <iv,encrypted_data>", filename);
     THROW_WALLET_EXCEPTION_IF(true, tools::error::file_read_error, filename);
   }
 
@@ -816,7 +816,7 @@ void message_store::read_from_file(const multisig_wallet_state &state, const std
   catch(...) {}
   if (!loaded)
   {
-    MERROR("MMS file " << filename << " has bad structure");
+    MERROR("MMS file {} has bad structure", filename);
     THROW_WALLET_EXCEPTION_IF(true, tools::error::file_read_error, filename);
   }
 

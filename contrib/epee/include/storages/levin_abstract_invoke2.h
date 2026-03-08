@@ -71,7 +71,7 @@ namespace epee
         {
           if (!buff.empty())
             on_levin_traffic(context, true, false, true, buff.size(), command);
-          LOG_PRINT_L1("Failed to invoke command " << command << " return code " << code);
+          LOG_PRINT_L1("Failed to invoke command {} return code {}", command, code);
           cb(code, result_struct, context);
           return false;
         }
@@ -79,14 +79,14 @@ namespace epee
         if(!stg_ret.load_from_binary(buff, &default_levin_limits))
         {
           on_levin_traffic(context, true, false, true, buff.size(), command);
-          LOG_ERROR("Failed to load_from_binary on command " << command);
+          LOG_ERROR("Failed to load_from_binary on command {}", command);
           cb(LEVIN_ERROR_FORMAT, result_struct, context);
           return false;
         }
         if (!result_struct.load(stg_ret))
         {
           on_levin_traffic(context, true, false, true, buff.size(), command);
-          LOG_ERROR("Failed to load result struct on command " << command);
+          LOG_ERROR("Failed to load result struct on command {}", command);
           cb(LEVIN_ERROR_FORMAT, result_struct, context);
           return false;
         }
@@ -96,7 +96,7 @@ namespace epee
       }, inv_timeout);
       if( res <=0 )
       {
-        LOG_PRINT_L1("Failed to invoke command " << command << " return code " << res);
+        LOG_PRINT_L1("Failed to invoke command {} return code {}", command, res);
         return false;
       }
       return true;
@@ -114,7 +114,7 @@ namespace epee
       int res = transport.send(to_send.finalize_notify(command), conn_id);
       if(res <=0 )
       {
-        MERROR("Failed to notify command " << command << " return code " << res);
+        MERROR("Failed to notify command {} return code {}", command, res);
         return false;
       }
       return true;
@@ -128,7 +128,7 @@ namespace epee
       if(!strg.load_from_binary(in_buff, &default_levin_limits))
       {
         on_levin_traffic(context, false, false, true, in_buff.size(), command);
-        LOG_ERROR("Failed to load_from_binary in command " << command);
+        LOG_ERROR("Failed to load_from_binary in command {}", command);
         return -1;
       }
       boost::value_initialized<t_in_type> in_struct;
@@ -137,7 +137,7 @@ namespace epee
       if (!static_cast<t_in_type&>(in_struct).load(strg))
       {
         on_levin_traffic(context, false, false, true, in_buff.size(), command);
-        LOG_ERROR("Failed to load in_struct in command " << command);
+        LOG_ERROR("Failed to load in_struct in command {}", command);
         return -1;
       }
       on_levin_traffic(context, false, false, false, in_buff.size(), command);
@@ -147,7 +147,7 @@ namespace epee
 
       if(!strg_out.store_to_binary(buff_out))
       {
-        LOG_ERROR("Failed to store_to_binary in command" << command);
+        LOG_ERROR("Failed to store_to_binary in command{}", command);
         return -1;
       }
 
@@ -161,14 +161,14 @@ namespace epee
       if(!strg.load_from_binary(in_buff, &default_levin_limits))
       {
         on_levin_traffic(context, false, false, true, in_buff.size(), command);
-        LOG_ERROR("Failed to load_from_binary in notify " << command);
+        LOG_ERROR("Failed to load_from_binary in notify {}", command);
         return -1;
       }
       boost::value_initialized<t_in_type> in_struct;
       if (!static_cast<t_in_type&>(in_struct).load(strg))
       {
         on_levin_traffic(context, false, false, true, in_buff.size(), command);
-        LOG_ERROR("Failed to load in_struct in notify " << command);
+        LOG_ERROR("Failed to load in_struct in notify {}", command);
         return -1;
       }
       on_levin_traffic(context, false, false, false, in_buff.size(), command);
@@ -211,12 +211,12 @@ namespace epee
 
 
 #define END_INVOKE_MAP2() \
-  LOG_ERROR("Unknown command:" << command); \
+  LOG_ERROR("Unknown command:{}", command); \
   on_levin_traffic(context, false, false, true, in_buff.size(), "invalid-command"); \
   return LEVIN_ERROR_CONNECTION_HANDLER_NOT_DEFINED; \
   } \
   catch (const std::exception &e) { \
-    MERROR("Error in handle_invoke_map: " << e.what()); \
+    MERROR("Error in handle_invoke_map: {}", e.what()); \
     return LEVIN_ERROR_CONNECTION_TIMEDOUT; /* seems kinda appropriate */ \
   } \
   }

@@ -138,7 +138,7 @@ boost::optional<std::string> ipv4_to_string(const char* src, size_t len)
 {
   if (len < 4)
   {
-    MERROR("Invalid IPv4 address: " << std::string(src, len));
+    MERROR("Invalid IPv4 address: {}", std::string(src, len));
     return boost::none;
   }
 
@@ -162,7 +162,7 @@ boost::optional<std::string> ipv6_to_string(const char* src, size_t len)
 {
   if (len < 8)
   {
-    MERROR("Invalid IPv4 address: " << std::string(src, len));
+    MERROR("Invalid IPv4 address: {}", std::string(src, len));
     return boost::none;
   }
 
@@ -219,7 +219,7 @@ static void add_anchors(ub_ctx *ctx)
   const char * const *ds = ::get_builtin_ds();
   while (*ds)
   {
-    MINFO("adding trust anchor: " << *ds);
+    MINFO("adding trust anchor: {}", *ds);
     ub_ctx_add_ta(ctx, string_copy(*ds++));
   }
 }
@@ -234,7 +234,7 @@ DNSResolver::DNSResolver() : m_data(new DNSResolverData())
     dns_public_addr = tools::dns_utils::parse_dns_public(DNS_PUBLIC);
     if (!dns_public_addr.empty())
     {
-      MGINFO("Using public DNS server(s): " << boost::join(dns_public_addr, ", ") << " (TCP)");
+      MGINFO("Using public DNS server(s): {} (TCP)", boost::join(dns_public_addr, ", "));
       use_dns_public = 1;
     }
     else
@@ -271,7 +271,7 @@ DNSResolver::DNSResolver() : m_data(new DNSResolverData())
     auto records = get_txt_record(probe_hostname, available, valid);
     if (!valid)
     {
-      MINFO("Failed to verify DNSSEC record from " << probe_hostname << ", falling back to TCP with well known DNSSEC resolvers");
+      MINFO("Failed to verify DNSSEC record from {}, falling back to TCP with well known DNSSEC resolvers", probe_hostname);
       ub_ctx_delete(m_data->m_ub_context);
       m_data->m_ub_context = ub_ctx_create();
       add_anchors(m_data->m_ub_context);
@@ -308,7 +308,7 @@ std::vector<std::string> DNSResolver::get_record(const std::string& url, int rec
     ub_resolve_free(result);
   });
   
-  MDEBUG("Performing DNSSEC " << get_record_name(record_type) << " record query for " << url);
+  MDEBUG("Performing DNSSEC {} record query for {}", get_record_name(record_type), url);
 
   // call DNS resolver, blocking.  if return value not zero, something went wrong
   if (!ub_resolve(m_data->m_ub_context, string_copy(url.c_str()), record_type, DNS_CLASS_IN, &result))
@@ -317,7 +317,7 @@ std::vector<std::string> DNSResolver::get_record(const std::string& url, int rec
     dnssec_valid = result->secure && !result->bogus;
     if (dnssec_available && !dnssec_valid)
     {
-      MWARNING("Invalid DNSSEC " << get_record_name(record_type) << " record signature for " << url << ": " << result->why_bogus);
+      MWARNING("Invalid DNSSEC {} record signature for {}: {}", get_record_name(record_type), url, result->why_bogus);
       MWARNING("Possibly your DNS service is problematic. You can have monerod use an alternate via env variable DNS_PUBLIC. Example: DNS_PUBLIC=tcp://9.9.9.9");
     }
     if (result->havedata)
@@ -328,7 +328,7 @@ std::vector<std::string> DNSResolver::get_record(const std::string& url, int rec
         if (res)
         {
           // do not dump dns record directly from dns into log
-          MINFO("Found " << get_record_name(record_type) << " record for " << url);
+          MINFO("Found {} record for {}", get_record_name(record_type), url);
           addresses.push_back(std::move(*res));
         }
       }
@@ -469,7 +469,7 @@ std::string get_account_address_as_str_from_url(const std::string& url, bool& dn
   auto addresses = addresses_from_url(url, dnssec_valid);
   if (addresses.empty())
   {
-    LOG_ERROR("wrong address: " << url);
+    LOG_ERROR("wrong address: {}", url);
     return {};
   }
   return dns_confirm(url, addresses, dnssec_valid);
@@ -506,12 +506,12 @@ bool load_txt_records_from_dns(std::vector<std::string> &good_records, const std
     if (!avail[cur_index])
     {
       records[cur_index].clear();
-      LOG_PRINT_L2("DNSSEC not available for hostname: " << url << ", skipping.");
+      LOG_PRINT_L2("DNSSEC not available for hostname: {}, skipping.", url);
     }
     if (!valid[cur_index])
     {
       records[cur_index].clear();
-      LOG_PRINT_L2("DNSSEC validation failed for hostname: " << url << ", skipping.");
+      LOG_PRINT_L2("DNSSEC validation failed for hostname: {}, skipping.", url);
     }
 
     cur_index++;
@@ -552,10 +552,10 @@ bool load_txt_records_from_dns(std::vector<std::string> &good_records, const std
       good_record = i;
   }
 
-  MDEBUG("Found " << (good_record == record_count.end() ? 0 : good_record->second) << "/" << dns_urls.size() << " matching records from " << num_valid_records << " valid records");
+  MDEBUG("Found {}/{} matching records from {} valid records", (good_record == record_count.end() ? 0 : good_record->second), dns_urls.size(), num_valid_records);
   if (good_record == record_count.end() || good_record->second < dns_urls.size() / 2 + 1)
   {
-    LOG_PRINT_L0("WARNING: no majority of DNS TXT records matched (only " << good_record->second << "/" << dns_urls.size() << ")");
+    LOG_PRINT_L0("WARNING: no majority of DNS TXT records matched (only {}/{})", good_record->second, dns_urls.size());
     return false;
   }
 
@@ -574,13 +574,13 @@ std::vector<std::string> parse_dns_public(const char *s)
   {
     for (size_t i = 0; i < sizeof(DEFAULT_DNS_PUBLIC_ADDR) / sizeof(DEFAULT_DNS_PUBLIC_ADDR[0]); ++i)
       dns_public_addr.push_back(DEFAULT_DNS_PUBLIC_ADDR[i]);
-    LOG_PRINT_L0("Using default public DNS server(s): " << boost::join(dns_public_addr, ", ") << " (TCP)");
+    LOG_PRINT_L0("Using default public DNS server(s): {} (TCP)", boost::join(dns_public_addr, ", "));
   }
   else if (sscanf(s, "tcp://%u.%u.%u.%u%c", &ip0, &ip1, &ip2, &ip3, &c) == 4)
   {
     if (ip0 > 255 || ip1 > 255 || ip2 > 255 || ip3 > 255)
     {
-      MERROR("Invalid IP: " << s << ", using default");
+      MERROR("Invalid IP: {}, using default", s);
     }
     else
     {

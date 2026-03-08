@@ -128,7 +128,7 @@ TEST(select_outputs, gamma)
     ++i;
   }
   double median = epee::misc_utils::median(ages);
-  MDEBUG("median age: " << median / 86400. << " days");
+  MDEBUG("median age: {} days", median / 86400.);
   ASSERT_GE(median, 1.3 * 86400);
   ASSERT_LE(median, 1.4 * 86400);
 }
@@ -170,8 +170,8 @@ TEST(select_outputs, density)
     }
     float selected_ratio = count_selected / (float)NPICKS;
     float chain_ratio = count_chain / (float)n_outs;
-    MDEBUG(count_selected << "/" << NPICKS << " outputs selected in blocks of density " << d << ", " << 100.0f * selected_ratio << "%");
-    MDEBUG(count_chain << "/" << offsets.size() << " outputs in blocks of density " << d << ", " << 100.0f * chain_ratio << "%");
+    MDEBUG("{}/{} outputs selected in blocks of density {}, {}%", count_selected, NPICKS, d, 100.0f * selected_ratio);
+    MDEBUG("{}/{} outputs in blocks of density {}, {}%", count_chain, offsets.size(), d, 100.0f * chain_ratio);
     ASSERT_LT(fabsf(selected_ratio - chain_ratio), 0.025f);
   }
 }
@@ -215,7 +215,7 @@ TEST(select_outputs, same_distribution)
     avg_dev += dev;
   }
   avg_dev /= 100;
-  MDEBUG("avg_dev: " << avg_dev);
+  MDEBUG("avg_dev: {}", avg_dev);
   ASSERT_LT(avg_dev, 0.02);
 }
 

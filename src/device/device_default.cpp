@@ -317,15 +317,15 @@ namespace hw {
             {
             // sending change to yourself; derivation = a*R
                 r = generate_key_derivation(txkey_pub, sender_account_keys.m_view_secret_key, derivation);
-                CHECK_AND_ASSERT_MES(r, false, "at creation outs: failed to generate_key_derivation(" << txkey_pub << ", <viewkey>)");
+                CHECK_AND_ASSERT_MES(r, false, "at creation outs: failed to generate_key_derivation({}, <viewkey>)", txkey_pub);
             }
             else
             {
             // sending to the recipient; derivation = r*A (or s*C in the subaddress scheme)
                 const crypto::secret_key &tx_privkey{dst_entr.is_subaddress && need_additional_txkeys ? additional_txkey.sec : tx_key};
                 r = generate_key_derivation(dst_entr.addr.m_view_public_key, tx_privkey, derivation);
-                CHECK_AND_ASSERT_MES(r, false, "at creation outs: failed to generate_key_derivation("
-                    << dst_entr.addr.m_view_public_key << ", " << crypto::secret_key_explicit_print_ref{tx_privkey} << ")");
+                CHECK_AND_ASSERT_MES(r, false, "at creation outs: failed to generate_key_derivation({}, {})",
+                    dst_entr.addr.m_view_public_key, crypto::secret_key_explicit_print_ref{tx_privkey});
             }
 
             if (need_additional_txkeys)
@@ -346,7 +346,7 @@ namespace hw {
             }
 
             r = derive_public_key(derivation, output_index, dst_entr.addr.m_spend_public_key, out_eph_public_key);
-            CHECK_AND_ASSERT_MES(r, false, "at creation outs: failed to derive_public_key(" << derivation << ", " << output_index << ", "<< dst_entr.addr.m_spend_public_key << ")");
+            CHECK_AND_ASSERT_MES(r, false, "at creation outs: failed to derive_public_key({}, {}, {})", derivation, output_index, dst_entr.addr.m_spend_public_key);
 
             return r;
         }

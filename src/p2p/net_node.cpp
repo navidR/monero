@@ -73,9 +73,7 @@ namespace
         expect<T> address = T::make(value);
         if (!address)
         {
-            MERROR(
-                "Failed to parse " << epee::net_utils::zone_to_string(T::get_zone()) << " address \"" << value << "\": " << address.error().message()
-            );
+            MERROR("Failed to parse {} address \"{}\": {}", epee::net_utils::zone_to_string(T::get_zone()), value, address.error().message());
             return {};
         }
         return {std::move(*address)};
@@ -185,11 +183,11 @@ namespace nodetool
             proxies.emplace_back();
 
             auto next = boost::algorithm::make_split_iterator(arg, boost::algorithm::first_finder(","));
-            CHECK_AND_ASSERT_MES(!next.eof() && !next->empty(), boost::none, "No network type for --" << arg_tx_proxy.name);
+            CHECK_AND_ASSERT_MES(!next.eof() && !next->empty(), boost::none, "No network type for --{}", arg_tx_proxy.name);
             const boost::string_ref zone{next->begin(), next->size()};
 
             ++next;
-            CHECK_AND_ASSERT_MES(!next.eof() && !next->empty(), boost::none, "No ipv4:port given for --" << arg_tx_proxy.name);
+            CHECK_AND_ASSERT_MES(!next.eof() && !next->empty(), boost::none, "No ipv4:port given for --{}", arg_tx_proxy.name);
             const boost::string_ref proxy{next->begin(), next->size()};
 
             ++next;
@@ -197,7 +195,7 @@ namespace nodetool
             {
                 if (2 <= count)
                 {
-                    MERROR("Too many ',' characters given to --" << arg_tx_proxy.name);
+                    MERROR("Too many ',' characters given to --{}", arg_tx_proxy.name);
                     return boost::none;
                 }
 
@@ -208,7 +206,7 @@ namespace nodetool
                     proxies.back().max_connections = get_max_connections(*next);
                     if (proxies.back().max_connections == 0)
                     {
-                        MERROR("Invalid max connections given to --" << arg_tx_proxy.name);
+                        MERROR("Invalid max connections given to --{}", arg_tx_proxy.name);
                         return boost::none;
                     }
                 }
@@ -223,7 +221,7 @@ namespace nodetool
                 proxies.back().zone = epee::net_utils::zone::i2p;
                 break;
             default:
-                MERROR("Invalid network for --" << arg_tx_proxy.name);
+                MERROR("Invalid network for --{}", arg_tx_proxy.name);
                 return boost::none;
             }
 
@@ -231,7 +229,7 @@ namespace nodetool
             std::uint16_t port = 0;
             if (!epee::string_tools::parse_peer_from_string(ip, port, std::string{proxy}) || port == 0)
             {
-                MERROR("Invalid ipv4:port given for --" << arg_tx_proxy.name);
+                MERROR("Invalid ipv4:port given for --{}", arg_tx_proxy.name);
                 return boost::none;
             }
             proxies.back().address = ip::tcp::endpoint{ip::address_v4{boost::endian::native_to_big(ip)}, port};
@@ -252,15 +250,15 @@ namespace nodetool
             inbounds.emplace_back();
 
             auto next = boost::algorithm::make_split_iterator(arg, boost::algorithm::first_finder(","));
-            CHECK_AND_ASSERT_MES(!next.eof() && !next->empty(), boost::none, "No inbound address for --" << arg_anonymous_inbound.name);
+            CHECK_AND_ASSERT_MES(!next.eof() && !next->empty(), boost::none, "No inbound address for --{}", arg_anonymous_inbound.name);
             const boost::string_ref address{next->begin(), next->size()};
 
             ++next;
-            CHECK_AND_ASSERT_MES(!next.eof() && !next->empty(), boost::none, "No local ipv4:port given for --" << arg_anonymous_inbound.name);
+            CHECK_AND_ASSERT_MES(!next.eof() && !next->empty(), boost::none, "No local ipv4:port given for --{}", arg_anonymous_inbound.name);
             const boost::string_ref bind{next->begin(), next->size()};
 
             const std::size_t colon = bind.find_first_of(':');
-            CHECK_AND_ASSERT_MES(colon < bind.size(), boost::none, "No local port given for --" << arg_anonymous_inbound.name);
+            CHECK_AND_ASSERT_MES(colon < bind.size(), boost::none, "No local port given for --{}", arg_anonymous_inbound.name);
 
             ++next;
             if (!next.eof())
@@ -268,7 +266,7 @@ namespace nodetool
                 inbounds.back().max_connections = get_max_connections(*next);
                 if (inbounds.back().max_connections == 0)
                 {
-                    MERROR("Invalid max connections given to --" << arg_tx_proxy.name);
+                    MERROR("Invalid max connections given to --{}", arg_tx_proxy.name);
                     return boost::none;
                 }
             }
@@ -285,7 +283,7 @@ namespace nodetool
                 inbounds.back().default_remote = net::i2p_address::unknown();
                 break;
             default:
-                MERROR("Invalid inbound address (" << address << ") for --" << arg_anonymous_inbound.name << ": " << (our_address ? "invalid type" : our_address.error().message()));
+                MERROR("Invalid inbound address ({}) for --{}: {}", address, arg_anonymous_inbound.name, (our_address ? "invalid type" : our_address.error().message()));
                 return boost::none;
             }
 
@@ -297,7 +295,7 @@ namespace nodetool
             std::uint16_t port = 0;
             if (!epee::string_tools::parse_peer_from_string(ip, port, std::string{bind}))
             {
-                MERROR("Invalid ipv4:port given for --" << arg_anonymous_inbound.name);
+                MERROR("Invalid ipv4:port given for --{}", arg_anonymous_inbound.name);
                 return boost::none;
             }
             inbounds.back().local_ip = std::string{bind.substr(0, colon)};
@@ -322,7 +320,7 @@ namespace nodetool
         if (address.get_zone() == epee::net_utils::zone::public_)
             return false;
 
-        MWARNING("Filtered command (#" << command << ") to/from " << address.str());
+        MWARNING("Filtered command (#{}) to/from {}", command, address.str());
         return true;
     }
 
@@ -361,7 +359,7 @@ namespace nodetool
         {
             if (socks_connect_timeout < std::chrono::steady_clock::now() - start)
             {
-                MERROR("Timeout on socks connect (" << proxy << " to " << remote.str() << ")");
+                MERROR("Timeout on socks connect ({} to {})", proxy, remote.str());
                 return boost::none;
             }
 
@@ -378,7 +376,7 @@ namespace nodetool
                 return {std::move(result.second)};
             }
 
-            MERROR("Failed to make socks connection to " << remote.str() << " (via " << proxy << "): " << result.first.message());
+            MERROR("Failed to make socks connection to {} (via {}): {}", remote.str(), proxy, result.first.message());
         }
         catch (boost::broken_promise const&)
         {}

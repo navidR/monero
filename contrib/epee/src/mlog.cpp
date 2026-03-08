@@ -36,7 +36,9 @@
 #endif
 
 #include <time.h>
+#include <array>
 #include <atomic>
+#include <vector>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #include "string_tools.h"
@@ -48,7 +50,7 @@
 
 #define MLOG_BASE_FORMAT "%datetime{%Y-%M-%d %H:%m:%s.%g}\t%thread\t%level\t%logger\t%loc\t%msg"
 
-#define MLOG_LOG(x) CINFO(el::base::Writer,el::base::DispatchAction::FileOnlyLog,MONERO_DEFAULT_LOG_CATEGORY) << x
+#define MLOG_LOG(...) MCLOG_FILE(el::Level::Info, MONERO_DEFAULT_LOG_CATEGORY, __VA_ARGS__)
 
 using namespace epee;
 
@@ -193,13 +195,13 @@ void mlog_configure(const std::string &filename_base, bool console, const std::s
           std::time_t ta = boost::filesystem::last_write_time(boost::filesystem::path(a), ec);
           if (ec)
           {
-            MERROR("Failed to get timestamp from " << a << ": " << ec);
+            MERROR("Failed to get timestamp from {}: {}", a, ec);
             ta = std::time(nullptr);
           }
           std::time_t tb = boost::filesystem::last_write_time(boost::filesystem::path(b), ec);
           if (ec)
           {
-            MERROR("Failed to get timestamp from " << b << ": " << ec);
+            MERROR("Failed to get timestamp from {}: {}", b, ec);
             tb = std::time(nullptr);
           }
           static_assert(std::is_integral<time_t>(), "bad time_t");
@@ -213,12 +215,12 @@ void mlog_configure(const std::string &filename_base, bool console, const std::s
             boost::filesystem::remove(found_files[i], ec);
             if (ec)
             {
-              MERROR("Failed to remove " << found_files[i] << ": " << ec);
+              MERROR("Failed to remove {}: {}", found_files[i], ec);
             }
           }
           catch (const std::exception &e)
           {
-            MERROR("Failed to remove " << found_files[i] << ": " << e.what());
+            MERROR("Failed to remove {}: {}", found_files[i], e.what());
           }
         }
       }
@@ -271,7 +273,7 @@ void mlog_set_categories(const char *categories)
     }
   }
   el::Loggers::setCategories(new_categories.c_str(), true);
-  MLOG_LOG("New log categories: " << el::Loggers::getCategories());
+  MLOG_LOG("New log categories: {}", el::Loggers::getCategories());
 }
 
 std::string mlog_get_categories()
@@ -314,7 +316,7 @@ void mlog_set_log(const char *log)
   }
   else
   {
-    MERROR("Invalid numerical log level: " << log);
+    MERROR("Invalid numerical log level: {}", log);
   }
 }
 
@@ -488,41 +490,38 @@ void reset_console_color() {
 
 static bool mlog(el::Level level, const char *category, const char *format, va_list ap) noexcept
 {
-  int size = 0;
-  char *p = NULL;
-  va_list apc;
-  bool ret = true;
+  if (!el::Loggers::allowed(level, category))
+    return true;
 
-  /* Determine required size */
+  std::array<char, 512> stack_buffer;
+  va_list apc;
   va_copy(apc, ap);
-  size = vsnprintf(p, size, format, apc);
+  const int size = vsnprintf(stack_buffer.data(), stack_buffer.size(), format, apc);
   va_end(apc);
   if (size < 0)
     return false;
 
-  size++;             /* For '\0' */
-  p = (char*)malloc(size);
-  if (p == NULL)
-    return false;
-
-  size = vsnprintf(p, size, format, ap);
-  if (size < 0)
-  {
-    free(p);
-    return false;
-  }
-
   try
   {
-    MCLOG(level, category, el::Color::Default, p);
+    el::base::Writer writer(level, el::Color::Default, __FILE__, __LINE__, ELPP_FUNC, el::base::DispatchAction::NormalLog);
+    if (static_cast<std::size_t>(size) < stack_buffer.size())
+    {
+      writer.construct(category) << stack_buffer.data();
+    }
+    else
+    {
+      std::vector<char> heap_buffer(static_cast<std::size_t>(size) + 1);
+      if (vsnprintf(heap_buffer.data(), heap_buffer.size(), format, ap) < 0)
+        return false;
+      writer.construct(category) << heap_buffer.data();
+    }
   }
   catch(...)
   {
-    ret = false;
+    return false;
   }
-  free(p);
 
-  return ret;
+  return true;
 }
 
 #define DEFLOG(fun,lev) \

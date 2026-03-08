@@ -1136,7 +1136,7 @@ namespace rct {
               rv.type = RCTTypeBulletproof;
               break;
             default:
-              ASSERT_MES_AND_THROW("Unsupported BP version: " << rct_config.bp_version);
+              ASSERT_MES_AND_THROW("Unsupported BP version: {}", rct_config.bp_version);
           }
         }
         else
@@ -1170,7 +1170,7 @@ namespace rct {
         {
             const bool plus = is_rct_bulletproof_plus(rv.type);
             CHECK_AND_ASSERT_THROW_MES(rct_config.range_proof_type == rct::RangeProofPaddedBulletproof,
-                "Unsupported range proof type: " << rct_config.range_proof_type);
+                "Unsupported range proof type: {}", rct_config.range_proof_type);
             {
                 rct::keyV C, masks;
                 if (hwdev.get_mode() == hw::device::TRANSACTION_CREATE_FAKE)
@@ -1307,7 +1307,7 @@ namespace rct {
 
             for (size_t i = 0; i < results.size(); ++i) {
               if (!results[i]) {
-                LOG_PRINT_L1("Range proof verified failed for proof " << i);
+                LOG_PRINT_L1("Range proof verified failed for proof {}", i);
                 return false;
               }
             }
@@ -1329,7 +1329,7 @@ namespace rct {
         }
         catch (const std::exception &e)
         {
-          LOG_PRINT_L1("Error in verRct: " << e.what());
+          LOG_PRINT_L1("Error in verRct: {}", e.what());
           return false;
         }
         catch (...)
@@ -1454,7 +1454,7 @@ namespace rct {
           return false;
         for (size_t i = 0; i < results.size(); ++i) {
           if (!results[i]) {
-            LOG_PRINT_L1("Range proof verified failed for proof " << i);
+            LOG_PRINT_L1("Range proof verified failed for proof {}", i);
             return false;
           }
         }
@@ -1464,7 +1464,7 @@ namespace rct {
       // we can get deep throws from ge_frombytes_vartime if input isn't valid
       catch (const std::exception &e)
       {
-        LOG_PRINT_L1("Error in verRctSemanticsSimple: " << e.what());
+        LOG_PRINT_L1("Error in verRctSemanticsSimple: {}", e.what());
         return false;
       }
       catch (...)
@@ -1521,7 +1521,7 @@ namespace rct {
 
         for (size_t i = 0; i < results.size(); ++i) {
           if (!results[i]) {
-            LOG_PRINT_L1("verRctMGSimple/verRctCLSAGSimple failed for input " << i);
+            LOG_PRINT_L1("verRctMGSimple/verRctCLSAGSimple failed for input {}", i);
             return false;
           }
         }
@@ -1531,7 +1531,7 @@ namespace rct {
       // we can get deep throws from ge_frombytes_vartime if input isn't valid
       catch (const std::exception &e)
       {
-        LOG_PRINT_L1("Error in verRctNonSemanticsSimple: " << e.what());
+        LOG_PRINT_L1("Error in verRctNonSemanticsSimple: {}", e.what());
         return false;
       }
       catch (...)

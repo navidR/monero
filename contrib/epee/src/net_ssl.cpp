@@ -232,7 +232,7 @@ bool create_ec_ssl_certificate(EVP_PKEY *&pkey, X509 *&cert, int type)
   EC_GROUP *group = EC_GROUP_new_by_curve_name(type);
   if (!group)
   {
-    MERROR("Error getting EC group " << type);
+    MERROR("Error getting EC group {}", type);
     return false;
   }
   openssl_group group_deleter{group};
@@ -242,7 +242,7 @@ bool create_ec_ssl_certificate(EVP_PKEY *&pkey, X509 *&cert, int type)
 
   if (!EC_GROUP_check(group, NULL))
   {
-    MERROR("Group failed check: " << ERR_reason_error_string(ERR_get_error()));
+    MERROR("Group failed check: {}", ERR_reason_error_string(ERR_get_error()));
     return false;
   }
   if (EC_KEY_set_group(ec_key.get(), group) != 1)
@@ -372,9 +372,9 @@ boost::asio::ssl::context ssl_options_t::create_context() const
   const bool private_key_exists = epee::file_io_utils::is_file_exist(auth.private_key_path);
   const bool certificate_exists = epee::file_io_utils::is_file_exist(auth.certificate_path);
   if (private_key_exists && !certificate_exists) {
-    ASSERT_MES_AND_THROW("private key is present, but certificate file '" << auth.certificate_path << "' is missing");
+    ASSERT_MES_AND_THROW("private key is present, but certificate file '{}' is missing", auth.certificate_path);
   } else if (!private_key_exists && certificate_exists) {
-    ASSERT_MES_AND_THROW("certificate is present, but private key file '" << auth.private_key_path << "' is missing");
+    ASSERT_MES_AND_THROW("certificate is present, but private key file '{}' is missing", auth.private_key_path);
   }
 
   if (auth.private_key_path.empty())
@@ -387,7 +387,7 @@ boost::asio::ssl::context ssl_options_t::create_context() const
     CHECK_AND_ASSERT_THROW_MES(create_ec_ssl_certificate(pkey, cert, NID_secp256k1), "Failed to create certificate");
     CHECK_AND_ASSERT_THROW_MES(SSL_CTX_use_certificate(ctx, cert), "Failed to use generated certificate");
     if (!SSL_CTX_use_PrivateKey(ctx, pkey))
-      MERROR("Failed to use generated EC private key for " << NID_secp256k1);
+      MERROR("Failed to use generated EC private key for {}", NID_secp256k1);
     else
       ok = true;
     X509_free(cert);
@@ -416,7 +416,7 @@ void ssl_authentication_t::use_ssl_certificate(boost::asio::ssl::context &ssl_co
   try {
     ssl_context.use_private_key_file(private_key_path, boost::asio::ssl::context::pem);
   } catch (const boost::system::system_error&) {
-    MERROR("Failed to load private key file '" << private_key_path << "' into SSL context");
+    MERROR("Failed to load private key file '{}' into SSL context", private_key_path);
     throw;
   }
   ssl_context.use_certificate_chain_file(certificate_path);
@@ -428,12 +428,7 @@ bool is_ssl(const unsigned char *data, size_t len)
     return false;
 
   // https://security.stackexchange.com/questions/34780/checking-client-hello-for-https-classification
-  MDEBUG("SSL detection buffer, " << len << " bytes: "
-    << (unsigned)(unsigned char)data[0] << " " << (unsigned)(unsigned char)data[1] << " "
-    << (unsigned)(unsigned char)data[2] << " " << (unsigned)(unsigned char)data[3] << " "
-    << (unsigned)(unsigned char)data[4] << " " << (unsigned)(unsigned char)data[5] << " "
-    << (unsigned)(unsigned char)data[6] << " " << (unsigned)(unsigned char)data[7] << " "
-    << (unsigned)(unsigned char)data[8]);
+  MDEBUG("SSL detection buffer, {} bytes: {} {} {} {} {} {} {} {} {}", len, (unsigned)(unsigned char)data[0], (unsigned)(unsigned char)data[1], (unsigned)(unsigned char)data[2], (unsigned)(unsigned char)data[3], (unsigned)(unsigned char)data[4], (unsigned)(unsigned char)data[5], (unsigned)(unsigned char)data[6], (unsigned)(unsigned char)data[7], (unsigned)(unsigned char)data[8]);
   if (data[0] == 0x16) // record
   if (data[1] == 3) // major version
   if (data[5] == 1) // ClientHello
@@ -645,7 +640,7 @@ bool ssl_options_t::handshake(
 
   if (ec)
   {
-    MERROR("SSL handshake failed, connection dropped: " << ec.message());
+    MERROR("SSL handshake failed, connection dropped: {}", ec.message());
     return false;
   }
   MDEBUG("SSL handshake success");
@@ -665,7 +660,7 @@ std::string get_hr_ssl_fingerprint(const X509 *cert, const EVP_MD *fdig)
   {
     const unsigned long ssl_err_val = static_cast<int>(ERR_get_error());
     const boost::system::error_code ssl_err_code = boost::asio::error::ssl_errors(static_cast<int>(ssl_err_val));
-    MERROR("Failed to create SSL fingerprint: " << ERR_reason_error_string(ssl_err_val));
+    MERROR("Failed to create SSL fingerprint: {}", ERR_reason_error_string(ssl_err_val));
     throw boost::system::system_error(ssl_err_code, ERR_reason_error_string(ssl_err_val));
   }
   fingerprint.resize(n * 3 - 1);
@@ -737,9 +732,9 @@ boost::system::error_code store_ssl_keys(boost::asio::ssl::context& ssl, const b
     if (!file)
     {
       if (epee::file_io_utils::is_file_exist(key_file.string())) {
-        MERROR("Permission denied to overwrite SSL private key file: '" << key_file.string() << "'");
+        MERROR("Permission denied to overwrite SSL private key file: '{}'", key_file.string());
       } else {
-        MERROR("Could not open SSL private key file for writing: '" << key_file.string() << "'");
+        MERROR("Could not open SSL private key file for writing: '{}'", key_file.string());
       }
 
       return {errno, boost::system::system_category()};
@@ -827,4 +822,3 @@ static void add_windows_root_certs(SSL_CTX *ctx) noexcept
     SSL_CTX_set_cert_store(ctx, store);
 }
 #endif
-

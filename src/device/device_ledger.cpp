@@ -55,13 +55,19 @@ namespace hw {
       apdu_verbose = verbose;
     }
 
+    inline std::string hex_status(unsigned int value)
+    {
+      char buffer[16];
+      std::snprintf(buffer, sizeof(buffer), "0x%x", value);
+      return buffer;
+    }
+
     #define TRACKD MTRACE("hw")
     #define ASSERT_SW(sw,ok,msk) CHECK_AND_ASSERT_THROW_MES(((sw)&(msk))==(ok), \
-      "Wrong Device Status: " << "0x" << std::hex << (sw) << " (" << Status::to_string(sw) << "), " << \
-      "EXPECTED 0x" << std::hex << (ok) << " (" << Status::to_string(ok) << "), " << \
-      "MASK 0x" << std::hex << (msk));
-    #define ASSERT_T0(exp)       CHECK_AND_ASSERT_THROW_MES(exp, "Protocol assert failure: "#exp ) ;
-    #define ASSERT_X(exp,msg)    CHECK_AND_ASSERT_THROW_MES(exp, msg); 
+      "Wrong Device Status: {} ({}), EXPECTED {} ({}), MASK {}", \
+      hex_status(sw), Status::to_string(sw), hex_status(ok), Status::to_string(ok), hex_status(msk));
+    #define ASSERT_T0(exp)       CHECK_AND_ASSERT_THROW_MES(exp, "Protocol assert failure: {}", #exp);
+    #define ASSERT_X(exp, ...)   CHECK_AND_ASSERT_THROW_MES(exp, __VA_ARGS__);
 
     #ifdef DEBUG_HWDEVICE
       crypto::secret_key dbg_viewkey;
@@ -304,12 +310,12 @@ namespace hw {
       this->mode = NONE;
       this->has_view_key = false;
       this->tx_in_progress = false;
-      MDEBUG( "Device "<<this->id <<" Created");
+      MDEBUG("Device {} Created", this->id);
     }
 
     device_ledger::~device_ledger() {
       this->release();
-      MDEBUG( "Device "<<this->id <<" Destroyed");
+      MDEBUG("Device {} Destroyed", this->id);
     }
 
     /* ======================================================================= */
@@ -326,19 +332,19 @@ namespace hw {
 
     //lock the device for a long sequence
     void device_ledger::lock(void) {
-      MDEBUG( "Ask for LOCKING for device "<<this->name << " in thread ");
+      MDEBUG("Ask for LOCKING for device {} in thread ", this->name);
       device_locker.lock();
-      MDEBUG( "Device "<<this->name << " LOCKed");
+      MDEBUG("Device {} LOCKed", this->name);
     }
 
     //lock the device for a long sequence
     bool device_ledger::try_lock(void) {
-      MDEBUG( "Ask for LOCKING(try) for device "<<this->name << " in thread ");
+      MDEBUG("Ask for LOCKING(try) for device {} in thread ", this->name);
       bool r = device_locker.try_lock();
       if (r) {
-        MDEBUG( "Device "<<this->name << " LOCKed(try)");
+        MDEBUG("Device {} LOCKed(try)", this->name);
       } else {
-        MDEBUG( "Device "<<this->name << " not LOCKed(try)");
+        MDEBUG("Device {} not LOCKed(try)", this->name);
       }
       return r;
     }
@@ -346,11 +352,11 @@ namespace hw {
     //lock the device for a long sequence
     void device_ledger::unlock(void) {
       try {
-        MDEBUG( "Ask for UNLOCKING for device "<<this->name << " in thread ");
+        MDEBUG("Ask for UNLOCKING for device {} in thread ", this->name);
       } catch (...) {
       }
       device_locker.unlock();
-      MDEBUG( "Device "<<this->name << " UNLOCKed");
+      MDEBUG("Device {} UNLOCKed", this->name);
     }
 
   
@@ -373,7 +379,7 @@ namespace hw {
           );
         const size_t len = strlen(strbuffer);
         buffer_to_str(strbuffer+len, sizeof(strbuffer)-len, (char*)(this->buffer_send+5), this->length_send-5);
-        MDEBUG( "CMD  : " << strbuffer);
+        MDEBUG("CMD  : {}", strbuffer);
       }
     }
 
@@ -383,7 +389,7 @@ namespace hw {
         snprintf(strbuffer, sizeof(strbuffer), "%.04x ", this->sw);
         const size_t len = strlen(strbuffer);
         buffer_to_str(strbuffer+len, sizeof(strbuffer)-len, (char*)(this->buffer_recv), this->length_recv);
-        MDEBUG( "RESP : " << strbuffer);
+        MDEBUG("RESP : {}", strbuffer);
 
       }
     }
@@ -417,7 +423,7 @@ namespace hw {
     }
 
     void device_ledger::send_secret(const unsigned char sec[32], int &offset) {
-      MDEBUG("send_secret: " << this->tx_in_progress);
+      MDEBUG("send_secret: {}", this->tx_in_progress);
       ASSERT_X(offset + 32 <= BUFFER_SEND_SIZE, "send_secret: out of bounds write (secret)");
       memmove(this->buffer_send+offset, sec, 32);
       offset +=32;
@@ -429,7 +435,7 @@ namespace hw {
     }
 
     void device_ledger::receive_secret(unsigned char sec[32], int &offset) {
-      MDEBUG("receive_secret: " << this->tx_in_progress);
+      MDEBUG("receive_secret: {}", this->tx_in_progress);
       ASSERT_X(offset + 32 <= BUFFER_RECV_SIZE, "receive_secret: out of bounds read (secret)");
       memmove(sec, this->buffer_recv+offset, 32);
       offset += 32;
@@ -465,8 +471,9 @@ namespace hw {
       this->length_recv -= 2;
       this->sw = (this->buffer_recv[length_recv]<<8) | this->buffer_recv[length_recv+1];
       logRESP();
-      MDEBUG("Device "<< this->id << " exchange: sw: " << this->sw << " expected: " << ok);
-      ASSERT_X(sw != SW_CLIENT_NOT_SUPPORTED, "Monero Ledger App doesn't support current monero version. Try to update the Monero Ledger App, at least " << MINIMAL_APP_VERSION_MAJOR<< "." << MINIMAL_APP_VERSION_MINOR << "." << MINIMAL_APP_VERSION_MICRO << " is required.");
+      MDEBUG("Device {} exchange: sw: {} expected: {}", this->id, this->sw, ok);
+      ASSERT_X(sw != SW_CLIENT_NOT_SUPPORTED, "Monero Ledger App doesn't support current monero version. Try to update the Monero Ledger App, at least {}.{}.{} is required.",
+          MINIMAL_APP_VERSION_MAJOR, MINIMAL_APP_VERSION_MINOR, MINIMAL_APP_VERSION_MICRO);
       ASSERT_X(sw != SW_PROTOCOL_NOT_SUPPORTED, "Make sure no other program is communicating with the Ledger.");
       ASSERT_SW(this->sw,ok,mask);
 
@@ -519,7 +526,7 @@ namespace hw {
       this->controle_device = &hw::get_device("default");
       this->release();
       hw_device.init();      
-      MDEBUG( "Device "<<this->id <<" HIDUSB inited");
+      MDEBUG("Device {} HIDUSB inited", this->id);
       return true;
     }
     
@@ -587,9 +594,9 @@ namespace hw {
           this->mode = mode;
           break;
         default:
-           CHECK_AND_ASSERT_THROW_MES(false, " device_ledger::set_mode(unsigned int mode): invalid mode: "<<mode);
+           CHECK_AND_ASSERT_THROW_MES(false, " device_ledger::set_mode(unsigned int mode): invalid mode: {}", mode);
         }
-        MDEBUG("Switch to mode: " <<mode);
+        MDEBUG("Switch to mode: {}", mode);
         return device::set_mode(mode);
     }
 
@@ -1475,7 +1482,7 @@ namespace hw {
       #ifdef DEBUG_HWDEVICE
       crypto::hash h_x;
       this->controle_device->get_transaction_prefix_hash(tx,h_x);
-      MDEBUG("get_transaction_prefix_hash [[IN]] h_x/1 "<<h_x);
+      MDEBUG("get_transaction_prefix_hash [[IN]] h_x/1 {}", h_x);
       #endif
     
       std::ostringstream s_x;
@@ -1640,7 +1647,7 @@ namespace hw {
       log_hexbuffer("generate_output_ephemeral_keys: [[OUT]] out_eph_public_key ", out_eph_public_key_x.data, 32);
       #endif
 
-      ASSERT_X(tx_version > 1, "TX version not supported"<<tx_version);
+      ASSERT_X(tx_version > 1, "TX version not supported {}", tx_version);
 
       // make additional tx pubkey if necessary
       cryptonote::keypair additional_txkey;
@@ -1812,7 +1819,7 @@ namespace hw {
         memmove(unmasked.mask.bytes,  &this->buffer_recv[32], 32);
 
         #ifdef DEBUG_HWDEVICE
-        MDEBUG("ecdhEncode: Akout: "<<AKout_x);
+        MDEBUG("ecdhEncode: Akout: {}", AKout_x);
         hw::ledger::check32("ecdhEncode", "amount", (char*)unmasked_x.amount.bytes, (char*)unmasked.amount.bytes);
         hw::ledger::check32("ecdhEncode", "mask", (char*)unmasked_x.mask.bytes, (char*)unmasked.mask.bytes);
 
@@ -1852,7 +1859,7 @@ namespace hw {
         memmove(masked.mask.bytes,  &this->buffer_recv[32], 32);
 
         #ifdef DEBUG_HWDEVICE
-        MDEBUG("ecdhEncode: Akout: "<<AKout_x);
+        MDEBUG("ecdhEncode: Akout: {}", AKout_x);
         hw::ledger::check32("ecdhDecode", "amount", (char*)masked_x.amount.bytes, (char*)masked.amount.bytes);
         hw::ledger::check32("ecdhDecode", "mask", (char*)masked_x.mask.bytes,(char*) masked.mask.bytes);
         #endif
@@ -2377,4 +2384,3 @@ namespace hw {
 
   }
 }
-

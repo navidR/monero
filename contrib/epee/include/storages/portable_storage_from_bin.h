@@ -93,7 +93,7 @@ namespace epee
         recursuion_limitation_guard(size_t& counter):m_counter_ref(counter)
         {
           ++m_counter_ref;
-          CHECK_AND_ASSERT_THROW_MES(m_counter_ref < EPEE_PORTABLE_STORAGE_RECURSION_LIMIT_INTERNAL, "Wrong blob data in portable storage: recursion limitation (" << EPEE_PORTABLE_STORAGE_RECURSION_LIMIT_INTERNAL << ") exceeded");
+          CHECK_AND_ASSERT_THROW_MES(m_counter_ref < EPEE_PORTABLE_STORAGE_RECURSION_LIMIT_INTERNAL, "Wrong blob data in portable storage: recursion limitation ({}) exceeded", EPEE_PORTABLE_STORAGE_RECURSION_LIMIT_INTERNAL);
         }
         ~recursuion_limitation_guard() noexcept(false)
         {
@@ -135,7 +135,7 @@ namespace epee
     void throwable_buffer_reader::read(void* target, size_t count)
     {
       RECURSION_LIMITATION();
-      CHECK_AND_ASSERT_THROW_MES(m_count >= count, " attempt to read " << count << " bytes from buffer with " << m_count << " bytes remained");
+      CHECK_AND_ASSERT_THROW_MES(m_count >= count, " attempt to read {} bytes from buffer with {} bytes remained", count, m_count);
       memcpy(target, m_ptr, count);
       m_ptr += count;
       m_count -= count;
@@ -168,7 +168,7 @@ namespace epee
       static_assert(sizeof(bool) == sizeof(uint8_t), "We really shouldn't use bool directly in serialization code. Replace it with uint8_t if this assert triggers!");
       uint8_t t;
       read(&t, sizeof(t));
-      CHECK_AND_ASSERT_THROW_MES(t <= 1, "Invalid bool value " << t);
+      CHECK_AND_ASSERT_THROW_MES(t <= 1, "Invalid bool value {}", t);
       pod_val = (t != 0);
     }
     
@@ -229,7 +229,7 @@ namespace epee
       case SERIALIZE_TYPE_OBJECT: return read_ae<section>();
       case SERIALIZE_TYPE_ARRAY:  return read_ae<array_entry>();
       default: 
-        CHECK_AND_ASSERT_THROW_MES(false, "unknown entry_type code = " << type);
+        CHECK_AND_ASSERT_THROW_MES(false, "unknown entry_type code = {}", type);
       }
       return read_ae<int8_t>(); // unreachable, dummy return to avoid compiler warning
     }
@@ -248,7 +248,7 @@ namespace epee
       case PORTABLE_RAW_SIZE_MARK_DWORD: v = read<uint32_t>();break;
       case PORTABLE_RAW_SIZE_MARK_INT64: v = read<uint64_t>();break;
       default:
-        CHECK_AND_ASSERT_THROW_MES(false, "unknown varint size_mask = " << size_mask);
+        CHECK_AND_ASSERT_THROW_MES(false, "unknown varint size_mask = {}", size_mask);
       }
       v >>= 2;
       return v;
@@ -321,7 +321,7 @@ namespace epee
       case SERIALIZE_TYPE_OBJECT: return read_se<section>();
       case SERIALIZE_TYPE_ARRAY:  return read_se<array_entry>();
       default: 
-        CHECK_AND_ASSERT_THROW_MES(false, "unknown entry_type code = " << ent_type);
+        CHECK_AND_ASSERT_THROW_MES(false, "unknown entry_type code = {}", ent_type);
       }
       return read_se<int8_t>(); // unreachable, dummy return to avoid compiler warning
     }
@@ -339,7 +339,7 @@ namespace epee
         std::string sec_name;
         read_sec_name(sec_name);
         const auto insert_loc = sec.m_entries.lower_bound(sec_name);
-        CHECK_AND_ASSERT_THROW_MES(insert_loc == sec.m_entries.end() || insert_loc->first != sec_name, "duplicate key: " << sec_name);
+        CHECK_AND_ASSERT_THROW_MES(insert_loc == sec.m_entries.end() || insert_loc->first != sec_name, "duplicate key: {}", sec_name);
         sec.m_entries.emplace_hint(insert_loc, std::move(sec_name), load_storage_entry());
       }
     }
@@ -348,8 +348,8 @@ namespace epee
     {
       RECURSION_LIMITATION();
       size_t len = read_varint();
-      CHECK_AND_ASSERT_THROW_MES(len < MAX_STRING_LEN_POSSIBLE, "to big string len value in storage: " << len);
-      CHECK_AND_ASSERT_THROW_MES(m_count >= len, "string len count value " << len << " goes out of remain storage len " << m_count);
+      CHECK_AND_ASSERT_THROW_MES(len < MAX_STRING_LEN_POSSIBLE, "to big string len value in storage: {}", len);
+      CHECK_AND_ASSERT_THROW_MES(m_count >= len, "string len count value {} goes out of remain storage len {}", len, m_count);
       //do this manually to avoid double memory write in huge strings (first time at resize, second at read)
       str.assign((const char*)m_ptr, len);
       m_ptr+=len;

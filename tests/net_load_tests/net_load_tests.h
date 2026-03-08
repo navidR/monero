@@ -190,7 +190,7 @@ namespace net_load_tests
       }
       if (!m_tcp_server.get_config_object().close(m_connections[idx]))
       {
-        LOG_PRINT_L0("Close connection error: " << m_connections[idx]);
+        LOG_PRINT_L0("Close connection error: {}", m_connections[idx]);
         if (!ignore_close_fails)
         {
           return false;

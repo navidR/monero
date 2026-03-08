@@ -170,7 +170,7 @@ namespace wallet_args
         }
         else
         {
-          MERROR(wallet_args::tr("Can't find config file ") << config);
+          MERROR("{}{}", wallet_args::tr("Can't find config file "), config);
           return false;
         }
       }
@@ -208,13 +208,13 @@ namespace wallet_args
     Print(print) << "Monero '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")";
 
     if (!command_line::is_arg_defaulted(vm, arg_log_level))
-      MINFO("Setting log level = " << command_line::get_arg(vm, arg_log_level));
+      MINFO("Setting log level = {}", command_line::get_arg(vm, arg_log_level));
     else
     {
       const char *logs = getenv("MONERO_LOGS");
-      MINFO("Setting log levels = " << (logs ? logs : "<default>"));
+      MINFO("Setting log levels = {}", (logs ? logs : "<default>"));
     }
-    MINFO(wallet_args::tr("Logging to: ") << log_path);
+    MINFO("{}{}", wallet_args::tr("Logging to: "), log_path);
 
     Print(print) << boost::format(wallet_args::tr("Logging to %s")) % log_path;
 

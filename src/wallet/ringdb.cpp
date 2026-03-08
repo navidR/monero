@@ -181,7 +181,7 @@ static int resize_env(MDB_env *env, const char *db_path, size_t needed)
       boost::filesystem::space_info si = boost::filesystem::space(path);
       if(si.available < needed)
       {
-        MERROR("!! WARNING: Insufficient free space to extend database !!: " << (si.available >> 20L) << " MB available");
+        MERROR("!! WARNING: Insufficient free space to extend database !!: {} MB available", (si.available >> 20L));
         return ENOSPC;
       }
     }
@@ -316,7 +316,7 @@ bool ringdb::remove_rings(const crypto::chacha_key &chacha_key, const std::vecto
       continue;
     THROW_WALLET_EXCEPTION_IF(data.mv_size <= 0, tools::error::wallet_internal_error, "Invalid ring data size");
 
-    MDEBUG("Removing ring data for key image " << key_image);
+    MDEBUG("Removing ring data for key image {}", key_image);
     dbr = mdb_del(txn, dbi_rings, &key, NULL);
     THROW_WALLET_EXCEPTION_IF(dbr, tools::error::wallet_internal_error, "Failed to remove ring to database: " + std::string(mdb_strerror(dbr)));
   }
@@ -384,10 +384,10 @@ bool ringdb::get_rings(const crypto::chacha_key &chacha_key, const std::vector<c
     data_plaintext = decrypt(std::string((const char*)data.mv_data, data.mv_size), key_image, chacha_key, 0);
     outs = decompress_ring(data_plaintext, 0);
   }
-  MDEBUG("Found ring for key image " << key_image << ":");
-  MDEBUG("Relative: " << boost::join(outs | boost::adaptors::transformed([](uint64_t out){return std::to_string(out);}), " "));
+  MDEBUG("Found ring for key image {}:", key_image);
+  MDEBUG("Relative: {}", boost::join(outs | boost::adaptors::transformed([](uint64_t out){return std::to_string(out);}), " "));
   outs = cryptonote::relative_output_offsets_to_absolute(outs);
-  MDEBUG("Absolute: " << boost::join(outs | boost::adaptors::transformed([](uint64_t out){return std::to_string(out);}), " "));
+  MDEBUG("Absolute: {}", boost::join(outs | boost::adaptors::transformed([](uint64_t out){return std::to_string(out);}), " "));
   all_outs.push_back(std::move(outs));
 
   }
@@ -470,13 +470,13 @@ bool ringdb::blackball_worker(const std::vector<std::pair<uint64_t, uint64_t>> &
     switch (op)
     {
       case BLACKBALL_BLACKBALL:
-        MDEBUG("Marking output " << output.first << "/" << output.second << " as spent");
+        MDEBUG("Marking output {}/{} as spent", output.first, output.second);
         dbr = mdb_cursor_put(cursor, &key, &data, MDB_NODUPDATA);
         if (dbr == MDB_KEYEXIST)
           dbr = 0;
         break;
       case BLACKBALL_UNBLACKBALL:
-        MDEBUG("Marking output " << output.first << "/" << output.second << " as unspent");
+        MDEBUG("Marking output {}/{} as unspent", output.first, output.second);
         dbr = mdb_cursor_get(cursor, &key, &data, MDB_GET_BOTH);
         if (dbr == 0)
           dbr = mdb_cursor_del(cursor, 0);

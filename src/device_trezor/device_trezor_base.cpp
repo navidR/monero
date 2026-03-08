@@ -59,7 +59,7 @@ namespace trezor {
         disconnect();
         release();
       } catch(std::exception const& e){
-        MERROR("Could not disconnect and release: " << e.what());
+        MERROR("Could not disconnect and release: {}", e.what());
       }
     }
 
@@ -105,7 +105,7 @@ namespace trezor {
         return true;
 
       } catch(std::exception const& e){
-        MERROR("Release exception: " << e.what());
+        MERROR("Release exception: {}", e.what());
         return false;
       }
     }
@@ -122,15 +122,15 @@ namespace trezor {
         enumerate(trans);
         sort_transports_by_env(trans);
 
-        MDEBUG("Enumeration yielded " << trans.size() << " Trezor devices");
+        MDEBUG("Enumeration yielded {} Trezor devices", trans.size());
         for (auto &cur : trans) {
-          MDEBUG("  device: " << *(cur.get()));
+          MDEBUG("  device: {}", *(cur.get()));
         }
 
         for (auto &cur : trans) {
           std::string cur_path = cur->get_path();
           if (boost::starts_with(cur_path, this->name)) {
-            MDEBUG("Device Match: " << cur_path);
+            MDEBUG("Device Match: {}", cur_path);
             m_transport = cur;
             break;
           }
@@ -149,7 +149,7 @@ namespace trezor {
         return true;
 
       } catch(std::exception const& e){
-        MERROR("Open exception: " << e.what());
+        MERROR("Open exception: {}", e.what());
         return false;
       }
     }
@@ -168,7 +168,7 @@ namespace trezor {
           m_transport = nullptr;
 
         } catch(std::exception const& e){
-          MERROR("Disconnect exception: " << e.what());
+          MERROR("Disconnect exception: {}", e.what());
           m_transport = nullptr;
           return false;
         }
@@ -189,28 +189,28 @@ namespace trezor {
 
     //lock the device for a long sequence
     void device_trezor_base::lock() {
-      MTRACE("Ask for LOCKING for device " << this->name << " in thread ");
+      MTRACE("Ask for LOCKING for device {} in thread ", this->name);
       device_locker.lock();
-      MTRACE("Device " << this->name << " LOCKed");
+      MTRACE("Device {} LOCKed", this->name);
     }
 
     //lock the device for a long sequence
     bool device_trezor_base::try_lock() {
-      MTRACE("Ask for LOCKING(try) for device " << this->name << " in thread ");
+      MTRACE("Ask for LOCKING(try) for device {} in thread ", this->name);
       bool r = device_locker.try_lock();
       if (r) {
-        MTRACE("Device " << this->name << " LOCKed(try)");
+        MTRACE("Device {} LOCKed(try)", this->name);
       } else {
-        MDEBUG("Device " << this->name << " not LOCKed(try)");
+        MDEBUG("Device {} not LOCKed(try)", this->name);
       }
       return r;
     }
 
     //unlock the device
     void device_trezor_base::unlock() {
-      MTRACE("Ask for UNLOCKING for device " << this->name << " in thread ");
+      MTRACE("Ask for UNLOCKING for device {} in thread ", this->name);
       device_locker.unlock();
-      MTRACE("Device " << this->name << " UNLOCKed");
+      MTRACE("Device {} UNLOCKed", this->name);
     }
 
     /* ======================================================================= */
@@ -247,7 +247,7 @@ namespace trezor {
       pingMsg->set_message("PING");
 
       auto success = this->client_exchange<messages::common::Success>(pingMsg);  // messages::MessageType_Success
-      MDEBUG("Ping response " << success->message());
+      MDEBUG("Ping response {}", success->message());
       (void)success;
     }
 
@@ -258,7 +258,7 @@ namespace trezor {
         this->call_ping_unsafe();
 
       } catch(exc::TrezorException const& e){
-        MINFO("Trezor does not respond: " << e.what());
+        MINFO("Trezor does not respond: {}", e.what());
         throw exc::DeviceNotResponsiveException(std::string("Trezor not responding: ") + e.what());
       }
     }
@@ -334,8 +334,8 @@ namespace trezor {
       this->m_wallet_deriv_path.reserve(fields.size());
       for(const std::string & cur : fields){
         const bool ok = boost::regex_match(cur.c_str(), match, rgx);
-        CHECK_AND_ASSERT_THROW_MES(ok, "Invalid wallet code: " << deriv_path << ". Invalid path element: " << cur);
-        CHECK_AND_ASSERT_THROW_MES(match[0].length() > 0, "Invalid wallet code: " << deriv_path << ". Invalid path element: " << cur);
+        CHECK_AND_ASSERT_THROW_MES(ok, "Invalid wallet code: {}. Invalid path element: {}", deriv_path, cur);
+        CHECK_AND_ASSERT_THROW_MES(match[0].length() > 0, "Invalid wallet code: {}. Invalid path element: {}", deriv_path, cur);
 
         const unsigned long cidx = std::stoul(match[0].str()) | TREZOR_BIP44_HARDENED_ZERO;
         this->m_wallet_deriv_path.push_back((unsigned int)cidx);
@@ -358,9 +358,9 @@ namespace trezor {
         return true;
 
       } catch(std::exception const& e) {
-        MERROR("Ping failed, exception thrown " << e.what());
+        MERROR("Ping failed, exception thrown {}", e.what());
       } catch(...){
-        MERROR("Ping failed, general exception thrown" << boost::current_exception_diagnostic_information());
+        MERROR("Ping failed, general exception thrown{}", boost::current_exception_diagnostic_information());
       }
 
       return false;
@@ -427,7 +427,7 @@ namespace trezor {
     void device_trezor_base::on_button_request(GenericMessage & resp, const messages::common::ButtonRequest * msg)
     {
       CHECK_AND_ASSERT_THROW_MES(msg, "Empty message");
-      MDEBUG("on_button_request, code: " << msg->code());
+      MDEBUG("on_button_request, code: {}", msg->code());
 
       TREZOR_CALLBACK(on_button_request, msg->code());
 
@@ -484,7 +484,7 @@ namespace trezor {
 
       boost::optional<epee::wipeable_string> passphrase;
       if (m_reply_with_empty_passphrase || m_always_use_empty_passphrase) {
-        MDEBUG("Answering passphrase prompt with an empty passphrase, always use empty: " << m_always_use_empty_passphrase);
+        MDEBUG("Answering passphrase prompt with an empty passphrase, always use empty: {}", m_always_use_empty_passphrase);
         on_device = false;
         passphrase = epee::wipeable_string("");
       } else if (m_passphrase){

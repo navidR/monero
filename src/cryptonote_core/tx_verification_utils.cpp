@@ -123,12 +123,12 @@ static bool expand_tx_and_ver_full_rct_non_sem(transaction& tx, const rct::ctkey
         {
             if (mix_ring[n][m].dest != rct::rct2pk(rv.mixRing[m][n].dest))
             {
-                MERROR("Failed to check ringct signatures: mismatched pubkey at vin " << n << ", index " << m);
+                MERROR("Failed to check ringct signatures: mismatched pubkey at vin {}, index {}", n, m);
                 return false;
             }
             if (mix_ring[n][m].mask != rct::rct2pk(rv.mixRing[m][n].mask))
             {
-                MERROR("Failed to check ringct signatures: mismatched commitment at vin " << n << ", index " << m);
+                MERROR("Failed to check ringct signatures: mismatched commitment at vin {}, index {}", n, m);
                 return false;
             }
         }
@@ -201,8 +201,7 @@ static bool tx_ver_legacy_ring_sigs(transaction& tx, const rct::ctkeyM& mix_ring
             tx.signatures.at(input_idx).data());
         if (!ver)
         {
-            MERROR("Failed to check ring signature for tx " << get_transaction_hash(tx) << "  vin key with k_image: "
-                << pin->k_image << "  sig_index: " << input_idx);
+            MERROR("Failed to check ring signature for tx {}  vin key with k_image: {}  sig_index: {}", get_transaction_hash(tx), pin->k_image, input_idx);
             fail_occurred.test_and_set();
         }
     };
@@ -360,13 +359,13 @@ bool ver_input_proofs_rings(transaction& tx, const rct::ctkeyM &dereferenced_mix
         case rct::RCTTypeBulletproofPlus:
             return expand_tx_and_ver_rct_non_sem(tx, dereferenced_mix_ring);
         default:
-            MERROR("Unrecognized RingCT type: " << tx.rct_signatures.type);
+            MERROR("Unrecognized RingCT type: {}", tx.rct_signatures.type);
             return false;
         }
     }
     else
     {
-        MERROR("Unrecognized transaction version: " << tx.version);
+        MERROR("Unrecognized transaction version: {}", tx.version);
         return false;
     }
 }
@@ -440,7 +439,7 @@ bool ver_mixed_rct_semantics(std::vector<const rct::rctSig*> rvv)
             is_batchable_rv = true;
             break;
         default:
-            MERROR("Unknown rct type: " << rv.type);
+            MERROR("Unknown rct type: {}", rv.type);
             return false;
             break;
         }

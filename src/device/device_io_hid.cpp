@@ -86,7 +86,7 @@ namespace hw {
       if (hid_verbose) {
         char  strbuffer[1024];
         hw::buffer_to_str(strbuffer, sizeof(strbuffer), (char*)buffer, block_len);
-        MDEBUG( "HID " << (read?"<":">") <<" : "<<strbuffer);
+        MDEBUG("HID {} : {}", (read?"<":">"), strbuffer);
       }
     }
  
@@ -115,20 +115,12 @@ namespace hw {
     hid_device_info *device_io_hid::find_device(hid_device_info *devices_list, boost::optional<int> interface_number, boost::optional<unsigned short> usage_page) {
       bool select_any = !interface_number && !usage_page;
 
-      MDEBUG( "Looking for " <<
-              (select_any ? "any HID Device" : "HID Device with") <<
-              (interface_number ? (" interface_number " + std::to_string(interface_number.value())) : "") <<
-              ((interface_number && usage_page) ? " or" : "") <<
-              (usage_page ? (" usage_page " + std::to_string(usage_page.value())) : ""));
+      MDEBUG("Looking for {}{}{}{}", (select_any ? "any HID Device" : "HID Device with"), (interface_number ? (" interface_number " + std::to_string(interface_number.value())) : ""), ((interface_number && usage_page) ? " or" : ""), (usage_page ? (" usage_page " + std::to_string(usage_page.value())) : ""));
 
       hid_device_info *result = nullptr;
       for (; devices_list != nullptr; devices_list = devices_list->next) {
         BOOST_SCOPE_EXIT(&devices_list, &result) {
-          MDEBUG( (result == devices_list ? "SELECTED" : "SKIPPED ") <<
-                  " HID Device" <<
-                  " path " << safe_hid_path(devices_list) <<
-                  " interface_number " << devices_list->interface_number <<
-                  " usage_page " << devices_list->usage_page);
+          MDEBUG("{} HID Device path {} interface_number {} usage_page {}", (result == devices_list ? "SELECTED" : "SKIPPED "), safe_hid_path(devices_list), devices_list->interface_number, devices_list->usage_page);
         }
         BOOST_SCOPE_EXIT_END
 

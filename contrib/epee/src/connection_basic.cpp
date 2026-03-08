@@ -143,7 +143,7 @@ connection_basic::connection_basic(boost::asio::io_context &io_context, boost::a
 	std::string remote_addr_str = "?";
 	try { boost::system::error_code e; remote_addr_str = socket().remote_endpoint(e).address().to_string(); } catch(...){} ;
 
-	_note("Spawned connection #"<<mI->m_peer_number<<" to " << remote_addr_str << " currently we have sockets count:" << m_state->sock_count);
+	_note("Spawned connection #{} to {} currently we have sockets count:{}", mI->m_peer_number, remote_addr_str, m_state->sock_count);
 }
 
 connection_basic::connection_basic(boost::asio::io_context &io_context, std::shared_ptr<connection_basic_shared_state> state, ssl_support_t ssl_support)
@@ -166,7 +166,7 @@ connection_basic::connection_basic(boost::asio::io_context &io_context, std::sha
 	std::string remote_addr_str = "?";
 	try { boost::system::error_code e; remote_addr_str = socket().remote_endpoint(e).address().to_string(); } catch(...){} ;
 
-	_note("Spawned connection #"<<mI->m_peer_number<<" to " << remote_addr_str << " currently we have sockets count:" << m_state->sock_count);
+	_note("Spawned connection #{} to {} currently we have sockets count:{}", mI->m_peer_number, remote_addr_str, m_state->sock_count);
 }
 
 connection_basic::~connection_basic() noexcept(false) {
@@ -174,7 +174,7 @@ connection_basic::~connection_basic() noexcept(false) {
 
 	std::string remote_addr_str = "?";
 	try { boost::system::error_code e; remote_addr_str = socket().remote_endpoint(e).address().to_string(); } catch(...){} ;
-	_note("Destructing connection #"<<mI->m_peer_number << " to " << remote_addr_str);
+	_note("Destructing connection #{} to {}", mI->m_peer_number, remote_addr_str);
 }
 
 void connection_basic::set_rate_up_limit(uint64_t limit) {
@@ -244,7 +244,7 @@ void connection_basic::sleep_before_packet(size_t packet_size, int phase,  int q
 		delay *= 0.50;
 		if (delay > 0) {
             long int ms = (long int)(delay * 1000);
-			MTRACE("Sleeping in " << __FUNCTION__ << " for " << ms << " ms before packet_size="<<packet_size); // debug sleep
+			MTRACE("Sleeping in {} for {} ms before packet_size={}", __FUNCTION__, ms, packet_size); // debug sleep
 			boost::this_thread::sleep(boost::posix_time::milliseconds( ms ) );
 		}
 	} while(delay > 0);
@@ -259,12 +259,12 @@ void connection_basic::sleep_before_packet(size_t packet_size, int phase,  int q
 
 void connection_basic::do_send_handler_write(const void* ptr , size_t cb ) {
         // No sleeping here; sleeping is done once and for all in connection<t_protocol_handler>::handle_write
-	MTRACE("handler_write (direct) - before ASIO write, for packet="<<cb<<" B (after sleep)");
+	MTRACE("handler_write (direct) - before ASIO write, for packet={} B (after sleep)", cb);
 }
 
 void connection_basic::do_send_handler_write_from_queue( const boost::system::error_code& e, size_t cb, int q_len ) {
         // No sleeping here; sleeping is done once and for all in connection<t_protocol_handler>::handle_write
-	MTRACE("handler_write (after write, from queue="<<q_len<<") - before ASIO write, for packet="<<cb<<" B (after sleep)");
+	MTRACE("handler_write (after write, from queue={}) - before ASIO write, for packet={} B (after sleep)", q_len, cb);
 }
 
 void connection_basic::logger_handle_net_read(size_t size) { // network data read
@@ -282,4 +282,3 @@ double connection_basic::get_sleep_time(size_t cb) {
 
 } // namespace
 } // namespace
-

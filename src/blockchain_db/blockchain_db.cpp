@@ -187,7 +187,7 @@ void BlockchainDB::add_transaction(const crypto::hash& blk_hash, const transacti
   {
     // should only need to compute hash for miner transactions
     tx_hash = get_transaction_hash(tx);
-    LOG_PRINT_L3("null tx_hash_ptr - needed to compute: " << tx_hash);
+    LOG_PRINT_L3("null tx_hash_ptr - needed to compute: {}", tx_hash);
   }
   else
   {
@@ -430,24 +430,7 @@ void BlockchainDB::reset_stats()
 
 void BlockchainDB::show_stats()
 {
-  LOG_PRINT_L1(ENDL
-    << "*********************************"
-    << ENDL
-    << "num_calls: " << num_calls
-    << ENDL
-    << "time_blk_hash: " << time_blk_hash << "ms"
-    << ENDL
-    << "time_tx_exists: " << time_tx_exists << "ms"
-    << ENDL
-    << "time_add_block1: " << time_add_block1 << "ms"
-    << ENDL
-    << "time_add_transaction: " << time_add_transaction << "ms"
-    << ENDL
-    << "time_commit1: " << time_commit1 << "ms"
-    << ENDL
-    << "*********************************"
-    << ENDL
-  );
+  LOG_PRINT_L1("{}*********************************{}num_calls: {}{}time_blk_hash: {}ms{}time_tx_exists: {}ms{}time_add_block1: {}ms{}time_add_transaction: {}ms{}time_commit1: {}ms{}*********************************{}", ENDL, ENDL, num_calls, ENDL, time_blk_hash, ENDL, time_tx_exists, ENDL, time_add_block1, ENDL, time_add_transaction, ENDL, time_commit1, ENDL, ENDL);
 }
 
 void BlockchainDB::fixup()
@@ -502,7 +485,7 @@ bool BlockchainDB::txpool_tx_matches_category(const crypto::hash& tx_hash, relay
   }
   catch (const std::exception &e)
   {
-    MERROR("Failed to get tx meta from txpool: " << e.what());
+    MERROR("Failed to get tx meta from txpool: {}", e.what());
   }
   return false;
 }

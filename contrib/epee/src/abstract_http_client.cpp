@@ -125,7 +125,7 @@ namespace http
   {
     http::url_content parsed{};
     const bool r = parse_url(address, parsed);
-    CHECK_AND_ASSERT_MES(r, false, "failed to parse url: " << address);
+    CHECK_AND_ASSERT_MES(r, false, "failed to parse url: {}", address);
     if (parsed.port == 0)
     {
       if (parsed.schema == "http")

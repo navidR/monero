@@ -59,7 +59,7 @@ DISABLE_VS_WARNINGS(4244 4345)
   //-----------------------------------------------------------------
   void account_keys::set_device( hw::device &hwdev)  {
     m_device = &hwdev;
-    MCDEBUG("device", "account_keys::set_device device type: "<<typeid(hwdev).name());
+    MCDEBUG("device", "account_keys::set_device device type: {}", typeid(hwdev).name());
   }
   //-----------------------------------------------------------------
   static void derive_key(const crypto::chacha_key &base_key, crypto::chacha_key &key)
@@ -142,7 +142,7 @@ DISABLE_VS_WARNINGS(4244 4345)
     try{
       m_keys.get_device().disconnect();
     } catch (const std::exception &e){
-      MERROR("Device disconnect exception: " << e.what());
+      MERROR("Device disconnect exception: {}", e.what());
     }
   }
   //-----------------------------------------------------------------
@@ -224,7 +224,7 @@ DISABLE_VS_WARNINGS(4244 4345)
   void account_base::create_from_device(hw::device &hwdev)
   {
     m_keys.set_device(hwdev);
-    MCDEBUG("device", "device type: "<<typeid(hwdev).name());
+    MCDEBUG("device", "device type: {}", typeid(hwdev).name());
     CHECK_AND_ASSERT_THROW_MES(hwdev.init(), "Device init failed");
     CHECK_AND_ASSERT_THROW_MES(hwdev.connect(), "Device connect failed");
     try {

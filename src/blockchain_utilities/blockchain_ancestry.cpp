@@ -99,7 +99,7 @@ struct tx_data_t
         }
         else
         {
-          LOG_PRINT_L0("Bad vin type in txid " << get_transaction_hash(tx));
+          LOG_PRINT_L0("Bad vin type in txid {}", get_transaction_hash(tx));
           throw std::runtime_error("Bad vin type");
         }
       }
@@ -114,7 +114,7 @@ struct tx_data_t
       }
       else
       {
-        LOG_PRINT_L0("Bad vout type in txid " << get_transaction_hash(tx));
+        LOG_PRINT_L0("Bad vout type in txid {}", get_transaction_hash(tx));
         throw std::runtime_error("Bad vout type");
       }
     }
@@ -213,7 +213,7 @@ static std::unordered_set<ancestor> get_ancestry(const std::unordered_map<crypto
   std::unordered_map<crypto::hash, std::unordered_set<ancestor>>::const_iterator i = ancestry.find(txid);
   if (i == ancestry.end())
   {
-    //MERROR("txid ancestry not found: " << txid);
+    //MERROR("txid ancestry not found: {}", txid);
     //throw std::runtime_error("txid ancestry not found");
     return std::unordered_set<ancestor>();
   }
@@ -257,13 +257,13 @@ static bool get_transaction(ancestry_state_t &state, BlockchainDB *db, const cry
   cryptonote::blobdata bd;
   if (!db->get_pruned_tx_blob(txid, bd))
   {
-    LOG_PRINT_L0("Failed to get txid " << txid << " from db");
+    LOG_PRINT_L0("Failed to get txid {} from db", txid);
     return false;
   }
   cryptonote::transaction tx;
   if (!cryptonote::parse_and_validate_tx_base_from_blob(bd, tx))
   {
-    LOG_PRINT_L0("Bad tx: " << txid);
+    LOG_PRINT_L0("Bad tx: {}", txid);
     return false;
   }
   tx_data = ::tx_data_t(tx);
@@ -303,7 +303,7 @@ static bool get_output_txid(ancestry_state_t &state, BlockchainDB *db, uint64_t 
     }
     else
     {
-      LOG_PRINT_L0("Bad vout type in txid " << cryptonote::get_transaction_hash(b.miner_tx));
+      LOG_PRINT_L0("Bad vout type in txid {}", cryptonote::get_transaction_hash(b.miner_tx));
       return false;
     }
   }
@@ -456,7 +456,7 @@ int main(int argc, char* argv[])
   LOG_PRINT_L0("database: LMDB");
 
   const std::string filename = (boost::filesystem::path(opt_data_dir) / db->get_db_name()).string();
-  LOG_PRINT_L0("Loading blockchain from folder " << filename << " ...");
+  LOG_PRINT_L0("Loading blockchain from folder {} ...", filename);
 
   try
   {
@@ -464,7 +464,7 @@ int main(int argc, char* argv[])
   }
   catch (const std::exception& e)
   {
-    LOG_PRINT_L0("Error opening database: " << e.what());
+    LOG_PRINT_L0("Error opening database: {}", e.what());
     return 1;
   }
   r = core_storage->blockchain.init(db, net_type);
@@ -477,7 +477,7 @@ int main(int argc, char* argv[])
   ancestry_state_t state;
 
   const std::string state_file_path = (boost::filesystem::path(opt_data_dir) / "ancestry-state.bin").string();
-  LOG_PRINT_L0("Loading state data from " << state_file_path);
+  LOG_PRINT_L0("Loading state data from {}", state_file_path);
   std::ifstream state_data_in;
   state_data_in.open(state_file_path, std::ios_base::binary | std::ios_base::in);
   if (!state_data_in.fail())
@@ -489,7 +489,7 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception &e)
     {
-      MERROR("Failed to load state data from " << state_file_path << ", restarting from scratch");
+      MERROR("Failed to load state data from {}, restarting from scratch", state_file_path);
       state = ancestry_state_t();
     }
     state_data_in.close();
@@ -503,7 +503,7 @@ int main(int argc, char* argv[])
   const uint64_t db_height = db->height();
   if (opt_refresh)
   {
-    MINFO("Starting from height " << state.height);
+    MINFO("Starting from height {}", state.height);
     state.block_cache.reserve(db_height);
     for (uint64_t h = state.height; h < db_height; ++h)
     {
@@ -544,13 +544,13 @@ int main(int argc, char* argv[])
           cryptonote::blobdata bd;
           if (!db->get_pruned_tx_blob(txid, bd))
           {
-            LOG_PRINT_L0("Failed to get txid " << txid << " from db");
+            LOG_PRINT_L0("Failed to get txid {} from db", txid);
             return 1;
           }
           cryptonote::transaction tx;
           if (!cryptonote::parse_and_validate_tx_base_from_blob(bd, tx))
           {
-            LOG_PRINT_L0("Bad tx: " << txid);
+            LOG_PRINT_L0("Bad tx: {}", txid);
             return 1;
           }
           tx_data = ::tx_data_t(tx);
@@ -583,19 +583,19 @@ int main(int argc, char* argv[])
         }
         const size_t ancestry_size = get_ancestry(state.ancestry, txid).size();
         block_ancestry_size += ancestry_size;
-        MINFO(txid << ": " << ancestry_size);
+        MINFO("{}: {}", txid, ancestry_size);
       }
       if (!txids.empty())
       {
         std::string stats_msg;
-        MINFO("Height " << h << ": " << (block_ancestry_size / txids.size()) << " average over " << txids.size() << stats_msg);
+        MINFO("Height {}: {} average over {}{}", h, (block_ancestry_size / txids.size()), txids.size(), stats_msg);
       }
       state.height = h;
       if (stop_requested)
         break;
     }
 
-    LOG_PRINT_L0("Saving state data to " << state_file_path);
+    LOG_PRINT_L0("Saving state data to {}", state_file_path);
     std::ofstream state_data_out;
     state_data_out.open(state_file_path, std::ios_base::binary | std::ios_base::out | std::ios::trunc);
     if (!state_data_out.fail())
@@ -607,7 +607,7 @@ int main(int argc, char* argv[])
       }
       catch (const std::exception &e)
       {
-        MERROR("Failed to save state data to " << state_file_path);
+        MERROR("Failed to save state data to {}", state_file_path);
       }
       state_data_out.close();
     }
@@ -616,7 +616,7 @@ int main(int argc, char* argv[])
   {
     if (state.height < db_height)
     {
-      MWARNING("The state file is only built up to height " << state.height << ", but the blockchain reached height " << db_height);
+      MWARNING("The state file is only built up to height {}, but the blockchain reached height {}", state.height, db_height);
       MWARNING("You may want to run with --refresh if you want to get ancestry for newer data");
     }
   }
@@ -656,7 +656,7 @@ int main(int argc, char* argv[])
 
   for (const crypto::hash &start_txid: start_txids)
   {
-    LOG_PRINT_L0("Checking ancestry for txid " << start_txid);
+    LOG_PRINT_L0("Checking ancestry for txid {}", start_txid);
 
     std::unordered_map<ancestor, unsigned int> ancestry;
 
@@ -697,16 +697,16 @@ int main(int argc, char* argv[])
 
             add_ancestry(state.ancestry, txid, get_ancestry(state.ancestry, output_txid));
             txids.push_back(output_txid);
-            MDEBUG("adding txid: " << output_txid);
+            MDEBUG("adding txid: {}", output_txid);
           }
         }
       }
     }
 
-    MINFO("Ancestry for " << start_txid << ": " << get_deduplicated_ancestry(ancestry) << " / " << get_full_ancestry(ancestry));
+    MINFO("Ancestry for {}: {} / {}", start_txid, get_deduplicated_ancestry(ancestry), get_full_ancestry(ancestry));
     for (const auto &i: ancestry)
     {
-      MINFO(cryptonote::print_money(i.first.amount) << "/" << i.first.offset << ": " << i.second);
+      MINFO("{}/{}: {}", cryptonote::print_money(i.first.amount), i.first.offset, i.second);
     }
   }
 
@@ -714,10 +714,7 @@ done:
   core_storage->blockchain.deinit();
 
   if (opt_show_cache_stats)
-  MINFO("cache: txes " << std::to_string(cached_txes*100./total_txes)
-        << "%, blocks " << std::to_string(cached_blocks*100./total_blocks)
-        << "%, outputs " << std::to_string(cached_outputs*100./total_outputs)
-        << "%");
+  MINFO("cache: txes {}%, blocks {}%, outputs {}%", std::to_string(cached_txes*100./total_txes), std::to_string(cached_blocks*100./total_blocks), std::to_string(cached_outputs*100./total_outputs));
 
   return 0;
 

@@ -221,7 +221,7 @@ namespace net_utils
 			}
 			catch(const boost::system::system_error& er)
 			{
-				MDEBUG("Some problems at connect, message: " << er.what());
+				MDEBUG("Some problems at connect, message: {}", er.what());
 				return false;
 			}
 			catch(...)
@@ -253,7 +253,7 @@ namespace net_utils
 			}
 			catch(const boost::system::system_error& /*er*/)
 			{
-				//LOG_ERROR("Some problems at disconnect, message: " << er.what());
+				//LOG_ERROR("Some problems at disconnect, message: {}", er.what());
 				return false;
 			}
 			catch(...)
@@ -295,7 +295,7 @@ namespace net_utils
 
 				if (ec)
 				{
-					LOG_PRINT_L3("Problems at write: " << ec.message());
+					LOG_PRINT_L3("Problems at write: {}", ec.message());
           m_connected = false;
 					return false;
 				}else
@@ -307,7 +307,7 @@ namespace net_utils
 
 			catch(const boost::system::system_error& er)
 			{
-				LOG_ERROR("Some problems at connect, message: " << er.what());
+				LOG_ERROR("Some problems at connect, message: {}", er.what());
 				return false;
 			}
 			catch(...)
@@ -371,7 +371,7 @@ namespace net_utils
 
 				if (ec)
 				{
-                    MTRACE("READ ENDS: Connection err_code " << ec.value());
+                    MTRACE("READ ENDS: Connection err_code {}", ec.value());
                     if(ec == boost::asio::error::eof)
                     {
                       MTRACE("Connection err_code eof.");
@@ -380,12 +380,12 @@ namespace net_utils
                       return true;
                     }
 
-					MDEBUG("Problems at read: " << ec.message());
+					MDEBUG("Problems at read: {}", ec.message());
                     m_connected = false;
 					return false;
 				}else
 				{
-                    MTRACE("READ ENDS: Success. bytes_tr: " << bytes_transfered);
+                    MTRACE("READ ENDS: Success. bytes_tr: {}", bytes_transfered);
 					m_deadline.expires_at(std::chrono::steady_clock::time_point::max());
 				}
 
@@ -399,7 +399,7 @@ namespace net_utils
 
 			catch(const boost::system::system_error& er)
 			{
-				LOG_ERROR("Some problems at read, message: " << er.what());
+				LOG_ERROR("Some problems at read, message: {}", er.what());
         m_connected = false;
 				return false;
 			}
@@ -423,13 +423,13 @@ namespace net_utils
 				shutdown_ssl();
 			m_ssl_socket->next_layer().cancel(ec);
 			if(ec)
-				MDEBUG("Problems at cancel: " << ec.message());
+				MDEBUG("Problems at cancel: {}", ec.message());
 			m_ssl_socket->next_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 			if(ec)
-				MDEBUG("Problems at shutdown: " << ec.message());
+				MDEBUG("Problems at shutdown: {}", ec.message());
 			m_ssl_socket->next_layer().close(ec);
 			if(ec)
-				MDEBUG("Problems at close: " << ec.message());
+				MDEBUG("Problems at close: {}", ec.message());
 			m_shutdowned = true;
       m_connected = false;
 			return true;
@@ -489,7 +489,7 @@ namespace net_utils
 			    ERR_PACK(ERR_LIB_SSL, 0, SSL_R_SHORT_READ)
 #endif
 			    )
-				MDEBUG("Problems at ssl shutdown: " << ec.message());
+				MDEBUG("Problems at ssl shutdown: {}", ec.message());
 		}
 		
 	protected:

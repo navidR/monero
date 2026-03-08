@@ -121,7 +121,7 @@ namespace cryptonote
         average_blocksize.push_back(span.size / span.nblocks);
         return true; // we don't care about the return value
       });
-      MINFO("Maximum average of blocksize for current batches : " << *std::max_element(average_blocksize.begin(), average_blocksize.end()));
+      MINFO("Maximum average of blocksize for current batches : {}", *std::max_element(average_blocksize.begin(), average_blocksize.end()));
       return *std::max_element(average_blocksize.begin(), average_blocksize.end());
     }
     void stop();
@@ -133,7 +133,7 @@ namespace cryptonote
       const auto it = m_max_out_peers.find(zone);
       if (it == m_max_out_peers.end())
       {
-        MWARNING(epee::net_utils::zone_to_string(zone) << " max out peers not set, using default");
+        MWARNING("{} max out peers not set, using default", epee::net_utils::zone_to_string(zone));
         return P2P_DEFAULT_CONNECTIONS_COUNT;
       }
       return it->second;
@@ -226,7 +226,7 @@ namespace cryptonote
     template<class t_parameter>
       bool post_notify(typename t_parameter::request& arg, cryptonote_connection_context& context)
       {
-        LOG_PRINT_L2("[" << epee::net_utils::print_connection_context_short(context) << "] post " << typeid(t_parameter).name() << " -->");
+        LOG_PRINT_L2("[{}] post {} -->", epee::net_utils::print_connection_context_short(context), typeid(t_parameter).name());
 
         epee::levin::message_writer out{256 * 1024}; // optimize for block responses
         epee::serialization::store_t_to_binary(arg, out.buffer);
